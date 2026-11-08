@@ -1,6 +1,6 @@
 # APP-06 Send a book to my or my partner's Kobo
 
-Status: in review
+Status: done
 Milestone: 5
 Depends on: BRK-03
 

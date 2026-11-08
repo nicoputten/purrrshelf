@@ -16,3 +16,7 @@ jest.mock('expo-secure-store', () => {
 jest.mock('expo-localization', () => ({
   getLocales: jest.fn(() => [{ languageCode: 'en', languageTag: 'en-US' }]),
 }));
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);

@@ -9,3 +9,16 @@ Canvas board: 6 · Library. Stories: APP-07, APP-08.
   badge top right, "Both" badge top left, progress bar and a status line
   (42% read / Unread / Finished).
 - Bottom tab bar, Library active.
+
+Built in APP-07:
+
+- Title "Library", then the tabs as chips: "Mine · 2", "Partner's · 2",
+  "All · 4" (accent when selected), then the view chips: Recently added,
+  Unread, On my Kobo, Series (sorted by series name and position).
+- Three-column grid, 150 high covers. "Both" badge top left, a small green
+  "Kobo" badge top right when it is on my Kobo, a progress bar when the Kobo
+  reported progress and a status line: "42% read", "Reading", "Unread",
+  "Finished". Screen readers hear the title, author, badges and status.
+- Offline: a muted line "Offline: showing the library as it was last time."
+  above the saved grid. Empty tabs show one muted sentence.
+- The search button and the bottom-bar badge come later.

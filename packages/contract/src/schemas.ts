@@ -247,3 +247,39 @@ export type ItemParams = z.infer<typeof ItemParams>;
 
 export const ItemKoboParams = ItemParams.extend({ userId: z.string().min(1).max(64) });
 export type ItemKoboParams = z.infer<typeof ItemKoboParams>;
+
+// --- Library (APP-07) -------------------------------------------------------
+
+export const ReadStatus = z.enum(['unread', 'reading', 'finished']);
+export type ReadStatus = z.infer<typeof ReadStatus>;
+
+export const LibraryBookEntry = z.object({
+  itemId: z.string(),
+  /** Null for a Calibre book that no search hit has been matched to yet. */
+  workId: WorkId.nullable(),
+  mediaType: MediaType,
+  title: z.string(),
+  authors: z.array(z.string()),
+  series: z.object({ name: z.string(), position: z.number().nullable() }).nullable(),
+  addedAt: z.iso.datetime(),
+  /** Oldest owner first; empty for a book nobody owns. */
+  owners: z.array(LibraryOwner),
+  onMyKobo: z.boolean(),
+  /** The asking reader's progress from their Kobo; null when their Kobo is not linked. */
+  reading: z
+    .object({
+      status: ReadStatus,
+      /** 0–100, null when the Kobo never reported a position. */
+      progressPercent: z.number().nullable(),
+    })
+    .nullable(),
+});
+export type LibraryBookEntry = z.infer<typeof LibraryBookEntry>;
+
+export const LibraryBooks = z
+  .object({
+    /** Every book in the shared library, newest first. The app filters and sorts. */
+    books: z.array(LibraryBookEntry),
+  })
+  .meta({ id: 'LibraryBooks' });
+export type LibraryBooks = z.infer<typeof LibraryBooks>;

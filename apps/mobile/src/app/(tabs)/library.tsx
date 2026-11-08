@@ -1,7 +1,6 @@
-import { useTranslation } from 'react-i18next';
-import { ComingSoonScreen } from '@/features/HomeScreen';
+import { router } from 'expo-router';
+import { LibraryScreen } from '@/features/library/LibraryScreen';
 
-export default function Screen() {
-  const { t } = useTranslation();
-  return <ComingSoonScreen title={t('tabs.library')} />;
+export default function LibraryRoute() {
+  return <LibraryScreen onOpen={(id) => router.push({ pathname: '/book/[id]', params: { id } })} />;
 }

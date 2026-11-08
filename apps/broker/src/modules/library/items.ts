@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import type { Clock } from '../../clock.js';
 import type { Db } from '../../db/index.js';
 import { libraryItems, ownerships, users, type LibraryItemRow } from '../../db/schema.js';
@@ -52,6 +52,15 @@ export class LibraryItems {
     };
     this.db.insert(libraryItems).values(row).run();
     return row;
+  }
+
+  /** Every item, newest first. */
+  all(): LibraryItemRow[] {
+    return this.db
+      .select()
+      .from(libraryItems)
+      .orderBy(desc(libraryItems.addedAt), asc(libraryItems.title))
+      .all();
   }
 
   get(id: string): LibraryItemRow | undefined {
