@@ -81,4 +81,22 @@ describe('app navigation', () => {
     await user.press(await screen.findByRole('button', { name: 'Log out' }));
     await waitFor(() => expect(screen.getByLabelText('Username')).toBeOnTheScreen());
   });
+
+  it('rechecks the library each time its tab opens', async () => {
+    secureStore.set(StorageKeys.serverUrl, 'https://shelf.example.invalid');
+    secureStore.set(StorageKeys.refreshToken, 'refresh-0');
+    const broker = fakeBroker({
+      'POST /auth/refresh': () => tokens(1),
+      'GET /me': me,
+      'GET /library/books': () => ok({ books: [] }),
+    });
+    setFetch(broker.fetch);
+    const loads = () => broker.calls.filter((c) => c.route === 'GET /library/books').length;
+    const user = userEvent.setup();
+    await renderRouter('./src/app', { initialUrl: '/library' });
+    await waitFor(() => expect(loads()).toBe(1));
+    await user.press(screen.getByRole('button', { name: /Settings/ }));
+    await user.press(screen.getByRole('button', { name: /Library/ }));
+    await waitFor(() => expect(loads()).toBe(2));
+  });
 });
