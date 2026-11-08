@@ -29,6 +29,7 @@ function RootStack() {
         </Stack.Protected>
         <Stack.Protected guard={status === 'ready'}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="book/[id]" />
         </Stack.Protected>
       </Stack>
     </>

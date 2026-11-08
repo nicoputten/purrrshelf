@@ -1,6 +1,6 @@
 # APP-04 See book details, series and owners
 
-Status: todo
+Status: in progress
 Milestone: 2
 Depends on: BRK-02
 
@@ -11,10 +11,13 @@ so that I can decide what to do with it in one place.
 
 ## Acceptance criteria
 
-- [ ] Cover, title, author, series position, language and format
-- [ ] Owner badges (Yours, Partner's) and my reading progress
-- [ ] Per-Kobo rows with state and Send / Remove actions
-- [ ] Series list with In library / Add / Add next
+- [x] Cover, title, author, series position, language and format
+- [x] Owner badges (Yours, Partner's)
+- [ ] My reading progress (needs reading state from the library, APP-08)
+- [x] Kobo row with my device state
+- [ ] Partner's Kobo row and Send / Remove actions (APP-06)
+- [x] Series list with This book / In library / Add / Add next labels
+- [ ] Add / Add next as actions (APP-03, the Add sheet)
 - [ ] Similar books row (filled by APP-09)
 
 ## Design
@@ -22,3 +25,8 @@ so that I can decide what to do with it in one place.
 Canvas board: 2 · Book detail — `docs/design/book-detail.md`
 
 ## Notes / decisions
+
+Milestone 2 builds the screen with the data the broker has today: work
+details and series (BRK-02), covers (BRK-07) and `library` on a work (empty
+until library items exist). The open items above need later stories; this
+story is done when they are wired.

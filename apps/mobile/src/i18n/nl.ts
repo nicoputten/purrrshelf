@@ -53,6 +53,22 @@ export const nl: Translations = {
     budget: 'nog {{left}} / {{limit}}',
     budgetA11y: 'Nog {{left}} van {{limit}} zoekopdrachten bij de indexer dit uur',
   },
+  book: {
+    back: 'Terug',
+    yours: 'Van jou',
+    ownerBook: 'Van {{name}}',
+    devices: 'Kobo',
+    yourKobo: 'Jouw Kobo',
+    onDevice: 'Op het apparaat',
+    notOnDevice: 'Niet op het apparaat',
+    seriesTitle: 'Serie {{name}}',
+    series: {
+      thisBook: 'Dit boek',
+      inLibrary: 'In bibliotheek',
+      addNext: 'Volgende toevoegen',
+      add: 'Toevoegen',
+    },
+  },
   settings: {
     title: 'Instellingen',
     language: 'Taal',

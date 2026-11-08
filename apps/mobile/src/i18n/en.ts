@@ -50,6 +50,22 @@ export const en = {
     budget: '{{left}} / {{limit}} left',
     budgetA11y: '{{left}} of {{limit}} indexer searches left this hour',
   },
+  book: {
+    back: 'Back',
+    yours: 'Yours',
+    ownerBook: '{{name}}’s',
+    devices: 'Kobo',
+    yourKobo: 'Your Kobo',
+    onDevice: 'On the device',
+    notOnDevice: 'Not on the device',
+    seriesTitle: '{{name}} series',
+    series: {
+      thisBook: 'This book',
+      inLibrary: 'In library',
+      addNext: 'Add next',
+      add: 'Add',
+    },
+  },
   settings: {
     title: 'Settings',
     language: 'Language',

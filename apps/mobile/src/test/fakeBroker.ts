@@ -102,3 +102,16 @@ export const budget = (left = 21, limit = 25) => ({
     indexers: [],
   },
 });
+
+/** Work detail for an invented book; override any field. */
+export function work(over: Record<string, unknown> = {}) {
+  return {
+    ...hit(),
+    description: 'A lamplighter walks the salt road to the sea.',
+    subjects: ['Fantasy'],
+    pageCount: 320,
+    ...over,
+  };
+}
+
+export const ok = (body: unknown) => ({ status: 200, body });
