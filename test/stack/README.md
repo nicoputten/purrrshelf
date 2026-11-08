@@ -43,3 +43,13 @@ docker compose -f test/stack/docker-compose.yml down -v && rm -rf .cwa-stack
 
 The contract tests are skipped when `CWA_STACK_DIR` is not set, so
 `pnpm test` works without Docker.
+
+To read the databases the way the broker's server does, through a read-only
+mount (ADR 0022), bind-mount the stack read-only and point
+`CWA_READONLY_DIR` at it; CI does this:
+
+```sh
+sudo mkdir -p /mnt/cwa-ro
+sudo mount --bind "$CWA_STACK_DIR" /mnt/cwa-ro && sudo mount -o remount,ro,bind /mnt/cwa-ro
+CWA_READONLY_DIR=/mnt/cwa-ro pnpm --filter @purrshelf/broker test:contract
+```

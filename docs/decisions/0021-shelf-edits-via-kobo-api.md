@@ -27,7 +27,9 @@ Kobo syncs with it, and CWA stores it in `app.db` (`remote_auth_token`,
 - **Service account:** a normal CWA user with only **download** and
   **delete books** rights. It is used for deleting books through the web UI
   (`POST /ajax/delete/<id>` with session cookie and CSRF token). It is not an
-  admin and needs no shelf rights.
+  admin and needs no shelf rights. In the CWA v4.0.8 user form, "Allow
+  Delete Books" only shows while "Allow Edit" is ticked; tick it, then untick
+  Edit again (deleting checks only the delete right).
 - **Reads** (books, shelves, device and reading state) come straight from
   `metadata.db` and `app.db`, read-only, as before.
 - **Missing pieces are errors, not fixes:** no shelf, two shelves with the
