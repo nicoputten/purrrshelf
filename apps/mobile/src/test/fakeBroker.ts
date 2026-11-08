@@ -97,7 +97,7 @@ export const searchResult = (hits: unknown[]) => ({
 export const budget = (left = 21, limit = 25) => ({
   status: 200,
   body: {
-    windowMinutes: 60,
+    windowMinutes: 1440,
     searches: { limit, left, nextFreeAt: '2026-01-01T12:00:00.000Z' },
     indexers: [],
   },
@@ -136,7 +136,7 @@ export const budgetWithIndexer = (left = 21, limit = 25) => {
     limitReachedUntil: null,
   };
   return ok({
-    windowMinutes: 60,
+    windowMinutes: 1440,
     searches: { limit, left, nextFreeAt: '2026-01-01T12:00:00.000Z' },
     indexers: [
       { indexerId: 'primary', name: 'Primary', priority: 0, searches: counter, grabs: counter },

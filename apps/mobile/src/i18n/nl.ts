@@ -51,7 +51,7 @@ export const nl: Translations = {
     ownerHasIt: '{{name}} heeft het',
     inLibrary: 'In bibliotheek',
     budget: 'nog {{left}} / {{limit}}',
-    budgetA11y: 'Nog {{left}} van {{limit}} zoekopdrachten bij de indexer dit uur',
+    budgetA11y: 'Nog {{left}} van {{limit}} zoekopdrachten bij de indexer vandaag',
   },
   book: {
     back: 'Terug',
@@ -95,7 +95,7 @@ export const nl: Translations = {
     readerKobo: 'Kobo van {{name}}',
     noKobo: 'Er is nog geen Kobo gekoppeld. Het boek gaat alleen naar de bibliotheek.',
     cost: 'Kost <b>1 zoekopdracht</b>, tot {{max}} als de eerste snuffel mist.',
-    left: 'Nog {{left}} van {{limit}} zoekopdrachten dit uur.',
+    left: 'Nog {{left}} van {{limit}} zoekopdrachten vandaag.',
     noIndexer: 'Er is nog geen indexer ingesteld, dus nieuwe boeken ophalen kan nog niet.',
     ownHint: 'Staat al in de bibliotheek: dit kost geen zoekopdracht, het wordt gewoon van jou.',
     fetch: 'Nu ophalen',
@@ -139,7 +139,7 @@ export const nl: Translations = {
     finishedOther: 'Op de Kobo',
     status: {
       searching: 'Aan het snuffelen…',
-      waiting_budget: 'Wacht op een vrije zoekopdracht; het budget van dit uur is op',
+      waiting_budget: 'Wacht op een vrije zoekopdracht; het budget van vandaag is op',
       not_found: 'Deze kon ik niet vinden',
       choose_release: 'Nog geen duidelijke match: kies een release',
       downloading: 'Downloaden · {{progress}}%',

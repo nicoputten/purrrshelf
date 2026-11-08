@@ -7,6 +7,7 @@ import { fixture } from './fake-newznab.js';
 import { QUERY, fakeFor, indexerInput, makeHarness, type Harness } from './downloads-harness.js';
 
 const MIN = 60_000;
+const DAY = 24 * 60 * MIN;
 const HOST = 'indexer.example.invalid';
 const BACKUP = 'backup.example.invalid';
 let h: Harness;
@@ -96,7 +97,7 @@ describe('query variants', () => {
   });
 
   it('ends in not_found without any indexer, or with all switched off', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 0 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 0 }));
     expect(await add()).toMatchObject({ status: 'not_found', error: 'No indexer is configured' });
     h.indexers.remove('primary');
     expect(await add()).toMatchObject({ status: 'not_found', error: 'No indexer is configured' });
@@ -156,7 +157,7 @@ describe('several indexers', () => {
 
 describe('empty budget', () => {
   it('waits, then runs automatically when a slot frees up, without repeating spent variants', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 1 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 1 }));
     const start = h.clock.now.getTime();
     fakeFor(h, HOST).on('search:The Lighthouse Cartographer', { body: fixture('search-hit.xml') });
 
@@ -164,10 +165,10 @@ describe('empty budget', () => {
     expect(req.status).toBe('waiting_budget');
     expect(h.calls()).toBe(1);
     const [job] = h.jobs.pending(RESUME_SEARCH_JOB);
-    expect(job).toMatchObject({ runAt: new Date(start + 60 * MIN) });
+    expect(job).toMatchObject({ runAt: new Date(start + DAY) });
 
     // Nothing runs before the slot is free.
-    h.clock.advance(59 * MIN);
+    h.clock.advance(DAY - MIN);
     expect(await h.jobs.runDue()).toBe(0);
     expect(h.calls()).toBe(1);
 
@@ -185,14 +186,14 @@ describe('empty budget', () => {
     expect(h.calls()).toBe(1);
     expect(attempts(req.id)[0]).toMatchObject({ error: 'Request limit reached', cost: 1 });
     expect(h.jobs.pending(RESUME_SEARCH_JOB)[0]!.runAt).toEqual(
-      new Date(h.clock.now.getTime() + 60 * MIN),
+      new Date(h.clock.now.getTime() + DAY),
     );
   });
 
   it('waits for the earliest indexer that frees up', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 0 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 0 }));
     h.indexers.upsert(
-      indexerInput({ id: 'backup', url: `https://${BACKUP}`, priority: 1, searchLimitPerHour: 1 }),
+      indexerInput({ id: 'backup', url: `https://${BACKUP}`, priority: 1, searchLimitPerDay: 1 }),
     );
     await h.budget.spend('backup', 'search', async () => undefined);
     h.clock.advance(10 * MIN);
@@ -200,35 +201,35 @@ describe('empty budget', () => {
     expect(req.status).toBe('waiting_budget');
     expect(h.calls()).toBe(0);
     expect(h.jobs.pending(RESUME_SEARCH_JOB)[0]!.runAt).toEqual(
-      new Date(h.clock.now.getTime() + 50 * MIN),
+      new Date(h.clock.now.getTime() + DAY - 10 * MIN),
     );
   });
 
   it('picks the earlier of two indexers that are both out of budget', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 1 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 1 }));
     h.indexers.upsert(
-      indexerInput({ id: 'backup', url: `https://${BACKUP}`, priority: 1, searchLimitPerHour: 1 }),
+      indexerInput({ id: 'backup', url: `https://${BACKUP}`, priority: 1, searchLimitPerDay: 1 }),
     );
     const start = h.clock.now.getTime();
     await h.budget.spend('primary', 'search', async () => undefined);
     h.clock.advance(10 * MIN);
     await h.budget.spend('backup', 'search', async () => undefined);
     expect((await add()).status).toBe('waiting_budget');
-    expect(h.jobs.pending(RESUME_SEARCH_JOB)[0]!.runAt).toEqual(new Date(start + 60 * MIN));
+    expect(h.jobs.pending(RESUME_SEARCH_JOB)[0]!.runAt).toEqual(new Date(start + DAY));
     // And the other way round.
-    h.indexers.upsert(indexerInput({ priority: 2, searchLimitPerHour: 1 }));
+    h.indexers.upsert(indexerInput({ priority: 2, searchLimitPerDay: 1 }));
     await add();
     expect(h.jobs.pending(RESUME_SEARCH_JOB).map((j) => j.runAt)).toEqual([
-      new Date(start + 60 * MIN),
-      new Date(start + 60 * MIN),
+      new Date(start + DAY),
+      new Date(start + DAY),
     ]);
   });
 
   it('keeps waiting when the slot is taken again before the job runs', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 1 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 1 }));
     const req = await add();
     expect(req.status).toBe('waiting_budget');
-    h.clock.advance(60 * MIN);
+    h.clock.advance(DAY);
     // Someone else spends the freed slot first.
     await h.budget.spend('primary', 'search', async () => undefined);
     await h.jobs.runDue();
@@ -237,11 +238,11 @@ describe('empty budget', () => {
   });
 
   it('does nothing for a request cancelled while waiting', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 1 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 1 }));
     await h.budget.spend('primary', 'search', async () => undefined);
     const req = await add();
     h.requests.cancel(req.id);
-    h.clock.advance(60 * MIN);
+    h.clock.advance(DAY);
     expect(await h.jobs.runDue()).toBe(1);
     expect(h.calls()).toBe(0);
     expect(h.requests.get(req.id).status).toBe('cancelled');
@@ -261,7 +262,7 @@ describe('Try again', () => {
   });
 
   it('is refused while waiting for budget', async () => {
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 1 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 1 }));
     await h.budget.spend('primary', 'search', async () => undefined);
     const req = await add();
     await expect(h.requests.retry(req.id)).rejects.toBeInstanceOf(InvalidTransitionError);

@@ -42,7 +42,7 @@ export function koboLabel(reader: Reader, t: TFunction): string {
   return reader.me ? t('add.yourKobo') : t('add.readerKobo', { name: reader.displayName });
 }
 
-/** Searches left this hour over all indexers, and how many one add can cost at most. */
+/** Searches left today over all indexers, and how many one add can cost at most. */
 function useCost() {
   const call = useSession((s) => s.call);
   const budget = useQuery({ queryKey: ['budget'], queryFn: () => call('budget') });

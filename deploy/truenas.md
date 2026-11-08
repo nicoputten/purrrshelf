@@ -111,12 +111,14 @@ Expose only the broker, through Nginx Proxy Manager with HTTPS and HSTS. See
 
 ## 9. Indexers (milestone 4)
 
-The indexer's URL and hourly limits live in the broker database; its API key
+The indexer's URL and daily limits live in the broker database; its API key
 only in the broker's environment, as `INDEXER_<ID>_API_KEY`. Use the limits
-from the indexer's API page (searches and NZB grabs separately):
+from the indexer's API page: API requests per day as `--search-limit` and
+NZB downloads per day as `--grab-limit`. The broker counts them over a rolling
+24 hours (ADR 0025):
 
 ```sh
-docker exec -it <broker-container> node dist/cli-main.js indexer add primary --name "<indexer name>" --url https://<indexer-host> --search-limit 25 --grab-limit 25
+docker exec -it <broker-container> node dist/cli-main.js indexer add primary --name "<indexer name>" --url https://<indexer-host> --search-limit 100 --grab-limit 25
 docker exec -it <broker-container> node dist/cli-main.js indexer list
 ```
 

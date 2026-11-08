@@ -9,7 +9,7 @@ let h: Harness;
 
 beforeEach(async () => {
   h = await makeHarness();
-  h.indexers.upsert(indexerInput({ searchLimitPerHour: 2, grabLimitPerHour: 1 }));
+  h.indexers.upsert(indexerInput({ searchLimitPerDay: 2, grabLimitPerDay: 1 }));
 });
 
 const primary = () => h.indexers.get('primary')!;
@@ -70,7 +70,7 @@ describe('createIndexerGateway', () => {
       env: { INDEXER_PRIMARY_API_KEY: 'fake' },
       clock: h.clock.fn,
     });
-    h.indexers.upsert(indexerInput({ searchLimitPerHour: 0 }));
+    h.indexers.upsert(indexerInput({ searchLimitPerDay: 0 }));
     await expect(gateway.search(primary(), { t: 'search' })).rejects.toBeInstanceOf(
       BudgetExhaustedError,
     );

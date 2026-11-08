@@ -34,7 +34,7 @@ describe('GET /api/v1/budget', () => {
     const res = await getBudget(await token());
     expect(res.statusCode).toBe(200);
     expect(Budget.parse(res.json())).toEqual({
-      windowMinutes: 60,
+      windowMinutes: 1440,
       searches: { limit: 0, left: 0, nextFreeAt: null },
       indexers: [],
     });
@@ -48,16 +48,16 @@ describe('GET /api/v1/budget', () => {
       name: 'Primary',
       url: 'https://indexer.example.invalid',
       priority: 0,
-      searchLimitPerHour: 2,
-      grabLimitPerHour: 5,
+      searchLimitPerDay: 2,
+      grabLimitPerDay: 5,
     });
     repo.upsert({
       id: 'backup',
       name: 'Backup',
       url: 'https://backup.example.invalid',
       priority: 1,
-      searchLimitPerHour: 1,
-      grabLimitPerHour: 1,
+      searchLimitPerDay: 1,
+      grabLimitPerDay: 1,
     });
     const budget = new IndexerBudget(ctx.database.db, ctx.clock.fn);
     const start = ctx.clock.now.getTime();
@@ -68,7 +68,7 @@ describe('GET /api/v1/budget', () => {
     ctx.clock.advance(5 * 60_000);
 
     const body = Budget.parse((await getBudget(await token())).json());
-    const freeAt = new Date(start + 60 * 60_000).toISOString();
+    const freeAt = new Date(start + 24 * 60 * 60_000).toISOString();
     expect(body.searches).toEqual({ limit: 3, left: 0, nextFreeAt: freeAt });
     expect(body.indexers).toEqual([
       {
@@ -102,8 +102,8 @@ describe('GET /api/v1/budget', () => {
         name: id,
         url: 'https://indexer.example.invalid',
         priority: 0,
-        searchLimitPerHour: 1,
-        grabLimitPerHour: 1,
+        searchLimitPerDay: 1,
+        grabLimitPerDay: 1,
       });
     }
     const budget = new IndexerBudget(ctx.database.db, ctx.clock.fn);

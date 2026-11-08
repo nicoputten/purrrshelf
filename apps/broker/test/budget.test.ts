@@ -12,6 +12,7 @@ import { IndexerRepository } from '../src/modules/indexers/repository.js';
 import { TestClock } from './helpers.js';
 
 const MIN = 60_000;
+const DAY = 24 * 60 * MIN;
 
 let database: DatabaseHandle;
 let clock: TestClock;
@@ -27,8 +28,8 @@ beforeEach(() => {
     name: 'Primary',
     url: 'https://indexer.example.invalid',
     priority: 0,
-    searchLimitPerHour: 3,
-    grabLimitPerHour: 2,
+    searchLimitPerDay: 3,
+    grabLimitPerDay: 2,
   });
   budget = new IndexerBudget(database.db, clock.fn);
 });
@@ -92,21 +93,21 @@ describe('IndexerBudget.spend', () => {
     expect(budget.status('primary', 'search').used).toBe(3);
   });
 
-  it('frees a slot exactly 60 minutes after the oldest call in the window', async () => {
+  it('frees a slot exactly 24 hours after the oldest call in the window', async () => {
     const start = clock.now.getTime();
     await spendN(3, 'search', 10 * MIN); // at 0, 10 and 20 minutes
     expect(budget.status('primary', 'search')).toMatchObject({
       left: 0,
-      nextFreeAt: new Date(start + 60 * MIN),
+      nextFreeAt: new Date(start + DAY),
     });
-    clock.now = new Date(start + 60 * MIN - 1);
+    clock.now = new Date(start + DAY - 1);
     expect(budget.status('primary', 'search').left).toBe(0);
-    clock.now = new Date(start + 60 * MIN);
+    clock.now = new Date(start + DAY);
     expect(budget.status('primary', 'search')).toMatchObject({ used: 2, left: 1 });
     await expect(budget.spend('primary', 'search', ok)).resolves.toBe('result');
     expect(budget.status('primary', 'search')).toMatchObject({
       left: 0,
-      nextFreeAt: new Date(start + 70 * MIN),
+      nextFreeAt: new Date(start + DAY + 10 * MIN),
     });
   });
 
@@ -120,19 +121,19 @@ describe('IndexerBudget.spend', () => {
   it('handles a limit lowered below what was already spent', async () => {
     const start = clock.now.getTime();
     await spendN(3, 'search', 5 * MIN); // at 0, 5, 10
-    indexers.upsert({ ...indexers.get('primary')!, searchLimitPerHour: 1 });
+    indexers.upsert({ ...indexers.get('primary')!, searchLimitPerDay: 1 });
     // All three calls must leave the window before one is free: the last at 10 minutes.
     expect(budget.status('primary', 'search')).toEqual({
       limit: 1,
       used: 3,
       left: 0,
-      nextFreeAt: new Date(start + 70 * MIN),
+      nextFreeAt: new Date(start + DAY + 10 * MIN),
       limitReachedUntil: null,
     });
   });
 
   it('never spends on an indexer with a limit of 0', async () => {
-    indexers.upsert({ ...indexers.get('primary')!, grabLimitPerHour: 0 });
+    indexers.upsert({ ...indexers.get('primary')!, grabLimitPerDay: 0 });
     await expect(budget.spend('primary', 'grab', ok)).rejects.toBeInstanceOf(BudgetExhaustedError);
   });
 
@@ -152,9 +153,9 @@ describe('IndexerBudget.spend', () => {
     expect(again.status('primary', 'search').used).toBe(2);
   });
 
-  it('forgets events older than a day', async () => {
+  it('forgets events older than two days', async () => {
     await spendN(1);
-    clock.advance(25 * 60 * MIN);
+    clock.advance(2 * DAY + MIN);
     await spendN(1);
     expect(database.db.select().from(budgetEvents).all()).toHaveLength(1);
   });
@@ -217,13 +218,13 @@ describe("the indexer's own limit-reached error", () => {
     // The block ends at 40 minutes, but the window is full until 60.
     expect(budget.status('primary', 'search')).toMatchObject({
       left: 0,
-      nextFreeAt: new Date(start + 60 * MIN),
+      nextFreeAt: new Date(start + DAY),
       limitReachedUntil: new Date(start + 40 * MIN),
     });
     clock.now = new Date(start + 40 * MIN);
     expect(budget.status('primary', 'search')).toMatchObject({
       left: 0,
-      nextFreeAt: new Date(start + 60 * MIN),
+      nextFreeAt: new Date(start + DAY),
       limitReachedUntil: null,
     });
   });
@@ -255,8 +256,8 @@ describe('IndexerBudget.overview', () => {
       name: 'Backup',
       url: 'https://backup.example.invalid',
       priority: -1,
-      searchLimitPerHour: 10,
-      grabLimitPerHour: 10,
+      searchLimitPerDay: 10,
+      grabLimitPerDay: 10,
     });
     await spendN(1);
     const overview = budget.overview();

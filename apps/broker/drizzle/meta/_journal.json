@@ -43,6 +43,13 @@
       "when": 1794150400793,
       "tag": "0005_library_items",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794157279614,
+      "tag": "0006_daily_indexer_limits",
+      "breakpoints": true
     }
   ]
 }

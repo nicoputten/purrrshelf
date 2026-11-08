@@ -24,8 +24,8 @@ const IndexerInput = z.object({
   priority: z
     .number({ error: 'Priority must be a whole number' })
     .int('Priority must be a whole number'),
-  searchLimitPerHour: limit,
-  grabLimitPerHour: limit,
+  searchLimitPerDay: limit,
+  grabLimitPerDay: limit,
 });
 export type IndexerInput = z.input<typeof IndexerInput>;
 

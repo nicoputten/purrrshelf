@@ -23,7 +23,9 @@ No canvas board (no UI).
 
 ## Notes / decisions
 
-See [ADR 0005](../decisions/0005-search-only-on-add.md).
+See [ADR 0005](../decisions/0005-search-only-on-add.md) and
+[ADR 0025](../decisions/0025-daily-indexer-budget.md): the window was changed
+from 60 minutes to a rolling 24 hours to match the indexer's daily limits.
 
 - Module: `apps/broker/src/modules/budget/`. `IndexerBudget.spend(indexer, kind, call)`
   checks the window, records the call and only then runs it; a call that fails
@@ -33,4 +35,4 @@ See [ADR 0005](../decisions/0005-search-only-on-add.md).
   indexer's retry time, or for one full window.
 - Indexers are added with `purrshelf indexer add <id> …` (URL and limits in the
   database); the key stays in env as `INDEXER_<ID>_API_KEY`.
-- `budget_events` older than a day are pruned on each spend.
+- `budget_events` older than two days are pruned on each spend.

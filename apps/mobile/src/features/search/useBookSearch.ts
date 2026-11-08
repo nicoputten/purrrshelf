@@ -29,7 +29,7 @@ export function useBookSearch(text: string, language: SearchLanguage) {
   });
 }
 
-/** Searches left this hour, for the budget pill; `null` while unknown or without indexers. */
+/** Searches left today, for the budget pill; `null` while unknown or without indexers. */
 export function useSearchBudget() {
   const call = useSession((s) => s.call);
   const query = useQuery({

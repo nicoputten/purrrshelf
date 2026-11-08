@@ -77,7 +77,7 @@ considered designed.
 - Home heading: "What are we reading next?"
 - Cost is never hidden: "looking costs nothing, only **Add** uses a search",
   "Uses 1 search, up to 4 if the first sniff misses", "21 of 25 searches left
-  this hour", "Try again · up to 4".
+  today", "Try again · up to 4".
 - Step names use cat verbs: "Sniffed it out", "Picked the best match",
   "Couldn't sniff this one out", "Fetch this book?", "Fetch it now".
 - Kobo sync is honest: "On your Kobo after its next sync".

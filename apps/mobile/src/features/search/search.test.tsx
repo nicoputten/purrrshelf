@@ -61,7 +61,7 @@ describe('Search (home)', () => {
     expect(screen.getByRole('radio', { name: 'Nederlands' })).not.toBeChecked();
     expect(screen.getByText(/Looking costs nothing, only/)).toBeOnTheScreen();
     expect(
-      await screen.findByRole('link', { name: '21 of 25 indexer searches left this hour' }),
+      await screen.findByRole('link', { name: '21 of 25 indexer searches left today' }),
     ).toBeOnTheScreen();
     expect(screen.getByText('21 / 25 left')).toBeOnTheScreen();
   });

@@ -48,7 +48,7 @@ export const en = {
     ownerHasIt: '{{name}} has it',
     inLibrary: 'In library',
     budget: '{{left}} / {{limit}} left',
-    budgetA11y: '{{left}} of {{limit}} indexer searches left this hour',
+    budgetA11y: '{{left}} of {{limit}} indexer searches left today',
   },
   book: {
     back: 'Back',
@@ -92,7 +92,7 @@ export const en = {
     readerKobo: '{{name}}’s Kobo',
     noKobo: 'No Kobo is linked yet. The book goes to the library only.',
     cost: 'Uses <b>1 search</b>, up to {{max}} if the first sniff misses.',
-    left: '{{left}} of {{limit}} searches left this hour.',
+    left: '{{left}} of {{limit}} searches left today.',
     noIndexer: 'No indexer is set up yet, so new books can’t be fetched.',
     ownHint: 'Already in the library: this costs no search, it just becomes yours.',
     fetch: 'Fetch it now',
@@ -136,7 +136,7 @@ export const en = {
     finishedOther: 'On the Kobo',
     status: {
       searching: 'Sniffing it out…',
-      waiting_budget: 'Waiting for a free search; the hourly budget is used up',
+      waiting_budget: 'Waiting for a free search; the daily budget is used up',
       not_found: 'Couldn’t sniff this one out',
       choose_release: 'No clear match yet: pick a release',
       downloading: 'Downloading · {{progress}}%',

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** One counter (searches or NZB grabs) of one indexer, over the rolling 60-minute window. */
+/** One counter (searches or NZB grabs) of one indexer, over the rolling 24-hour window (ADR 0025). */
 export const BudgetCounter = z
   .object({
     limit: z.number().int().nonnegative(),

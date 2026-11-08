@@ -10,8 +10,8 @@ const base = {
   name: 'Primary',
   url: 'https://indexer.example.invalid/',
   priority: 0,
-  searchLimitPerHour: 25,
-  grabLimitPerHour: 25,
+  searchLimitPerDay: 25,
+  grabLimitPerDay: 25,
 };
 
 beforeEach(() => {
@@ -59,8 +59,8 @@ describe('IndexerRepository', () => {
     [{ name: ' ' }, /name/i],
     [{ url: 'ftp://indexer.example.invalid' }, /URL/],
     [{ url: 'not a url' }, /URL/],
-    [{ searchLimitPerHour: -1 }, /limit/],
-    [{ grabLimitPerHour: 1.5 }, /limit/],
+    [{ searchLimitPerDay: -1 }, /limit/],
+    [{ grabLimitPerDay: 1.5 }, /limit/],
     [{ priority: 0.5 }, /priority/i],
   ])('rejects %j', (patch, message) => {
     expect(() => repo.upsert({ ...base, ...patch })).toThrow(IndexerError);

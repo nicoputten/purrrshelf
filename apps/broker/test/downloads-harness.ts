@@ -19,8 +19,8 @@ export function indexerInput(overrides: Partial<IndexerInput> = {}): IndexerInpu
     name: 'Primary',
     url: 'https://indexer.example.invalid',
     priority: 0,
-    searchLimitPerHour: 25,
-    grabLimitPerHour: 25,
+    searchLimitPerDay: 25,
+    grabLimitPerDay: 25,
     ...overrides,
   };
 }

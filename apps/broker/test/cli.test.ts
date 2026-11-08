@@ -92,7 +92,7 @@ describe('purrshelf CLI', () => {
 
     expect(await runCli(['indexer', 'list'], h.io)).toBe(0);
     expect(h.out.at(-1)).toBe(
-      'primary\tPrimary\tpriority -1\t10 searches/h\t5 grabs/h\tINDEXER_PRIMARY_API_KEY missing',
+      'primary\tPrimary\tpriority -1\t10 searches/day\t5 grabs/day\tINDEXER_PRIMARY_API_KEY missing',
     );
     const withKey = { ...h.io, env: { ...h.io.env, INDEXER_PRIMARY_API_KEY: 'fake' } };
     await runCli(['indexer', 'list'], withKey);
@@ -153,7 +153,7 @@ describe('purrshelf CLI', () => {
     await runCli([...add, '--search-limit', '1', '--grab-limit', '1'], io);
     expect(await runCli(['indexer', 'caps', 'primary'], io)).toBe(0);
     expect(h.out.at(-1)).toBe('primary: book search with q, title, author');
-    // The one search of this hour is spent: a second read is refused without calling out.
+    // The one search of today is spent: a second read is refused without calling out.
     expect(await runCli(['indexer', 'caps', 'primary'], io)).toBe(1);
     expect(h.err.at(-1)).toMatch(/No search budget left/);
     expect(fake.calls).toHaveLength(1);

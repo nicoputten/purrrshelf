@@ -44,8 +44,8 @@ export const indexers = sqliteTable('indexers', {
   url: text('url').notNull(),
   /** Lower is queried first; indexers are never queried in parallel. */
   priority: integer('priority').notNull().default(0),
-  searchLimitPerHour: integer('search_limit_per_hour').notNull(),
-  grabLimitPerHour: integer('grab_limit_per_hour').notNull(),
+  searchLimitPerDay: integer('search_limit_per_day').notNull(),
+  grabLimitPerDay: integer('grab_limit_per_day').notNull(),
   /** Cached `t=caps` reply. */
   capsJson: text('caps_json'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
@@ -54,7 +54,7 @@ export const indexers = sqliteTable('indexers', {
 export const budgetKinds = ['search', 'grab'] as const;
 export type BudgetKind = (typeof budgetKinds)[number];
 
-/** One row per indexer call spent; the rolling 60-minute window is counted from these. */
+/** One row per indexer call spent; the rolling 24-hour window is counted from these. */
 export const budgetEvents = sqliteTable(
   'budget_events',
   {

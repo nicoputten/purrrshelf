@@ -99,7 +99,7 @@ export const endpoints = {
   budget: {
     method: 'GET',
     path: '/budget',
-    summary: 'Per indexer: searches and grabs left in the rolling hour, and the next free slot',
+    summary: 'Per indexer: searches and grabs left in the rolling 24 hours, and the next free slot',
     auth: true,
     response: Budget,
     status: 200,

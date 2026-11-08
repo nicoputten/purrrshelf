@@ -60,7 +60,7 @@ describe('Add sheet', () => {
     expect(
       await screen.findByText('Uses 1 search, up to 4 if the first sniff misses.'),
     ).toBeOnTheScreen();
-    expect(screen.getByText('21 of 25 searches left this hour.')).toBeOnTheScreen();
+    expect(screen.getByText('21 of 25 searches left today.')).toBeOnTheScreen();
   });
 
   it('fetches with the chosen language and Kobos, and remembers the language', async () => {

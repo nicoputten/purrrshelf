@@ -9,10 +9,10 @@ import {
   type Indexer,
 } from '../../db/schema.js';
 
-/** The indexer's limits are per rolling hour (ADR 0005). */
-export const BUDGET_WINDOW_MS = 60 * 60_000;
+/** The indexer's limits are per rolling 24 hours (ADR 0025): never more than its daily cap. */
+export const BUDGET_WINDOW_MS = 24 * 60 * 60_000;
 /** Events older than this are no longer needed for the window and are pruned. */
-const RETENTION_MS = 24 * 60 * 60_000;
+const RETENTION_MS = 2 * 24 * 60 * 60_000;
 
 export interface BudgetStatus {
   limit: number;
@@ -143,7 +143,7 @@ export class IndexerBudget {
   }
 
   private compute(indexer: Indexer, kind: BudgetKind, now: Date, db: Db = this.db): BudgetStatus {
-    const limit = kind === 'search' ? indexer.searchLimitPerHour : indexer.grabLimitPerHour;
+    const limit = kind === 'search' ? indexer.searchLimitPerDay : indexer.grabLimitPerDay;
     const windowStart = new Date(now.getTime() - BUDGET_WINDOW_MS);
     const times = db
       .select({ at: budgetEvents.at })

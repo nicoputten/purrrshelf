@@ -3,32 +3,33 @@
 One record per decision. ADRs are never deleted or rewritten: when a decision
 changes, add a new ADR and mark the old one `superseded by NNNN`.
 
-| ADR                                                         | Decision                                                                | Status                    |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------- |
-| [0001](0001-expo-react-native.md)                           | Mobile app: React Native with Expo                                      | accepted                  |
-| [0002](0002-typescript-broker.md)                           | Backend: a TypeScript broker in Docker                                  | accepted                  |
-| [0003](0003-cwa-as-library.md)                              | Library and Kobo sync: Calibre-Web-Automated behind an adapter          | accepted, amended by 0016 |
-| [0004](0004-direct-newznab-and-sabnzbd.md)                  | Downloads: talk to Newznab and SABnzbd directly                         | accepted                  |
-| [0005](0005-search-only-on-add.md)                          | Searching: only when a user adds a book, within a visible hourly budget | accepted                  |
-| [0006](0006-auto-pick-releases.md)                          | Release picking: auto-pick by score, with "Pick another"                | accepted                  |
-| [0007](0007-metadata-providers.md)                          | Metadata: Hardcover first, plus Open Library and Google Books           | accepted                  |
-| [0008](0008-two-users.md)                                   | Users: exactly two, each with their own login and Kobo                  | accepted                  |
-| [0009](0009-shared-library-ownership.md)                    | Library: one shared copy per book, ownership per user                   | accepted                  |
-| [0010](0010-languages-and-dark-mode.md)                     | Languages: Dutch and English books, bilingual UI, dark mode             | accepted                  |
-| [0011](0011-remote-access-via-proxy.md)                     | Remote access: through the existing Nginx Proxy Manager                 | accepted                  |
-| [0012](0012-no-notifications-v1.md)                         | Notifications: none in v1                                               | accepted                  |
-| [0013](0013-public-repo.md)                                 | Repo: public, MIT licence, no secrets or personal data                  | accepted                  |
-| [0014](0014-later-audiobooks-and-play-store.md)             | Later: audiobooks via Audiobookshelf, possible Play Store release       | accepted                  |
-| [0015](0015-styling-with-tokens.md)                         | Styling: one token set with React Native StyleSheet                     | accepted                  |
-| [0016](0016-epub-in-library-kepub-at-sync.md)               | The library stores EPUB; KEPUB is made at Kobo sync time                | accepted                  |
-| [0017](0017-cwa-setup-contract.md)                          | The CWA setup the broker relies on                                      | accepted, amended by 0021 |
-| [0018](0018-trust-only-the-proxy.md)                        | Trust X-Forwarded-For only from the proxy                               | accepted                  |
-| [0019](0019-work-ids-and-metadata-merge.md)                 | Work ids and how metadata hits are merged                               | accepted                  |
-| [0020](0020-covers-served-by-the-broker.md)                 | Covers are served by the broker, never hot-linked                       | accepted                  |
-| [0021](0021-shelf-edits-via-kobo-api.md)                    | Shelf changes go through each reader's Kobo sync API                    | accepted                  |
-| [0022](0022-read-cwa-databases-through-read-only-mounts.md) | CWA's databases are read through read-only mounts                       | accepted                  |
-| [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | accepted                  |
-| [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                  |
+| ADR                                                         | Decision                                                                | Status                     |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------- |
+| [0001](0001-expo-react-native.md)                           | Mobile app: React Native with Expo                                      | accepted                   |
+| [0002](0002-typescript-broker.md)                           | Backend: a TypeScript broker in Docker                                  | accepted                   |
+| [0003](0003-cwa-as-library.md)                              | Library and Kobo sync: Calibre-Web-Automated behind an adapter          | accepted, amended by 0016  |
+| [0004](0004-direct-newznab-and-sabnzbd.md)                  | Downloads: talk to Newznab and SABnzbd directly                         | accepted                   |
+| [0005](0005-search-only-on-add.md)                          | Searching: only when a user adds a book, within a visible hourly budget | superseded in part by 0025 |
+| [0006](0006-auto-pick-releases.md)                          | Release picking: auto-pick by score, with "Pick another"                | accepted                   |
+| [0007](0007-metadata-providers.md)                          | Metadata: Hardcover first, plus Open Library and Google Books           | accepted                   |
+| [0008](0008-two-users.md)                                   | Users: exactly two, each with their own login and Kobo                  | accepted                   |
+| [0009](0009-shared-library-ownership.md)                    | Library: one shared copy per book, ownership per user                   | accepted                   |
+| [0010](0010-languages-and-dark-mode.md)                     | Languages: Dutch and English books, bilingual UI, dark mode             | accepted                   |
+| [0011](0011-remote-access-via-proxy.md)                     | Remote access: through the existing Nginx Proxy Manager                 | accepted                   |
+| [0012](0012-no-notifications-v1.md)                         | Notifications: none in v1                                               | accepted                   |
+| [0013](0013-public-repo.md)                                 | Repo: public, MIT licence, no secrets or personal data                  | accepted                   |
+| [0014](0014-later-audiobooks-and-play-store.md)             | Later: audiobooks via Audiobookshelf, possible Play Store release       | accepted                   |
+| [0015](0015-styling-with-tokens.md)                         | Styling: one token set with React Native StyleSheet                     | accepted                   |
+| [0016](0016-epub-in-library-kepub-at-sync.md)               | The library stores EPUB; KEPUB is made at Kobo sync time                | accepted                   |
+| [0017](0017-cwa-setup-contract.md)                          | The CWA setup the broker relies on                                      | accepted, amended by 0021  |
+| [0018](0018-trust-only-the-proxy.md)                        | Trust X-Forwarded-For only from the proxy                               | accepted                   |
+| [0019](0019-work-ids-and-metadata-merge.md)                 | Work ids and how metadata hits are merged                               | accepted                   |
+| [0020](0020-covers-served-by-the-broker.md)                 | Covers are served by the broker, never hot-linked                       | accepted                   |
+| [0021](0021-shelf-edits-via-kobo-api.md)                    | Shelf changes go through each reader's Kobo sync API                    | accepted                   |
+| [0022](0022-read-cwa-databases-through-read-only-mounts.md) | CWA's databases are read through read-only mounts                       | accepted                   |
+| [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | accepted                   |
+| [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                   |
+| [0025](0025-daily-indexer-budget.md)                        | The indexer budget counts per day, not per hour                         | accepted                   |
 
 ## Template
 

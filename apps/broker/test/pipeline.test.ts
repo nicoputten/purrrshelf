@@ -164,7 +164,7 @@ describe('auto-pick', () => {
   });
 
   it('keeps the list when the grab budget is empty', async () => {
-    h.indexers.upsert(indexerInput({ grabLimitPerHour: 0 }));
+    h.indexers.upsert(indexerInput({ grabLimitPerDay: 0 }));
     const req = await add();
     expect(req).toMatchObject({
       status: 'choose_release',

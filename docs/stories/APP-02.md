@@ -14,7 +14,7 @@ so that I can tell at a glance whether we already have a book.
 - [x] Search home with one field, language chips (any / English / Nederlands)
 - [x] Each hit shows cover, title, author, series and badges (On your Kobo, Partner has it)
 - [x] Copy makes clear that looking is free and only Add spends a search
-- [x] Indexer budget pill shows searches left this hour
+- [x] Indexer budget pill shows searches left today
 - [x] Empty, loading and error states are translated
 
 ## Design

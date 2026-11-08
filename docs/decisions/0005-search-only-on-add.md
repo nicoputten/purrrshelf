@@ -1,6 +1,6 @@
 # 0005. Searching: only when a user adds a book, within a visible hourly budget
 
-Status: accepted
+Status: accepted, window superseded by 0025
 Date: 2026-11-08
 
 ## Context

@@ -211,7 +211,7 @@ async function indexerCommand(
           const key = IndexerRepository.apiKeyEnvName(i.id);
           const keySet = io.env[key] ? 'key set' : `${key} missing`;
           io.out(
-            `${i.id}\t${i.name}\tpriority ${i.priority}\t${i.searchLimitPerHour} searches/h\t${i.grabLimitPerHour} grabs/h\t${keySet}`,
+            `${i.id}\t${i.name}\tpriority ${i.priority}\t${i.searchLimitPerDay} searches/day\t${i.grabLimitPerDay} grabs/day\t${keySet}`,
           );
         }
         return 0;
@@ -226,8 +226,8 @@ async function indexerCommand(
           name: flags.name,
           url: flags.url,
           priority: flags.priority === undefined ? 0 : int(flags.priority),
-          searchLimitPerHour: int(flags['search-limit']),
-          grabLimitPerHour: int(flags['grab-limit']),
+          searchLimitPerDay: int(flags['search-limit']),
+          grabLimitPerDay: int(flags['grab-limit']),
         });
         io.out(
           `Saved indexer ${row.id}; set ${IndexerRepository.apiKeyEnvName(row.id)} in the environment`,

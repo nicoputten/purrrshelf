@@ -51,7 +51,7 @@ export class IndexerSearch {
     if (owned) return { kind: 'in_library', calibreBookId: owned.calibreBookId };
 
     // A search limit of 0 switches an indexer off.
-    const indexers = this.indexers.list().filter((i) => i.searchLimitPerHour > 0);
+    const indexers = this.indexers.list().filter((i) => i.searchLimitPerDay > 0);
     if (indexers.length === 0) return { kind: 'not_found', reason: 'No indexer is configured' };
 
     const tried = this.triedThisRound(request);
