@@ -1,7 +1,15 @@
 /**
  * Contract tests against a real CWA v4.0.8 set up by `cwa-fixture.ts`.
  * Skipped unless CWA_STACK_DIR points at a running fixture (CI job "CWA contract").
+ *
+ * With CWA_READONLY_DIR set to a read-only bind mount of CWA_STACK_DIR, the
+ * adapter reads metadata.db and app.db through that mount, the way the broker
+ * container does on the server (ADR 0022).
  */
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CwaAdapter } from '../../src/modules/library/cwa-adapter.js';
 import { CwaWebSession } from '../../src/modules/library/cwa-web.js';
@@ -9,6 +17,14 @@ import { FIXTURE_BOOKS } from '../fixtures/epub.js';
 import { loadFixture, type CwaFixture } from './fixture-file.js';
 
 const fixture = loadFixture();
+const readonlyDir = process.env.CWA_READONLY_DIR;
+const stackDir = process.env.CWA_STACK_DIR ?? '';
+/** The path as the broker sees it: through the read-only mount when there is one. */
+const viaMount = (path: string) =>
+  readonlyDir ? join(readonlyDir, relative(stackDir, path)) : path;
+const composeFile = fileURLToPath(
+  new URL('../../../../test/stack/docker-compose.yml', import.meta.url),
+);
 
 describe.skipIf(!fixture)('CwaAdapter against CWA v4.0.8', () => {
   // Collected even when skipped, so give the destructuring something to work on.
@@ -23,8 +39,8 @@ describe.skipIf(!fixture)('CwaAdapter against CWA v4.0.8', () => {
       serviceUser: f.service.username,
       servicePassword: f.service.password,
       koboShelfName: f.koboShelfName,
-      metadataDbPath: f.metadataDbPath,
-      appDbPath: f.appDbPath,
+      metadataDbPath: viaMount(f.metadataDbPath),
+      appDbPath: viaMount(f.appDbPath),
     });
   });
   afterAll(() => adapter.close());
@@ -104,9 +120,42 @@ describe.skipIf(!fixture)('CwaAdapter against CWA v4.0.8', () => {
     });
   });
 
+  it.skipIf(!readonlyDir)('reads through a mount the broker cannot write to', () => {
+    expect(() => writeFileSync(viaMount(join(stackDir, 'config', 'probe')), '')).toThrow(/EROFS/);
+  });
+
+  it('keeps up with CWA writing app.db while it reads', async () => {
+    for (let i = 0; i < 15; i++) {
+      await adapter.addToKoboShelf(readerA!, bookA!);
+      expect((await adapter.getDeviceState(readerA!, bookA!)).onKoboShelf).toBe(true);
+      await adapter.removeFromKoboShelf(readerA!, bookA!);
+      expect((await adapter.getDeviceState(readerA!, bookA!)).onKoboShelf).toBe(false);
+    }
+  });
+
   it('deletes a book through CWA as the service account', async () => {
     await adapter.deleteBook(bookB!);
     expect(await adapter.getBook(bookB!)).toBeNull();
     await expect(adapter.deleteBook(bookB!)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('still reads after CWA restarts', { timeout: 240_000 }, async () => {
+    execFileSync('docker', ['compose', '-f', composeFile, 'restart', 'cwa'], { stdio: 'ignore' });
+    const deadline = Date.now() + 200_000;
+    for (;;) {
+      const up = await fetch(new URL('/login', f.baseUrl)).then(
+        (res) => res.ok,
+        () => false,
+      );
+      if (up) break;
+      if (Date.now() > deadline) throw new Error('CWA did not come back');
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    await adapter.ping();
+    expect((await adapter.getBook(bookA!))?.title).toBe(FIXTURE_BOOKS[0]!.title);
+    expect(adapter.resolveKoboShelf(readerA!).name).toBe('Kobo');
+    await adapter.addToKoboShelf(readerA!, bookA!);
+    expect((await adapter.getDeviceState(readerA!, bookA!)).onKoboShelf).toBe(true);
+    await adapter.removeFromKoboShelf(readerA!, bookA!);
   });
 });

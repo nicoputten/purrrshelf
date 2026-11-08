@@ -46,8 +46,15 @@ Settings:
 
 - Create the broker's CWA service account: a normal (non-admin) user with
   **download** and **delete books** rights only; it needs no shelf rights
-  (ADR 0021). Put its credentials in the broker's `.env` as
-  `CWA_SERVICE_USER` / `CWA_SERVICE_PASSWORD`, never in the repo.
+  (ADR 0021). In CWA v4.0.8, "Allow Delete Books" only shows once "Allow
+  Edit" is ticked, but deleting does not need Edit. So:
+  1. Tick **Allow Downloads**.
+  2. Tick **Allow Edit**, then tick **Allow Delete Books**, which now appears.
+  3. Untick **Allow Edit** again. Delete stays ticked, just hidden.
+  4. Save.
+
+  Put its credentials in the broker's `.env` as `CWA_SERVICE_USER` /
+  `CWA_SERVICE_PASSWORD`, never in the repo.
 
 ## 5. SABnzbd (before milestone 4)
 
@@ -71,6 +78,10 @@ Run the broker as `568:568` so CWA can read what it writes to ingest.
 | `/cwa-config`      | read-only  | read shelves, Kobo tokens and reading state (app.db) |
 | `/cwa-book-ingest` | read-write | the same dataset as CWA's ingest folder              |
 | `/downloads`       | read-only  | SABnzbd's `kobopush` complete folder                 |
+
+Both CWA folders stay read-only. CWA keeps `metadata.db` and `app.db` in WAL
+mode, and the broker reads them through the `-wal` / `-shm` files CWA keeps
+open. While CWA is stopped, `/health` shows `library: fail` (ADR 0022).
 
 See `docker-compose.example.yml` for a starting point.
 

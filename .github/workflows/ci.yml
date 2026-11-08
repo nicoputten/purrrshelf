@@ -81,8 +81,15 @@ jobs:
       - run: pnpm --filter @purrshelf/contract build
       - name: Start CWA and recreate the server setup (ADR 0017, 0021)
         run: pnpm --filter @purrshelf/broker cwa:fixture
+      - name: Mount the stack read-only, as the broker's server mounts are (ADR 0022)
+        run: |
+          sudo mkdir -p /mnt/cwa-ro
+          sudo mount --bind "$CWA_STACK_DIR" /mnt/cwa-ro
+          sudo mount -o remount,ro,bind /mnt/cwa-ro
       - name: Contract tests
         run: pnpm --filter @purrshelf/broker test:contract
+        env:
+          CWA_READONLY_DIR: /mnt/cwa-ro
       - name: CWA logs
         if: failure()
         run: docker compose -f test/stack/docker-compose.yml logs --tail 300
