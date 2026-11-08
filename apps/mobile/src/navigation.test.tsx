@@ -30,7 +30,7 @@ describe('app navigation', () => {
     await user.press(screen.getByRole('button', { name: 'Log in' }));
 
     expect(await screen.findByText('What are we reading next?')).toBeOnTheScreen();
-    expect(await screen.findByText('Hi Reader One!')).toBeOnTheScreen();
+    expect(await screen.findByLabelText('Search by title or author')).toBeOnTheScreen();
   });
 
   it('opens straight on the home screen with a stored session', async () => {

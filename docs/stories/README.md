@@ -17,7 +17,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-01](BRK-01.md) | Log in with my own account                                     | 1         | done   |
 | [APP-01](APP-01.md) | Connect the app to my server and log in                        | 1         | done   |
 | [BRK-02](BRK-02.md) | Search book metadata from three providers                      | 2         | done   |
-| [APP-02](APP-02.md) | Search for a book by title and see covers and badges           | 2         | todo   |
+| [APP-02](APP-02.md) | Search for a book by title and see covers and badges           | 2         | done   |
 | [APP-04](APP-04.md) | See book details, series and owners                            | 2         | todo   |
 | [BRK-03](BRK-03.md) | Read and change Kobo shelves through CWA                       | 3         | todo   |
 | [BRK-04](BRK-04.md) | Track the indexer budget per hour                              | 4         | done   |

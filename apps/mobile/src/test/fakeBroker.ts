@@ -3,20 +3,22 @@ import type { FetchLike } from '@purrshelf/contract';
 type Handler = (
   body: unknown,
   headers: Record<string, string>,
+  url: URL,
 ) => { status: number; body: unknown } | Error;
 
 /** A tiny in-memory broker for app tests: route "METHOD /path" → handler. */
 export function fakeBroker(routes: Record<string, Handler>) {
   const calls: { route: string; body: unknown; headers: Record<string, string> }[] = [];
   const fetch: FetchLike = async (url, init) => {
-    const path = new URL(url).pathname.replace(/^\/api\/v1/, '');
+    const parsed = new URL(url);
+    const path = decodeURIComponent(parsed.pathname.replace(/^\/api\/v1/, ''));
     const route = `${init.method ?? 'GET'} ${path}`;
     const headers = (init.headers ?? {}) as Record<string, string>;
     const body: unknown = init.body ? JSON.parse(init.body as string) : undefined;
     calls.push({ route, body, headers });
     const handler = routes[route];
     if (!handler) return json(404, { code: 'NOT_FOUND', message: 'Not found' });
-    const result = handler(body, headers);
+    const result = handler(body, headers, parsed);
     if (result instanceof Error) throw result;
     return json(result.status, result.body);
   };
@@ -59,4 +61,44 @@ export const me = () => ({
 export const apiError = (status: number, code: string, details?: unknown) => ({
   status,
   body: { code, message: code, ...(details ? { details } : {}) },
+});
+
+/** An invented search hit; override any field. */
+export function hit(over: Record<string, unknown> = {}) {
+  return {
+    id: 'hardcover:301',
+    mediaType: 'ebook',
+    title: 'The Salt Road',
+    subtitle: null,
+    authors: ['Ilse Varenkamp'],
+    language: 'en',
+    series: { id: 'hardcover:77', name: 'Lantern Keepers', position: 1, total: 3 },
+    publishedYear: 2019,
+    isbns: ['9780000000026'],
+    hasCover: true,
+    sources: [{ provider: 'hardcover', id: '301' }],
+    library: null,
+    ...over,
+  };
+}
+
+export const searchResult = (hits: unknown[]) => ({
+  status: 200,
+  body: {
+    hits,
+    providers: [
+      { provider: 'hardcover', status: 'ok' },
+      { provider: 'openlibrary', status: 'ok' },
+      { provider: 'googlebooks', status: 'ok' },
+    ],
+  },
+});
+
+export const budget = (left = 21, limit = 25) => ({
+  status: 200,
+  body: {
+    windowMinutes: 60,
+    searches: { limit, left, nextFreeAt: '2026-01-01T12:00:00.000Z' },
+    indexers: [],
+  },
 });

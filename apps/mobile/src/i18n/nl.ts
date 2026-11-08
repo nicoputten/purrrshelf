@@ -30,8 +30,28 @@ export const nl: Translations = {
   },
   home: {
     heading: 'Wat gaan we hierna lezen?',
-    hello: 'Hoi {{name}}!',
-    placeholder: 'Boeken zoeken komt in de volgende update.',
+  },
+  search: {
+    label: 'Zoek op titel of schrijver',
+    placeholder: 'Titel, schrijver of allebei',
+    languageLabel: 'Taal van het boek',
+    anyLanguage: 'Elke taal',
+    freeHint: 'Kijken kost niets, alleen <b>Toevoegen</b> gebruikt een zoekopdracht.',
+    found_one:
+      '{{count}} boek gevonden · kijken kost niets, alleen <b>Toevoegen</b> gebruikt een zoekopdracht',
+    found_other:
+      '{{count}} boeken gevonden · kijken kost niets, alleen <b>Toevoegen</b> gebruikt een zoekopdracht',
+    searching: 'Even snuffelen…',
+    noResultsTitle: 'Niets kunnen opsnuffelen',
+    noResultsHint: 'Probeer minder woorden, een andere spelling of Elke taal.',
+    retry: 'Opnieuw proberen',
+    seriesPosition: '{{name}} #{{position}}',
+    onYourKobo: 'Op je Kobo',
+    yours: 'Van jou',
+    ownerHasIt: '{{name}} heeft het',
+    inLibrary: 'In bibliotheek',
+    budget: 'nog {{left}} / {{limit}}',
+    budgetA11y: 'Nog {{left}} van {{limit}} zoekopdrachten bij de indexer dit uur',
   },
   settings: {
     title: 'Instellingen',

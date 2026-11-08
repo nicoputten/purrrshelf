@@ -4,7 +4,7 @@ import { usePreferences } from '@/session/preferences';
 import { setFetch, useSession } from '@/session/session';
 import { fakeBroker, me } from '@/test/fakeBroker';
 import { renderWithProviders, resetApp, secureStore } from '@/test/utils';
-import { HomeScreen } from '../HomeScreen';
+import { ComingSoonScreen } from '../HomeScreen';
 import { SettingsScreen } from './SettingsScreen';
 
 beforeEach(async () => {
@@ -55,10 +55,10 @@ describe('SettingsScreen', () => {
   });
 });
 
-describe('HomeScreen', () => {
-  it('greets the user by name', async () => {
-    await renderWithProviders(<HomeScreen />);
-    expect(screen.getByText('What are we reading next?')).toBeOnTheScreen();
-    expect(await screen.findByText('Hi Reader One!')).toBeOnTheScreen();
+describe('ComingSoonScreen', () => {
+  it('shows the title and a coming-soon note', async () => {
+    await renderWithProviders(<ComingSoonScreen title="Library" />);
+    expect(screen.getByText('Library')).toBeOnTheScreen();
+    expect(screen.getByText('Coming soon')).toBeOnTheScreen();
   });
 });
