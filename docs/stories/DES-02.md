@@ -62,6 +62,10 @@ screen — `docs/design/design-choices.md` (Icon, Motion),
   before we looked), so a download that was already running doesn't swat.
   A request added in this session is remembered from the start, so its grab
   plays even if Requests opens later. After an app restart nothing replays.
+- Fix after testing on the phone: one-shots only look at events while their
+  screen is focused (tabs stay alive in the background, so a grab used to
+  play off screen and was never seen). A grab or push the app first sees
+  within two minutes of it happening (download at 5% or less) still plays.
 - A grab is named by its release: Pick another on a running download is a
   new grab and swats again.
 - With reduced motion, Swat still gives the landing haptic (not the two taps)
