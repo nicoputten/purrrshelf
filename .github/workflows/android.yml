@@ -1,19 +1,50 @@
 name: Android APK
 
-# Builds a sideloadable APK on mobile release tags (created by release-please).
+# Builds a sideloadable APK (ADR 0028).
+# - Release: called by release.yml when release-please cuts a mobile release
+#   (tags pushed with GITHUB_TOKEN never trigger other workflows, so the tag
+#   trigger below only fires for tags pushed by hand). Builds every ABI and
+#   attaches the APK to the GitHub release.
+# - Test: run by hand from the Actions tab. Builds arm64-v8a only (every
+#   current Android phone), which skips three quarters of the native compile.
 on:
   push:
     tags: ['mobile-v*']
   workflow_dispatch:
+    inputs:
+      abis:
+        description: ABIs to build (arm64-v8a is enough for a phone)
+        type: choice
+        default: arm64-v8a
+        options:
+          - arm64-v8a
+          - armeabi-v7a,arm64-v8a,x86,x86_64
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag to attach the APK to
+        type: string
+        required: true
 
 permissions:
   contents: write
 
+concurrency:
+  group: android-${{ inputs.tag || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ABIS: ${{ inputs.abis || 'armeabi-v7a,arm64-v8a,x86,x86_64' }}
+  RELEASE_TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
+
 jobs:
   apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -23,21 +54,35 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      # Caches the Gradle distribution, dependencies and build cache between
+      # runs (written from main, read-only elsewhere).
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-${{ env.ABIS }}
+          max-size: 1G
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @purrshelf/contract build
       - name: Generate the native project
         working-directory: apps/mobile
         run: pnpm expo prebuild --platform android --no-install
-      - name: Build release APK
+      - name: Build release APK (${{ env.ABIS }})
         working-directory: apps/mobile/android
+        env:
+          # React Native's CMake setup picks up ccache when it is on PATH.
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache
         # Signed with the debug key for sideloading; Play Store signing comes later.
-        run: ./gradlew assembleRelease --no-daemon
+        run: >-
+          ./gradlew assembleRelease
+          -PreactNativeArchitectures=${{ env.ABIS }}
+          --build-cache --parallel
       - uses: actions/upload-artifact@v7
         with:
           name: purrshelf-apk
           path: apps/mobile/android/app/build/outputs/apk/release/*.apk
       - name: Attach to the release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.RELEASE_TAG != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" apps/mobile/android/app/build/outputs/apk/release/*.apk --clobber
+        run: gh release upload "$RELEASE_TAG" apps/mobile/android/app/build/outputs/apk/release/*.apk --clobber --repo "$GITHUB_REPOSITORY"
