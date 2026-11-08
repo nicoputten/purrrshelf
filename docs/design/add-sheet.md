@@ -10,3 +10,18 @@ Canvas board: 3 · Add to library. Stories: APP-03.
   and "21 of 25 searches left this hour."
 - Primary: **Fetch it now** (56 high). Secondary text button: Not now.
 - Already in the library: no cost box; adding only records ownership.
+
+Built (APP-03):
+
+- One sheet for the whole app, opened by Add on a search result, "Add to
+  library" on the book page and "Add next in series".
+- Language defaults to the book's own language, else the last pick (remembered
+  on the phone), else the app language.
+- One checkbox per reader linked to CWA: "Your Kobo" (ticked) and "Reader
+  Two's Kobo". Without any linked Kobo the sheet says the book goes to the
+  library only.
+- The cost box says "up to 4" per indexer with a search budget, and "21 of 25
+  searches left this hour". Without an indexer it explains why Fetch is off.
+- Already in the library: title "Add to your library?", no language or cost,
+  button "Add to my library".
+- After Fetch the sheet closes and the app opens Requests.

@@ -1,7 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import { ComingSoonScreen } from '@/features/HomeScreen';
+import { RequestsScreen } from '@/features/requests/RequestsScreen';
 
-export default function Screen() {
-  const { t } = useTranslation();
-  return <ComingSoonScreen title={t('tabs.requests')} />;
+export default function RequestsRoute() {
+  return <RequestsScreen />;
 }

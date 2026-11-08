@@ -24,4 +24,5 @@ Built (APP-02):
   anything out" with a tip when empty, and the translated error with "Try
   again" when search is down.
 - The budget pill only shows once the server has an indexer.
-- The Add button on cards waits for APP-03 (Add sheet).
+- An accent Add button (64×44) on cards not in the library opens the Add
+  sheet (APP-03).

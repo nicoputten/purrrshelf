@@ -18,7 +18,7 @@ export async function resetApp(): Promise<void> {
   secureStore.clear();
   setFetch(undefined);
   useSession.setState({ status: 'loading', serverUrl: null, accessToken: null });
-  usePreferences.setState({ theme: 'system', language: 'system' });
+  usePreferences.setState({ theme: 'system', language: 'system', bookLanguage: null });
   await i18n.changeLanguage('en');
 }
 

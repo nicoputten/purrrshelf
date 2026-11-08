@@ -12,9 +12,14 @@ describe('preferences', () => {
   it('persists and reloads choices', async () => {
     await usePreferences.getState().setTheme('light');
     await usePreferences.getState().setLanguage('nl');
-    usePreferences.setState({ theme: 'system', language: 'system' });
+    await usePreferences.getState().setBookLanguage('en');
+    usePreferences.setState({ theme: 'system', language: 'system', bookLanguage: null });
     await usePreferences.getState().load();
-    expect(usePreferences.getState()).toMatchObject({ theme: 'light', language: 'nl' });
+    expect(usePreferences.getState()).toMatchObject({
+      theme: 'light',
+      language: 'nl',
+      bookLanguage: 'en',
+    });
   });
 
   it.each(['not json', JSON.stringify({ theme: 'purple', language: 'fr' })])(

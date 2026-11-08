@@ -165,6 +165,13 @@ describe('Book detail', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it('offers Add to library for a book that is not in the library yet', async () => {
+    const { view, onAdd } = render(work(), undefined, { withAdd: true });
+    await view;
+    await userEvent.setup().press(await screen.findByRole('button', { name: 'Add to library' }));
+    expect(onAdd).toHaveBeenCalledWith('hardcover:301');
+  });
+
   it('has no Add next button without a way to add', async () => {
     const { view } = render();
     await view;

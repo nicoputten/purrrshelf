@@ -25,10 +25,12 @@ import {
 export interface SearchScreenProps {
   /** Opens a hit; Book detail (APP-04) passes this in. */
   onOpen?: (workId: string) => void;
+  /** Opens the Add sheet (APP-03). */
+  onAdd?: (workId: string) => void;
 }
 
 /** Search (home): one field, language chips, results with covers and badges (APP-02). */
-export function SearchScreen({ onOpen }: SearchScreenProps) {
+export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [text, setText] = useState('');
@@ -104,6 +106,7 @@ export function SearchScreen({ onOpen }: SearchScreenProps) {
                 key={hit.id}
                 hit={hit}
                 {...(onOpen ? { onPress: () => onOpen(hit.id) } : {})}
+                {...(onAdd ? { onAdd: () => onAdd(hit.id) } : {})}
               />
             ))}
           </View>

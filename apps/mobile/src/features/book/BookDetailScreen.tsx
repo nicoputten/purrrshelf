@@ -146,6 +146,10 @@ function BookDetail({
         </View>
       </View>
 
+      {!work.library && onAdd ? (
+        <Button label={t('add.addToLibrary')} onPress={() => onAdd(work.id)} />
+      ) : null}
+
       {work.library ? (
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <AppText style={styles.section}>{t('book.devices')}</AppText>

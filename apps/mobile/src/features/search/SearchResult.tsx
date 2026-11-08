@@ -31,7 +31,16 @@ export function secondLine(hit: WorkSummary, t: TFunction): string {
   return parts.join(' · ');
 }
 
-export function SearchResult({ hit, onPress }: { hit: WorkSummary; onPress?: () => void }) {
+export function SearchResult({
+  hit,
+  onPress,
+  onAdd,
+}: {
+  hit: WorkSummary;
+  onPress?: () => void;
+  /** Opens the Add sheet; only shown for books not in the library yet (APP-03). */
+  onAdd?: () => void;
+}) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const badges = libraryBadges(hit.library, t);
@@ -56,6 +65,21 @@ export function SearchResult({ hit, onPress }: { hit: WorkSummary; onPress?: () 
           </View>
         ) : null}
       </View>
+      {onAdd && !hit.library ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('add.addA11y', { title: hit.title })}
+          onPress={onAdd}
+          style={({ pressed }) => [
+            styles.add,
+            { backgroundColor: pressed ? colors.accentPressed : colors.accent },
+          ]}
+        >
+          <AppText style={[styles.addLabel, { color: colors.onAccent }]}>
+            {t('add.addButton')}
+          </AppText>
+        </Pressable>
+      ) : null}
     </>
   );
   const style = [styles.card, { backgroundColor: colors.surface }];
@@ -77,6 +101,16 @@ export function SearchResult({ hit, onPress }: { hit: WorkSummary; onPress?: () 
 }
 
 const styles = StyleSheet.create({
+  add: {
+    alignSelf: 'center',
+    minWidth: 64,
+    height: 44,
+    paddingHorizontal: 12,
+    borderRadius: radius.button,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addLabel: { fontFamily: fonts.bodyBold },
   card: {
     flexDirection: 'row',
     gap: 14,

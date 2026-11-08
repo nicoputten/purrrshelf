@@ -162,6 +162,19 @@ describe('Search (home)', () => {
     expect(onOpen).toHaveBeenCalledWith('hardcover:301');
   });
 
+  it('offers Add only for books not in the library', async () => {
+    broker();
+    const onAdd = jest.fn();
+    const user = userEvent.setup();
+    await renderWithProviders(<SearchScreen onOpen={jest.fn()} onAdd={onAdd} />);
+    await user.type(screen.getByLabelText('Search by title or author'), 'salt', {
+      submitEditing: true,
+    });
+    await user.press(await screen.findByRole('button', { name: 'Add The Salt Road' }));
+    expect(onAdd).toHaveBeenCalledWith('hardcover:301');
+    expect(screen.queryByRole('button', { name: 'Add Max Havelaar' })).toBeNull();
+  });
+
   it('falls back to the placeholder card when a cover fails to load', async () => {
     broker();
     await renderWithProviders(<SearchScreen />);

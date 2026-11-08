@@ -115,3 +115,50 @@ export function work(over: Record<string, unknown> = {}) {
 }
 
 export const ok = (body: unknown) => ({ status: 200, body });
+
+export const readers = (over: Record<string, unknown>[] = []) =>
+  ok({
+    readers: over.length
+      ? over
+      : [
+          { id: 'u1', displayName: 'Reader One', me: true, kobo: true },
+          { id: 'u2', displayName: 'Reader Two', me: false, kobo: true },
+        ],
+  });
+
+/** Budget with one active indexer, so one add costs up to 4 searches. */
+export const budgetWithIndexer = (left = 21, limit = 25) => {
+  const counter = {
+    limit,
+    used: limit - left,
+    left,
+    nextFreeAt: '2026-01-01T12:00:00.000Z',
+    limitReachedUntil: null,
+  };
+  return ok({
+    windowMinutes: 60,
+    searches: { limit, left, nextFreeAt: '2026-01-01T12:00:00.000Z' },
+    indexers: [
+      { indexerId: 'primary', name: 'Primary', priority: 0, searches: counter, grabs: counter },
+    ],
+  });
+};
+
+/** An invented request; override any field. */
+export function bookRequest(over: Record<string, unknown> = {}) {
+  return {
+    id: 'r1',
+    workId: 'hardcover:301',
+    title: 'The Salt Road',
+    authors: ['Ilse Varenkamp'],
+    language: 'en',
+    mediaType: 'ebook',
+    status: 'searching',
+    progress: null,
+    error: null,
+    pushTo: ['u1'],
+    createdAt: '2026-01-01T12:00:00.000Z',
+    updatedAt: '2026-01-01T12:00:00.000Z',
+    ...over,
+  };
+}

@@ -23,7 +23,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-04](BRK-04.md) | Track the indexer budget per hour                              | 4         | done        |
 | [BRK-05](BRK-05.md) | Search the indexer only when a book is added                   | 4         | done        |
 | [BRK-06](BRK-06.md) | Pick, download and import the best release                     | 4         | done        |
-| [APP-03](APP-03.md) | Add a book to my library                                       | 4         | todo        |
+| [APP-03](APP-03.md) | Add a book to my library                                       | 4         | done        |
 | [APP-05](APP-05.md) | Follow a request and pick another release                      | 4         | todo        |
 | [BRK-07](BRK-07.md) | Serve and cache book covers                                    | 4         | done        |
 | [APP-06](APP-06.md) | Send a book to my or my partner's Kobo                         | 5         | todo        |

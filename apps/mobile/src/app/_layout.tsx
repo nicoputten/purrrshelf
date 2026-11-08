@@ -1,11 +1,12 @@
 import { Fredoka_500Medium, Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
 import { Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppProviders } from '@/components/AppProviders';
+import { AddSheetHost } from '@/features/add/AddSheet';
 import { usePreferences } from '@/session/preferences';
 import { useSession } from '@/session/session';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -32,6 +33,7 @@ function RootStack() {
           <Stack.Screen name="book/[id]" />
         </Stack.Protected>
       </Stack>
+      {status === 'ready' ? <AddSheetHost onAdded={() => router.navigate('/requests')} /> : null}
     </>
   );
 }
