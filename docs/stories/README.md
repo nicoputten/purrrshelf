@@ -33,6 +33,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-08](APP-08.md) | See reading progress from the Kobo                             | 7         | in review   |
 | [APP-09](APP-09.md) | See similar books on a book's page                             | 7         | in progress |
 | [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | done        |
+| [DES-01](DES-01.md) | Recognise Purrshelf on my phone                                | 8         | done        |
 
 ## Template
 

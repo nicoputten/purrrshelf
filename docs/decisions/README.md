@@ -30,6 +30,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | accepted                   |
 | [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                   |
 | [0025](0025-daily-indexer-budget.md)                        | The indexer budget counts per day, not per hour                         | accepted                   |
+| [0026](0026-app-icon.md)                                    | App icon "Peekaboo"                                                     | accepted                   |
 
 ## Template
 

@@ -5,16 +5,15 @@
     "scheme": "purrshelf",
     "version": "0.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#17141C",
     "android": {
       "package": "app.purrshelf",
       "adaptiveIcon": {
-        "backgroundColor": "#17141C",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#2E2836",
+        "foregroundImage": "./assets/icon/adaptive-icon-foreground.png",
+        "monochromeImage": "./assets/icon/adaptive-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -27,14 +26,17 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 160,
+          "image": "./assets/icon/splash-icon.png",
+          "imageWidth": 200,
           "backgroundColor": "#17141C"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "web": {
+      "favicon": "./assets/icon/favicon.png"
     }
   }
 }

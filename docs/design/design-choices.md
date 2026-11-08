@@ -62,6 +62,9 @@ considered designed.
 ## Cat motifs
 
 - **Logo:** line-drawn cat face next to the word Purrshelf.
+- **App icon ("Peekaboo", ADR 0026):** a ginger cat peeking over an open
+  book on `#2E2836`; the splash shows the same cat and book on `#17141C`.
+  Files and palette: `apps/mobile/assets/icon/README.md`.
 - **Cat ears:** two small triangles on top of the search field, the detail
   cover and the add sheet.
 - **Paw print:** the indexer-budget icon, the Search tab icon and the
