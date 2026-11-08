@@ -92,8 +92,11 @@ const envSchema = z.object({
     .refine((v) => v === undefined || /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(v), {
       message: 'must look like owner/name',
     }),
-  /** The broker asks GitHub at most once per this many minutes, and only when the app asks. */
-  APP_UPDATE_CHECK_MINUTES: z.coerce.number().int().positive().default(60),
+  /**
+   * The broker asks GitHub at most once per this many minutes, and only when the app asks.
+   * Short, so a tap on "Check for updates" sees a new release almost at once.
+   */
+  APP_UPDATE_CHECK_MINUTES: z.coerce.number().int().positive().default(2),
   /** Where the downloaded APK is kept, on the /data volume. */
   APP_UPDATES_PATH: z.string().min(1).default('/data/app-updates'),
   MAX_APK_MB: z.coerce.number().positive().default(200),

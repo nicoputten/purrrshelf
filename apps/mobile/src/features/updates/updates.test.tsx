@@ -176,6 +176,7 @@ describe('UpdateSection', () => {
     await renderWithProviders(<UpdateSection />);
     await fireEvent.press(await screen.findByText('Check for updates'));
     expect(await screen.findByText('You have the newest version.')).toBeTruthy();
+    expect(screen.getByText(/^Checked at /)).toBeTruthy();
   });
 
   it('translates a failed check and a damaged download', async () => {

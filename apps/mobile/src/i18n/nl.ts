@@ -273,6 +273,7 @@ export const nl: Translations = {
     unknownVersion: 'onbekend',
     check: 'Zoek naar updates',
     upToDate: 'Je hebt de nieuwste versie.',
+    checkedAt: 'Gecontroleerd om {{time}}',
     available: 'Versie {{version}} staat klaar',
     update: 'Bijwerken',
     downloading: 'Downloaden… {{percent}}%',

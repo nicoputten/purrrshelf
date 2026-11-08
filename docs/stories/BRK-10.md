@@ -12,7 +12,7 @@ so that the app can update itself without me visiting GitHub.
 ## Acceptance criteria
 
 - [x] `GET /api/v1/app/latest` (logged in) returns `{ version, versionCode, sha256, size, notes, publishedAt }` from the newest published, non-prerelease `mobile-v*` release of `APP_RELEASES_REPO`, or `503 { code: "APP_UPDATE_UNAVAILABLE" }` when the setting is unset or GitHub fails
-- [x] The broker only calls GitHub when the app asks, at most once per `APP_UPDATE_CHECK_MINUTES` (default 60), and caches the answer
+- [x] The broker only calls GitHub when the app asks, at most once per `APP_UPDATE_CHECK_MINUTES` (default 2; was 60, which hid a new release for up to an hour), and caches the answer
 - [x] The APK is downloaded once into `/data/app-updates`, its SHA-256 is computed and checked against the release asset's digest, and older APKs are removed
 - [x] `GET /api/v1/app/latest.apk` (logged in) streams that file with `Content-Type: application/vnd.android.package-archive`
 - [x] Only HTTPS GitHub URLs are followed, the size is capped, and the response is validated with Zod in `packages/contract`

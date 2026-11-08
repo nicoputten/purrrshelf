@@ -11,9 +11,10 @@ const MAX_NOTES = 600;
 
 /** The "App" section of Settings: installed version, update check and install (APP-10). */
 export function UpdateSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
-  const { status, release, progress, failure, errorCode, check, install } = useAppUpdate();
+  const { status, release, progress, failure, errorCode, checkedAt, check, install } =
+    useAppUpdate();
   const installed = updaterNative.installedVersion();
   const busy = status === 'downloading' || status === 'installing';
 
@@ -54,6 +55,17 @@ export function UpdateSection() {
       ) : null}
 
       {status === 'upToDate' ? <AppText>{t('updates.upToDate')}</AppText> : null}
+      {/* The time shows that a repeated tap really checked again. */}
+      {checkedAt !== null && (status === 'upToDate' || status === 'failed') ? (
+        <AppText variant="muted">
+          {t('updates.checkedAt', {
+            time: new Date(checkedAt).toLocaleTimeString(i18n.language, {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          })}
+        </AppText>
+      ) : null}
       {failure ? (
         <AppText accessibilityRole="alert" style={{ color: colors.danger }}>
           {failure === 'check' && errorCode

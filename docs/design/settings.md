@@ -14,6 +14,8 @@ Library, App, Account.
 - While downloading, the Update button is disabled and reads
   "Downloading… 42%"; then "Opening the installer…".
 - "You have the newest version." after a check that found nothing.
+- After a check that found nothing or failed, a muted "Checked at 23:40" line
+  (local time), so a repeated tap visibly checked again.
 - Errors (check failed, download failed, damaged download, installer failed)
   appear in danger colour above the check button, as an alert.
 - An outline **Check for updates** button ends the section.

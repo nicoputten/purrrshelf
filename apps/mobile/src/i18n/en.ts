@@ -270,6 +270,7 @@ export const en = {
     unknownVersion: 'unknown',
     check: 'Check for updates',
     upToDate: 'You have the newest version.',
+    checkedAt: 'Checked at {{time}}',
     available: 'Version {{version}} is ready',
     update: 'Update',
     downloading: 'Downloading… {{percent}}%',
