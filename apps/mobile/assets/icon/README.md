@@ -1,7 +1,7 @@
 # App icon "Peekaboo"
 
 Android adaptive icon on a 108 × 108 canvas, artwork inside the 66 dp safe
-zone. See ADR 0026 and story DES-01.
+zone. See ADR 0027 and story DES-01.
 
 | File                                                                                             | Used for                                                     |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
