@@ -35,6 +35,10 @@ Statuses: `todo`, `in progress`, `done`.
 | [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | done      |
 | [DES-01](DES-01.md) | Recognise Purrshelf on my phone                                | 8         | done      |
 | [DES-02](DES-02.md) | Little cat moments                                             | 8         | done      |
+| [OPS-03](OPS-03.md) | Sign releases with our own key and real version numbers        | 9         | in review |
+| [BRK-10](BRK-10.md) | Serve the latest app version                                   | 9         | todo      |
+| [APP-10](APP-10.md) | Update the app from inside the app                             | 9         | todo      |
+| [APP-11](APP-11.md) | Install updates without the Install screen                     | 9         | todo      |
 
 ## Template
 

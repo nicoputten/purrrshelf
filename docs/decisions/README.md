@@ -35,6 +35,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0028](0028-fast-android-test-builds.md)                    | Fast Android test builds, APK on every mobile release                   | accepted, amended by 0030  |
 | [0029](0029-app-icon.md)                                    | App icon "Peekaboo"                                                     | accepted                   |
 | [0030](0030-arm64-only-release-apk.md)                      | Release APKs are arm64-only too                                         | accepted                   |
+| [0031](0031-in-app-updates.md)                              | In-app updates: APK self-update through the broker                      | accepted                   |
 | [0032](0032-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
 
 ## Template

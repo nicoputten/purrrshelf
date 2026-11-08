@@ -1,6 +1,6 @@
 import { constants } from 'node:fs';
 import { chmod, readdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
-import { basename, extname, join } from 'node:path';
+import { extname, join } from 'node:path';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Clock } from '../../clock.js';
@@ -103,6 +103,28 @@ async function listFiles(dir: string): Promise<string[]> {
     }),
   );
   return nested.flat();
+}
+
+/**
+ * The files of a finished download. SABnzbd reports its own path, and its
+ * category folder is mounted at downloadsPath here. It reports a job folder
+ * (`.../kobopush/<job>`), or for a single-file job the file itself
+ * (`.../kobopush/<job>/<file>`), so match the last one or two parts.
+ */
+async function downloadedFiles(downloadsPath: string, storage: string): Promise<string[]> {
+  const parts = storage.split('/').filter(Boolean);
+  let firstError: unknown;
+  for (const depth of [1, 2]) {
+    const tail = parts.slice(-depth);
+    if (tail.length < depth || tail.includes('..')) continue;
+    const path = join(downloadsPath, ...tail);
+    try {
+      return (await stat(path)).isDirectory() ? await listFiles(path) : [path];
+    } catch (err) {
+      firstError ??= err;
+    }
+  }
+  throw firstError ?? new Error(`no such file or directory, ${storage}`);
 }
 
 /**
@@ -365,11 +387,9 @@ export class ReleasePipeline {
   /** Picks the ebook out of the finished download and drops it in CWA's ingest folder. */
   private async importFrom(request: RequestRow, storage: string): Promise<void> {
     const { settings } = this.deps;
-    // SABnzbd reports its own path; the same folder is mounted at downloadsPath here.
-    const folder = join(settings.downloadsPath, basename(storage));
     let book: { path: string; ext: string; size: number } | undefined;
     try {
-      const files = await listFiles(folder);
+      const files = await downloadedFiles(settings.downloadsPath, storage);
       const found = await Promise.all(
         files
           .map((path) => ({ path, ext: extname(path).toLowerCase() }))

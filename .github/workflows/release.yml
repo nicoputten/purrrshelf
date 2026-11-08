@@ -54,3 +54,5 @@ jobs:
     uses: ./.github/workflows/android.yml
     with:
       tag: ${{ needs.release-please.outputs.mobile_tag }}
+    # The release key secrets (ADR 0031) are read by android.yml.
+    secrets: inherit

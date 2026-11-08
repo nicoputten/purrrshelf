@@ -394,6 +394,32 @@ describe('following the download', () => {
     });
   });
 
+  it('finds the book when SABnzbd reports the file instead of the job folder', async () => {
+    // SABnzbd reports a single-file job as <category>/<job>/<file>.
+    const req = await add();
+    await finishDownload('nzo_1', { 'Some Author - Some Title (epub).epub': makeEpub() });
+    sab.states.set('nzo_1', [
+      {
+        state: 'completed',
+        storage: '/sab/complete/kobopush/Download nzo_1/Some Author - Some Title (epub).epub',
+      },
+    ]);
+    await tick();
+    expect(h.requests.get(req.id)).toMatchObject({ status: 'importing', error: null });
+    expect(await readdir(ingest)).toEqual([`kobopush-${req.id}.epub`]);
+  });
+
+  it('never looks outside the downloads folder', async () => {
+    const req = await add();
+    sab.states.set('nzo_1', [{ state: 'completed', storage: '/sab/complete/../../etc' }]);
+    await tick();
+    expect(h.requests.get(req.id).error).toMatch(/^Cannot read the download/);
+    const other = await add();
+    sab.states.set('nzo_2', [{ state: 'completed', storage: '..' }]);
+    await tick();
+    expect(h.requests.get(other.id).error).toMatch(/^Cannot read the download: no such file/);
+  });
+
   it('fails the import when the download folder is missing', async () => {
     const req = await add();
     sab.states.set('nzo_1', [{ state: 'completed', storage: '/sab/complete/kobopush/gone' }]);
