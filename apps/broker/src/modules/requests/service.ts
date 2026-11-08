@@ -54,6 +54,7 @@ export class RequestService {
     private readonly onFound: OnFound,
     private readonly clock: Clock,
     private readonly onInLibrary: OnInLibrary,
+    private readonly notify: (row: RequestRow) => RequestRow,
   ) {}
 
   /** Job handler for {@link RESUME_SEARCH_JOB}. */
@@ -110,38 +111,47 @@ export class RequestService {
   start(input: NewRequest): { request: RequestRow; done: Promise<RequestRow> } {
     const now = this.clock();
     const query = BookQuerySchema.parse(input.query);
-    const row = this.db
-      .insert(requests)
-      .values({
-        id: randomUUID(),
-        userId: input.userId,
-        workId: input.workId,
-        queryJson: JSON.stringify(query),
-        language: query.language,
-        mediaType: 'ebook',
-        status: 'searching',
-        pushToJson: JSON.stringify(input.pushTo),
-        searchStartedAt: now,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning()
-      .get();
+    const row = this.notify(
+      this.db
+        .insert(requests)
+        .values({
+          id: randomUUID(),
+          userId: input.userId,
+          workId: input.workId,
+          queryJson: JSON.stringify(query),
+          language: query.language,
+          mediaType: 'ebook',
+          status: 'searching',
+          pushToJson: JSON.stringify(input.pushTo),
+          searchStartedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
+        .get(),
+    );
     return { request: row, done: this.runSearch(row) };
   }
 
   /** "Try again": a new, paid search round. */
   async retry(id: string): Promise<RequestRow> {
+    return this.startRetry(id).done;
+  }
+
+  /** Like {@link retry}, but answers once the round has started. */
+  startRetry(id: string): { request: RequestRow; done: Promise<RequestRow> } {
     const request = this.get(id);
     if (!canRetry(request.status)) throw new InvalidTransitionError(request.status, 'searching');
     const now = this.clock();
-    const row = this.db
-      .update(requests)
-      .set({ status: 'searching', searchStartedAt: now, updatedAt: now, error: null })
-      .where(eq(requests.id, id))
-      .returning()
-      .get();
-    return this.runSearch(row);
+    const row = this.notify(
+      this.db
+        .update(requests)
+        .set({ status: 'searching', searchStartedAt: now, updatedAt: now, error: null })
+        .where(eq(requests.id, id))
+        .returning()
+        .get(),
+    );
+    return { request: row, done: this.runSearch(row) };
   }
 
   cancel(id: string): RequestRow {
@@ -186,16 +196,18 @@ export class RequestService {
     extra: { error?: string; calibreBookId?: number } = {},
   ): RequestRow {
     assertTransition(request.status, status);
-    return this.db
-      .update(requests)
-      .set({
-        status,
-        updatedAt: this.clock(),
-        error: extra.error ?? null,
-        ...('calibreBookId' in extra ? { calibreBookId: extra.calibreBookId } : {}),
-      })
-      .where(eq(requests.id, request.id))
-      .returning()
-      .get();
+    return this.notify(
+      this.db
+        .update(requests)
+        .set({
+          status,
+          updatedAt: this.clock(),
+          error: extra.error ?? null,
+          ...('calibreBookId' in extra ? { calibreBookId: extra.calibreBookId } : {}),
+        })
+        .where(eq(requests.id, request.id))
+        .returning()
+        .get(),
+    );
   }
 }

@@ -1,7 +1,15 @@
 import type { z } from 'zod';
 import { Budget } from './budget.js';
 import { ErrorResponse } from './errors.js';
-import { AddRequest, BookRequest, Readers, RequestList, RequestParams } from './requests.js';
+import {
+  AddRequest,
+  BookRequest,
+  Readers,
+  ReleaseList,
+  RequestList,
+  RequestParams,
+  RequestReleaseParams,
+} from './requests.js';
 import {
   DiscoverSearchQuery,
   DiscoverSearchResult,
@@ -123,6 +131,42 @@ export const endpoints = {
     method: 'GET',
     path: '/requests/:id',
     summary: 'One of my requests',
+    auth: true,
+    params: RequestParams,
+    response: BookRequest,
+    status: 200,
+  },
+  requestReleases: {
+    method: 'GET',
+    path: '/requests/:id/releases',
+    summary: 'The releases the search already found, scored. Free: never searches again.',
+    auth: true,
+    params: RequestParams,
+    response: ReleaseList,
+    status: 200,
+  },
+  pickRelease: {
+    method: 'POST',
+    path: '/requests/:id/releases/:releaseId',
+    summary: 'Download this release instead (one grab from the budget, no search)',
+    auth: true,
+    params: RequestReleaseParams,
+    response: BookRequest,
+    status: 200,
+  },
+  retryRequest: {
+    method: 'POST',
+    path: '/requests/:id/retry',
+    summary: 'Try again: a new, paid search round. Answers before the search ends.',
+    auth: true,
+    params: RequestParams,
+    response: BookRequest,
+    status: 200,
+  },
+  cancelRequest: {
+    method: 'POST',
+    path: '/requests/:id/cancel',
+    summary: 'Stop or dismiss a request',
     auth: true,
     params: RequestParams,
     response: BookRequest,

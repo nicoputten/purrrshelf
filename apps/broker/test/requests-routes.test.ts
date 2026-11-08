@@ -226,7 +226,7 @@ describe('POST /requests', () => {
       (await post({ workId: SALT_ROAD, language: 'en', pushTo: [] })).json(),
     );
     await vi.waitFor(() => expect(errors).toHaveBeenCalled());
-    expect(errors.mock.calls[0]?.[1]).toBe('request failed after add');
+    expect(errors.mock.calls[0]?.[1]).toBe('request failed after it was answered');
     expect(BookRequest.parse((await get(`/requests/${created.id}`)).json()).status).toBe(
       'in_library',
     );

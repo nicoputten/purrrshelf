@@ -45,6 +45,7 @@ import type { LibraryItems as OwnershipStore } from './modules/requests/delivery
 import { SabnzbdClient, type DownloadClient } from './modules/sabnzbd/client.js';
 import { readerRoutes } from './modules/readers/routes.js';
 import { requestRoutes } from './modules/requests/routes.js';
+import { requestView } from './modules/requests/view.js';
 import { libraryBookLookup } from './modules/search/library-book-lookup.js';
 import { meRoutes } from './modules/me/routes.js';
 
@@ -102,6 +103,8 @@ export async function buildApp({
   libraryItems: ownershipOverride,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
+    // Open event streams (Requests screen) must not hold up a shutdown.
+    forceCloseConnections: true,
     logger: {
       level: config.LOG_LEVEL,
       // Never log credentials or tokens.
@@ -237,6 +240,9 @@ export async function buildApp({
       await api.register(readerRoutes, { users, requireAuth: authenticated });
       await api.register(requestRoutes, {
         requests: downloads.requests,
+        releases: downloads.pipeline,
+        events: downloads.events,
+        view: (row) => requestView(database.db, row),
         works: discover,
         readerIds: () => users.list().map((u) => u.id),
         requireAuth: authenticated,

@@ -16,10 +16,11 @@ import { BudgetExhaustedError } from '../budget/budget.js';
 import type { IndexerGateway } from '../budget/gateway.js';
 import { tagEpub, IDENTIFIER_SCHEME } from '../importer/epub.js';
 import type { IndexerRepository } from '../indexers/repository.js';
-import { assertTransition } from '../requests/status.js';
+import { assertTransition, canTransition, InvalidTransitionError } from '../requests/status.js';
 import type { DownloadClient } from '../sabnzbd/client.js';
 import { cleanTitle, type BookQuery } from '../search/planner.js';
-import { rankReleases } from './scoring.js';
+import { ACCEPT_THRESHOLD, detectFormat, detectLanguage, rankReleases } from './scoring.js';
+import type { ReleaseList } from '@purrshelf/contract';
 
 export const POLL_DOWNLOAD_JOB = 'poll_download';
 export const WAIT_IMPORT_JOB = 'wait_import';
@@ -57,6 +58,8 @@ export interface PipelineDeps {
   library: ImportLibrary | null;
   schedule: Schedule;
   settings: PipelineSettings;
+  /** Tells the live Requests screen about every change (APP-05). */
+  notify: (request: RequestRow) => RequestRow;
   /** Ownership and Kobo shelves once CWA has the book (APP-03). */
   onImported?: (request: RequestRow) => Promise<RequestRow>;
 }
@@ -71,6 +74,11 @@ const NOT_SET_UP = 'Downloads are not set up yet: SABnzbd or the library is not 
 
 export class ReleaseError extends Error {
   override name = 'ReleaseError';
+}
+
+/** SABnzbd or the library is not configured, so nothing can be grabbed. */
+export class DownloadsNotSetUpError extends ReleaseError {
+  override name = 'DownloadsNotSetUpError';
 }
 
 function message(err: unknown): string {
@@ -132,6 +140,84 @@ export class ReleasePipeline {
     return result;
   }
 
+  /** "Pick another": every release the search found, scored, best first. Spends nothing. */
+  options(request: RequestRow): ReleaseList {
+    const { ranked } = this.rank(request);
+    const name = (id: string) => this.deps.indexers.get(id)?.name ?? id;
+    const usable = ranked.map((r) => ({
+      id: r.release.id,
+      title: r.release.title,
+      format: r.signals.format,
+      size: r.release.size,
+      language: r.signals.language,
+      indexerName: name(r.release.indexerId),
+      publishedAt: r.release.publishedAt?.toISOString() ?? null,
+      grabs: r.release.grabs,
+      score: r.score,
+      rejected: r.rejected,
+      picked: r.release.status === 'grabbed',
+      titleMatch: r.signals.titleMatch === 1,
+      authorMatch: r.signals.authorMatch,
+    }));
+    const failed = this.db
+      .select()
+      .from(releases)
+      .where(and(eq(releases.requestId, request.id), eq(releases.status, 'failed')))
+      .all()
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        format: detectFormat(r.title),
+        size: r.size,
+        language: detectLanguage(r.title, r.language),
+        indexerName: name(r.indexerId),
+        publishedAt: r.publishedAt?.toISOString() ?? null,
+        grabs: r.grabs,
+        score: 0,
+        rejected: ['failed_before' as const],
+        picked: false,
+        titleMatch: false,
+        authorMatch: false,
+      }));
+    const order = (r: { rejected: unknown[] }) => (r.rejected.length ? 1 : 0);
+    return {
+      releases: [...usable, ...failed].sort((a, b) => order(a) - order(b)),
+      acceptThreshold: ACCEPT_THRESHOLD,
+    };
+  }
+
+  /**
+   * The reader picked a release from the list. A running download of another
+   * release is stopped first; nothing is searched again.
+   */
+  async pickAnother(request: RequestRow, releaseId: string): Promise<RequestRow> {
+    const services = this.services();
+    if (!services) throw new DownloadsNotSetUpError(NOT_SET_UP);
+    if (!canTransition(request.status, 'downloading')) {
+      throw new InvalidTransitionError(request.status, 'downloading');
+    }
+    const release = this.release(request, releaseId);
+    if (!release || release.status === 'failed') {
+      throw new ReleaseError('That release is not available for this request');
+    }
+    if (release.status === 'grabbed' && request.status === 'downloading') return request;
+    if (request.status === 'downloading' && request.downloadId) {
+      await services.sab.remove(request.downloadId).catch(() => undefined);
+    }
+    this.db
+      .update(releases)
+      .set({ status: 'candidate' })
+      .where(and(eq(releases.requestId, request.id), eq(releases.status, 'grabbed')))
+      .run();
+    return this.grab(request, releaseId);
+  }
+
+  /** Before a cancel: stops a running download so SABnzbd does not finish it for nothing. */
+  async stop(request: RequestRow): Promise<void> {
+    if (request.status !== 'downloading' || !request.downloadId || !this.deps.sab) return;
+    await this.deps.sab.remove(request.downloadId).catch(() => undefined);
+  }
+
   /**
    * Grabs one release: downloads its NZB (one grab from the budget) and adds
    * it to SABnzbd. Used for the auto-pick, "Pick another" and the fallback
@@ -140,7 +226,7 @@ export class ReleasePipeline {
    */
   async grab(request: RequestRow, releaseId: string): Promise<RequestRow> {
     const services = this.services();
-    if (!services) throw new ReleaseError(NOT_SET_UP);
+    if (!services) throw new DownloadsNotSetUpError(NOT_SET_UP);
     const release = this.release(request, releaseId);
     if (!release || release.status === 'failed') {
       throw new ReleaseError('That release is not available for this request');
@@ -344,12 +430,14 @@ export class ReleasePipeline {
   }
 
   private update(request: RequestRow, set: Partial<RequestRow>): RequestRow {
-    return this.db
-      .update(requests)
-      .set({ ...set, updatedAt: this.deps.clock() })
-      .where(eq(requests.id, request.id))
-      .returning()
-      .get();
+    return this.deps.notify(
+      this.db
+        .update(requests)
+        .set({ ...set, updatedAt: this.deps.clock() })
+        .where(eq(requests.id, request.id))
+        .returning()
+        .get(),
+    );
   }
 
   private setStatus(

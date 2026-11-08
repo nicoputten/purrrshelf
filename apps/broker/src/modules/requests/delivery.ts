@@ -40,6 +40,7 @@ export class Delivery {
     private readonly items: LibraryItems,
     private readonly shelves: KoboShelves | null,
     private readonly clock: Clock,
+    private readonly notify: (request: RequestRow) => RequestRow,
   ) {}
 
   readonly deliver = async (request: RequestRow): Promise<RequestRow> => {
@@ -85,11 +86,13 @@ export class Delivery {
     request: RequestRow,
     set: { status?: 'pushed'; error: string | null },
   ): RequestRow {
-    return this.db
-      .update(requests)
-      .set({ ...set, updatedAt: this.clock() })
-      .where(eq(requests.id, request.id))
-      .returning()
-      .get();
+    return this.notify(
+      this.db
+        .update(requests)
+        .set({ ...set, updatedAt: this.clock() })
+        .where(eq(requests.id, request.id))
+        .returning()
+        .get(),
+    );
   }
 }

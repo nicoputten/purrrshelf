@@ -18,6 +18,7 @@ import {
   type KoboShelves,
   type LibraryItems,
 } from './requests/delivery.js';
+import { RequestEvents } from './requests/events.js';
 import { RESUME_SEARCH_JOB, RequestService } from './requests/service.js';
 import type { DownloadClient } from './sabnzbd/client.js';
 import { titleMatchJudge } from './search/judge.js';
@@ -55,6 +56,7 @@ export interface Downloads {
   gateway: IndexerGateway;
   requests: RequestService;
   delivery: Delivery;
+  events: RequestEvents;
   pipeline: ReleasePipeline;
   jobs: JobRunner;
 }
@@ -78,11 +80,13 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     titleMatchJudge,
     deps.clock,
   );
+  const events = new RequestEvents();
   const delivery = new Delivery(
     deps.db,
     deps.libraryItems ?? noLibraryItems,
     deps.shelves ?? null,
     deps.clock,
+    events.emit,
   );
   const holder: { jobs?: JobRunner } = {};
   const schedule = (type: string, payload: unknown, runAt: Date) =>
@@ -97,6 +101,7 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     schedule,
     settings: { ...DEFAULT_SETTINGS, ...deps.settings },
     onImported: delivery.deliver,
+    notify: events.emit,
   });
   const requests = new RequestService(
     deps.db,
@@ -105,6 +110,7 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     (request) => pipeline.pick(request),
     deps.clock,
     delivery.deliver,
+    events.emit,
   );
   /**
    * The job types. Only two can reach an indexer, both through the budget:
@@ -122,5 +128,5 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     deps.log,
   );
   holder.jobs = jobs;
-  return { budget, indexers, gateway, requests, delivery, pipeline, jobs };
+  return { budget, indexers, gateway, requests, delivery, events, pipeline, jobs };
 }

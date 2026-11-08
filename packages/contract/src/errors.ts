@@ -17,6 +17,9 @@ export const errorCodes = [
   'LIBRARY_UNAVAILABLE',
   'KOBO_SHELF_MISSING',
   'KOBO_SYNC_NOT_SET_UP',
+  'REQUEST_STATE',
+  'RELEASE_UNAVAILABLE',
+  'DOWNLOADS_NOT_SET_UP',
   'KOBO_NOT_LINKED',
 ] as const;
 
