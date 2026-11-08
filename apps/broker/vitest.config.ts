@@ -15,6 +15,9 @@ export default defineConfig({
         statements: 80,
         // CLAUDE.md: the indexer budget needs 100%.
         'src/modules/budget/**': { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // …and so do the request status machine and the search that spends it.
+        'src/modules/requests/**': { lines: 100, functions: 100, branches: 100, statements: 100 },
+        'src/modules/search/**': { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:newznab="http://www.newznab.com/DTD/2010/feeds/attributes/">
+  <channel>
+    <title>Fake indexer</title>
+    <item>
+      <title>Ada Quill - The Lighthouse Cartographer (2021) EPUB</title>
+      <guid isPermaLink="true">https://indexer.example.invalid/details/aaa111</guid>
+      <link>https://indexer.example.invalid/getnzb/aaa111.nzb</link>
+      <pubDate>Mon, 01 Mar 2021 10:00:00 +0000</pubDate>
+      <enclosure url="https://indexer.example.invalid/getnzb/aaa111.nzb" length="2400000" type="application/x-nzb"/>
+      <newznab:attr name="category" value="7020"/>
+      <newznab:attr name="size" value="2400000"/>
+      <newznab:attr name="grabs" value="42"/>
+      <newznab:attr name="language" value="English"/>
+    </item>
+    <item>
+      <title>The Lighthouse Cartographer Audiobook MP3</title>
+      <guid>bbb222</guid>
+      <pubDate>not a date</pubDate>
+      <enclosure url="https://indexer.example.invalid/getnzb/bbb222.nzb" length="350000000" type="application/x-nzb"/>
+    </item>
+    <item>
+      <title>Unrelated Book PDF</title>
+      <link>https://indexer.example.invalid/api?t=get&amp;id=ccc333</link>
+    </item>
+    <item>
+      <description>an item without a title is skipped</description>
+    </item>
+  </channel>
+</rss>
