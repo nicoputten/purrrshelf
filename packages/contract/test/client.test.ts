@@ -1,6 +1,8 @@
+import { z } from 'zod';
 import { describe, expect, it, vi } from 'vitest';
 import {
   ApiError,
+  buildPath,
   NetworkError,
   createClient,
   normaliseBaseUrl,
@@ -152,5 +154,21 @@ describe('path and query parameters', () => {
     const client = createClient({ baseUrl: 'https://x.example.invalid', fetch });
     await expect(client.call('work', { id: '../admin' })).rejects.toThrow();
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('buildPath', () => {
+  it('leaves the path alone when every query parameter is empty', () => {
+    const ep = {
+      method: 'GET',
+      path: '/x',
+      summary: 'x',
+      auth: false,
+      query: z.object({ a: z.string().optional() }),
+      response: z.object({}),
+      status: 200,
+    } as const;
+    expect(buildPath(ep, {})).toBe('/x');
+    expect(buildPath(ep, { a: 'b c' })).toBe('/x?a=b+c');
   });
 });
