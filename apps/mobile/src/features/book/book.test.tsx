@@ -6,6 +6,11 @@ import { renderWithProviders, resetApp } from '@/test/utils';
 import { BookDetailScreen } from './BookDetailScreen';
 import { positionLabel, seriesStates } from './series';
 
+// The first render of this screen is a cold start (module loading under
+// coverage) and can pass 5 s on a busy 2-core CI runner while the broker
+// tests run alongside it.
+jest.setTimeout(15_000);
+
 beforeEach(async () => {
   await resetApp();
   useSession.setState({
