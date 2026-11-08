@@ -15,6 +15,8 @@ import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { AccessTokens } from './modules/auth/tokens.js';
 import { UserRepository } from './modules/auth/users.js';
+import { IndexerBudget } from './modules/budget/budget.js';
+import { budgetRoutes } from './modules/budget/routes.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import { meRoutes } from './modules/me/routes.js';
 
@@ -60,6 +62,9 @@ export async function buildApp({
     clock,
   );
 
+  const authenticated = requireAuth(accessTokens, clock);
+  const budget = new IndexerBudget(database.db, clock);
+
   await app.register(
     async (api) => {
       await api.register(healthRoutes, {
@@ -69,7 +74,8 @@ export async function buildApp({
         auth,
         loginRateLimitPerMinute: config.LOGIN_RATE_LIMIT_PER_MINUTE,
       });
-      await api.register(meRoutes, { users, requireAuth: requireAuth(accessTokens, clock) });
+      await api.register(meRoutes, { users, requireAuth: authenticated });
+      await api.register(budgetRoutes, { budget, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },
   );

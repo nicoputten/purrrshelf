@@ -79,3 +79,17 @@ docker exec -it <broker-container> node dist/cli-main.js user list
 
 Expose only the broker, through Nginx Proxy Manager with HTTPS and HSTS. See
 [reverse-proxy.md](reverse-proxy.md).
+
+## 9. Indexers (milestone 4)
+
+The indexer's URL and hourly limits live in the broker database; its API key
+only in the broker's environment, as `INDEXER_<ID>_API_KEY`. Use the limits
+from the indexer's API page (searches and NZB grabs separately):
+
+```sh
+docker exec -it <broker-container> node dist/cli-main.js indexer add primary --name "<indexer name>" --url https://<indexer-host> --search-limit 25 --grab-limit 25
+docker exec -it <broker-container> node dist/cli-main.js indexer list
+```
+
+`indexer list` says whether the key variable is set. Adding the same id again
+updates it; a lower `--priority` is queried first.

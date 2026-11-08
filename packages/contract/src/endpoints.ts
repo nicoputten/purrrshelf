@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { Budget } from './budget.js';
 import { ErrorResponse } from './errors.js';
 import {
   Empty,
@@ -66,6 +67,14 @@ export const endpoints = {
     summary: 'Current user, locale and Kobo state',
     auth: true,
     response: Me,
+    status: 200,
+  },
+  budget: {
+    method: 'GET',
+    path: '/budget',
+    summary: 'Per indexer: searches and grabs left in the rolling hour, and the next free slot',
+    auth: true,
+    response: Budget,
     status: 200,
   },
 } as const satisfies Record<string, Endpoint>;

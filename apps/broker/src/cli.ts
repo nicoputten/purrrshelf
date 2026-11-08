@@ -3,6 +3,7 @@ import { Locale } from '@purrshelf/contract';
 import { systemClock } from './clock.js';
 import type { DatabaseHandle } from './db/index.js';
 import { UserError, UserRepository } from './modules/auth/users.js';
+import { IndexerError, IndexerRepository } from './modules/indexers/repository.js';
 
 export interface CliIo {
   env: NodeJS.ProcessEnv;
@@ -17,8 +18,13 @@ const USAGE = `Usage:
   purrshelf user add <username> --name <display name> [--locale en|nl]
   purrshelf user set-password <username>
   purrshelf user list
+  purrshelf indexer add <id> --name <name> --url <url> --search-limit <n> --grab-limit <n> [--priority <n>]
+  purrshelf indexer list
+  purrshelf indexer remove <id>
 
 The password is read from PURRSHELF_PASSWORD or from the first line of stdin.
+Adding an existing indexer id updates it. The indexer's API key is never
+stored: set INDEXER_<ID>_API_KEY in the broker's environment.
 The database is DATABASE_PATH (default /data/purrshelf.db).`;
 
 /** Small admin CLI, so no account or password ever has to live in the repo. */
@@ -28,7 +34,15 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
     parsed = parseArgs({
       args: argv,
       allowPositionals: true,
-      options: { name: { type: 'string' }, locale: { type: 'string' }, help: { type: 'boolean' } },
+      options: {
+        name: { type: 'string' },
+        locale: { type: 'string' },
+        url: { type: 'string' },
+        priority: { type: 'string' },
+        'search-limit': { type: 'string' },
+        'grab-limit': { type: 'string' },
+        help: { type: 'boolean' },
+      },
     });
   } catch (e) {
     io.err((e as Error).message);
@@ -37,12 +51,25 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   }
   const { positionals, values } = parsed;
   const [group, command, username] = positionals;
-  if (values.help || group !== 'user' || !command) {
+  if (values.help || (group !== 'user' && group !== 'indexer') || !command) {
     (values.help ? io.out : io.err)(USAGE);
     return values.help ? 0 : 2;
   }
 
   const database = io.openDatabase(io.env.DATABASE_PATH ?? '/data/purrshelf.db');
+  if (group === 'indexer') {
+    try {
+      return indexerCommand(
+        command,
+        username,
+        values,
+        new IndexerRepository(database.db, systemClock),
+        io,
+      );
+    } finally {
+      database.close();
+    }
+  }
   const users = new UserRepository(database.db, systemClock);
   try {
     switch (command) {
@@ -91,5 +118,80 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
     throw e;
   } finally {
     database.close();
+  }
+}
+
+interface IndexerFlags {
+  name?: string | undefined;
+  url?: string | undefined;
+  priority?: string | undefined;
+  'search-limit'?: string | undefined;
+  'grab-limit'?: string | undefined;
+}
+
+/** A whole number from a flag, or NaN so validation reports it. */
+function int(value: string | undefined): number {
+  return value !== undefined && /^-?\d+$/.test(value) ? Number(value) : Number.NaN;
+}
+
+function indexerCommand(
+  command: string,
+  id: string | undefined,
+  flags: IndexerFlags,
+  repo: IndexerRepository,
+  io: CliIo,
+): number {
+  try {
+    switch (command) {
+      case 'list': {
+        for (const i of repo.list()) {
+          const key = IndexerRepository.apiKeyEnvName(i.id);
+          const keySet = io.env[key] ? 'key set' : `${key} missing`;
+          io.out(
+            `${i.id}\t${i.name}\tpriority ${i.priority}\t${i.searchLimitPerHour} searches/h\t${i.grabLimitPerHour} grabs/h\t${keySet}`,
+          );
+        }
+        return 0;
+      }
+      case 'add': {
+        if (!id || !flags.name || !flags.url || !flags['search-limit'] || !flags['grab-limit']) {
+          io.err(USAGE);
+          return 2;
+        }
+        const row = repo.upsert({
+          id,
+          name: flags.name,
+          url: flags.url,
+          priority: flags.priority === undefined ? 0 : int(flags.priority),
+          searchLimitPerHour: int(flags['search-limit']),
+          grabLimitPerHour: int(flags['grab-limit']),
+        });
+        io.out(
+          `Saved indexer ${row.id}; set ${IndexerRepository.apiKeyEnvName(row.id)} in the environment`,
+        );
+        return 0;
+      }
+      case 'remove': {
+        if (!id) {
+          io.err(USAGE);
+          return 2;
+        }
+        if (!repo.remove(id)) {
+          io.err(`No indexer "${id}"`);
+          return 1;
+        }
+        io.out(`Removed indexer ${id}`);
+        return 0;
+      }
+      default:
+        io.err(USAGE);
+        return 2;
+    }
+  } catch (e) {
+    if (e instanceof IndexerError) {
+      io.err(e.message);
+      return 1;
+    }
+    throw e;
   }
 }
