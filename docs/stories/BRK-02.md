@@ -26,7 +26,7 @@ No canvas board (no UI).
 ## Notes / decisions
 
 See [ADR 0007](../decisions/0007-metadata-providers.md) and
-[ADR 0018](../decisions/0018-work-ids-and-metadata-merge.md).
+[ADR 0019](../decisions/0019-work-ids-and-metadata-merge.md).
 
 - Providers are asked in parallel and merged in priority order; one failing
   provider is reported per hit list, not as an error.

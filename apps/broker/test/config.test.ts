@@ -50,3 +50,29 @@ describe('loadConfig', () => {
     ).toBe('tok');
   });
 });
+
+describe('TRUST_PROXY', () => {
+  const load = (TRUST_PROXY?: string) =>
+    loadConfig({ JWT_SECRET: TEST_SECRET, ...(TRUST_PROXY === undefined ? {} : { TRUST_PROXY }) })
+      .TRUST_PROXY;
+
+  it('trusts private networks by default', () => {
+    expect(load()).toBe('loopback,linklocal,uniquelocal');
+  });
+
+  it('accepts a list of proxy addresses', () => {
+    expect(load(' 172.18.0.0/16, 127.0.0.1 ')).toBe('172.18.0.0/16, 127.0.0.1');
+  });
+
+  it.each(['none', 'false', 'NONE'])('trusts nobody for %s', (value) => {
+    expect(load(value)).toBe(false);
+  });
+
+  it.each(['true', 'TRUE'])('refuses to trust every peer (%s)', (value) => {
+    expect(() => load(value)).toThrow(/TRUST_PROXY: trusting every peer/);
+  });
+
+  it('refuses an empty value', () => {
+    expect(() => load('  ')).toThrow(/TRUST_PROXY: use "none"/);
+  });
+});

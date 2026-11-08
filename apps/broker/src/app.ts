@@ -15,6 +15,8 @@ import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { AccessTokens } from './modules/auth/tokens.js';
 import { UserRepository } from './modules/auth/users.js';
+import { IndexerBudget } from './modules/budget/budget.js';
+import { budgetRoutes } from './modules/budget/routes.js';
 import { createDiscover, defaultProviders } from './modules/discover/index.js';
 import { hardcoverTokenCheck } from './modules/discover/hardcover-token.js';
 import type { FetchLike } from './modules/discover/http.js';
@@ -53,7 +55,7 @@ export async function buildApp({
       // Never log credentials or tokens.
       redact: ['req.headers.authorization', 'req.headers.cookie'],
     },
-    trustProxy: true,
+    trustProxy: config.TRUST_PROXY,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
@@ -76,6 +78,7 @@ export async function buildApp({
   );
 
   const authenticated = requireAuth(accessTokens, clock);
+  const budget = new IndexerBudget(database.db, clock);
   const discover = createDiscover({
     config,
     db: database.db,
@@ -110,6 +113,7 @@ export async function buildApp({
         loginRateLimitPerMinute: config.LOGIN_RATE_LIMIT_PER_MINUTE,
       });
       await api.register(meRoutes, { users, requireAuth: authenticated });
+      await api.register(budgetRoutes, { budget, requireAuth: authenticated });
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },

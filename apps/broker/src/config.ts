@@ -4,6 +4,7 @@ import { z } from 'zod';
  * Every setting comes from the environment. Nothing that identifies the
  * household or unlocks a service has a default value here.
  */
+export const DEFAULT_TRUST_PROXY = 'loopback,linklocal,uniquelocal';
 /**
  * An optional secret: unset, empty and the `.env.example` placeholder
  * (`change-me`) all mean "not configured".
@@ -31,6 +32,22 @@ const envSchema = z.object({
   LOGIN_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
   /** Login attempts per IP per minute, before the account lockout kicks in. */
   LOGIN_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+  /**
+   * Which peers may set X-Forwarded-For (ADR 0018): a comma-separated list of
+   * IPs, CIDRs or the names `loopback`, `linklocal`, `uniquelocal`; `none`
+   * trusts nobody. The default trusts private networks, where Nginx Proxy
+   * Manager runs. `true` (trust everyone) is refused: any client could then
+   * pick its own IP and dodge the login rate limit.
+   */
+  TRUST_PROXY: z
+    .string()
+    .trim()
+    .default(DEFAULT_TRUST_PROXY)
+    .refine((v) => v.toLowerCase() !== 'true', {
+      message: 'trusting every peer lets clients spoof their IP; list the proxy instead',
+    })
+    .refine((v) => v !== '', { message: 'use "none" to trust no proxy' })
+    .transform((v): string | false => (['none', 'false'].includes(v.toLowerCase()) ? false : v)),
 
   // Metadata providers (BRK-02, ADR 0007). Hardcover is skipped without a token.
   HARDCOVER_API_TOKEN: optionalSecret,
