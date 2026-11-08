@@ -9,6 +9,7 @@ import {
   Health,
   ItemKoboParams,
   ItemKobos,
+  ItemOwnership,
   ItemParams,
   LibraryBooks,
   LoginRequest,
@@ -170,6 +171,25 @@ export const endpoints = {
     summary: 'Every book in the shared library with owners, my Kobo and my reading progress',
     auth: true,
     response: LibraryBooks,
+    status: 200,
+  },
+  keepBook: {
+    method: 'PUT',
+    path: '/library/items/:itemId/owners/me',
+    summary: 'Add a library book to my library, or undo removing it. Cancels a pending deletion.',
+    auth: true,
+    params: ItemParams,
+    response: ItemOwnership,
+    status: 200,
+  },
+  removeBook: {
+    method: 'DELETE',
+    path: '/library/items/:itemId/owners/me',
+    summary:
+      'Remove a book from my library and my Kobo. When nobody owns it any more it is deleted after 7 days.',
+    auth: true,
+    params: ItemParams,
+    response: ItemOwnership,
     status: 200,
   },
   itemKobos: {

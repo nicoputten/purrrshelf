@@ -283,3 +283,19 @@ export const LibraryBooks = z
   })
   .meta({ id: 'LibraryBooks' });
 export type LibraryBooks = z.infer<typeof LibraryBooks>;
+
+// --- Ownership (BRK-08) -----------------------------------------------------
+
+export const ItemOwnership = z
+  .object({
+    itemId: z.string(),
+    /** Oldest owner first. */
+    owners: z.array(LibraryOwner),
+    /**
+     * Set when nobody owns the book any more: it is deleted from the library
+     * at this time unless someone keeps it before then (ADR 0009).
+     */
+    deleteAfter: z.iso.datetime().nullable(),
+  })
+  .meta({ id: 'ItemOwnership' });
+export type ItemOwnership = z.infer<typeof ItemOwnership>;

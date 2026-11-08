@@ -1,6 +1,6 @@
 # APP-07 Browse my, my partner's and all books
 
-Status: in review
+Status: done
 Milestone: 5
 Depends on: BRK-03
 
