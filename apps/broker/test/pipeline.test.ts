@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { releases } from '../src/db/schema.js';
+import { releases, users } from '../src/db/schema.js';
 import { readTag } from '../src/modules/importer/epub.js';
 import {
   POLL_DOWNLOAD_JOB,
@@ -62,15 +62,8 @@ let root: string;
 let downloads: string;
 let ingest: string;
 
-beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), 'purrshelf-pipeline-'));
-  downloads = join(root, 'downloads');
-  ingest = join(root, 'ingest');
-  await mkdir(downloads);
-  await mkdir(ingest);
-  sab = new FakeSab();
-  lib = new FakeLibrary();
-  h = await makeHarness({
+function harness(extra: Parameters<typeof makeHarness>[0] = {}) {
+  return makeHarness({
     sab,
     importLibrary: lib,
     settings: {
@@ -79,7 +72,19 @@ beforeEach(async () => {
       pollIntervalMs: POLL,
       importTimeoutMs: 60_000,
     },
+    ...extra,
   });
+}
+
+beforeEach(async () => {
+  root = await mkdtemp(join(tmpdir(), 'purrshelf-pipeline-'));
+  downloads = join(root, 'downloads');
+  ingest = join(root, 'ingest');
+  await mkdir(downloads);
+  await mkdir(ingest);
+  sab = new FakeSab();
+  lib = new FakeLibrary();
+  h = await harness();
   h.indexers.upsert(indexerInput());
   fakeFor(h, HOST)
     .on('search', { body: fixture('search-hit.xml') })
@@ -232,6 +237,34 @@ describe('following the download', () => {
     lib.byIdentifier.set(req.id, 501);
     await tick();
     expect(h.requests.get(req.id)).toMatchObject({ status: 'in_library', calibreBookId: 501 });
+  });
+
+  it('puts the imported book on the chosen Kobo', async () => {
+    const shelved: { cwaUserId: number; bookId: number }[] = [];
+    h = await harness({
+      shelves: {
+        addToKoboShelf: async (owner, bookId) => {
+          shelved.push({ cwaUserId: owner.cwaUserId, bookId });
+        },
+      },
+    });
+    h.indexers.upsert(indexerInput());
+    fakeFor(h, HOST)
+      .on('search', { body: fixture('search-hit.xml') })
+      .on('get', { body: fixture('release.nzb') });
+    h.database.db.update(users).set({ cwaUserId: 11 }).where(eq(users.id, h.userId)).run();
+    const req = await h.requests.add({
+      userId: h.userId,
+      workId: 'work-1',
+      query: QUERY,
+      pushTo: [h.userId],
+    });
+    await finishDownload('nzo_1', { 'book.epub': makeEpub() });
+    await tick();
+    lib.byIdentifier.set(req.id, 501);
+    await tick();
+    expect(h.requests.get(req.id)).toMatchObject({ status: 'pushed', calibreBookId: 501 });
+    expect(shelved).toEqual([{ cwaUserId: 11, bookId: 501 }]);
   });
 
   it('imports AZW3 and MOBI untouched (CWA converts them to EPUB at ingest)', async () => {

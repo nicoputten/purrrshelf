@@ -57,6 +57,8 @@ export interface PipelineDeps {
   library: ImportLibrary | null;
   schedule: Schedule;
   settings: PipelineSettings;
+  /** Ownership and Kobo shelves once CWA has the book (APP-03). */
+  onImported?: (request: RequestRow) => Promise<RequestRow>;
 }
 
 const JobPayload = z.object({ requestId: z.string() });
@@ -215,7 +217,8 @@ export class ReleasePipeline {
     if (request?.status !== 'importing' || !services) return;
     const book = await this.findImported(services.library, request);
     if (book) {
-      this.setStatus(request, 'in_library', { calibreBookId: book.id });
+      const row = this.setStatus(request, 'in_library', { calibreBookId: book.id });
+      await this.deps.onImported?.(row);
       return;
     }
     if (this.deps.clock().getTime() >= deadline) {

@@ -34,7 +34,10 @@ import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import type { LibraryAdapter } from './modules/library/types.js';
+import type { LibraryItems } from './modules/requests/delivery.js';
 import { SabnzbdClient, type DownloadClient } from './modules/sabnzbd/client.js';
+import { readerRoutes } from './modules/readers/routes.js';
+import { requestRoutes } from './modules/requests/routes.js';
 import { libraryBookLookup } from './modules/search/library-book-lookup.js';
 import { meRoutes } from './modules/me/routes.js';
 
@@ -62,6 +65,8 @@ export interface AppDeps {
   libraryCovers?: LibraryCovers;
   /** The library (CWA). Absent when CWA is not configured. */
   library?: LibraryAdapter | null;
+  /** Library items and ownership for finished requests; none until the library stream provides them. */
+  libraryItems?: LibraryItems;
 }
 
 declare module 'fastify' {
@@ -87,6 +92,7 @@ export async function buildApp({
   libraryLookup = noLibraryState,
   libraryCovers = noLibraryCovers,
   library = null,
+  libraryItems,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: {
@@ -138,6 +144,8 @@ export async function buildApp({
     log: app.log,
     sab: downloadClient,
     importLibrary: library,
+    shelves: library,
+    ...(libraryItems ? { libraryItems } : {}),
     settings: {
       downloadsPath: config.DOWNLOADS_PATH,
       ingestPath: config.CWA_INGEST_PATH,
@@ -201,6 +209,14 @@ export async function buildApp({
       await api.register(meRoutes, { users, requireAuth: authenticated });
       await api.register(budgetRoutes, { budget: downloads.budget, requireAuth: authenticated });
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
+      await api.register(readerRoutes, { users, requireAuth: authenticated });
+      await api.register(requestRoutes, {
+        requests: downloads.requests,
+        works: discover,
+        readerIds: () => users.list().map((u) => u.id),
+        requireAuth: authenticated,
+        log: app.log,
+      });
       await api.register(coverRoutes, { covers, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },

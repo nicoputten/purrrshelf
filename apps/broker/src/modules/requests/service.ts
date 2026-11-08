@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, notInArray } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Clock } from '../../clock.js';
 import type { Db } from '../../db/index.js';
@@ -43,6 +43,9 @@ export type ResumeScheduler = (requestId: string, runAt: Date) => void;
 /** What happens after a search stored releases: the pick (BRK-06). */
 export type OnFound = (request: RequestRow) => Promise<RequestRow>;
 
+/** What happens once the book is in the library: ownership and Kobo shelves (APP-03). */
+export type OnInLibrary = (request: RequestRow) => Promise<RequestRow>;
+
 export class RequestService {
   constructor(
     private readonly db: Db,
@@ -50,6 +53,7 @@ export class RequestService {
     private readonly scheduleResume: ResumeScheduler,
     private readonly onFound: OnFound,
     private readonly clock: Clock,
+    private readonly onInLibrary: OnInLibrary,
   ) {}
 
   /** Job handler for {@link RESUME_SEARCH_JOB}. */
@@ -67,8 +71,43 @@ export class RequestService {
     return row;
   }
 
+  /** A user's requests, newest first. */
+  list(userId: string, limit = 50): RequestRow[] {
+    return this.db
+      .select()
+      .from(requests)
+      .where(eq(requests.userId, userId))
+      .orderBy(desc(requests.createdAt), desc(requests.id))
+      .limit(limit)
+      .all();
+  }
+
+  /** The user's request for this work that is still going (or can be retried), if any. */
+  findOpen(userId: string, workId: string): RequestRow | undefined {
+    return this.db
+      .select()
+      .from(requests)
+      .where(
+        and(
+          eq(requests.userId, userId),
+          eq(requests.workId, workId),
+          notInArray(requests.status, ['pushed', 'cancelled']),
+        ),
+      )
+      .orderBy(desc(requests.createdAt))
+      .get();
+  }
+
   /** A user tapped Add: create the request and search right away. */
   async add(input: NewRequest): Promise<RequestRow> {
+    return this.start(input).done;
+  }
+
+  /**
+   * Like {@link add}, but answers the new request before the search ends, so
+   * the app can follow it. `done` settles with the request after the search.
+   */
+  start(input: NewRequest): { request: RequestRow; done: Promise<RequestRow> } {
     const now = this.clock();
     const query = BookQuerySchema.parse(input.query);
     const row = this.db
@@ -88,7 +127,7 @@ export class RequestService {
       })
       .returning()
       .get();
-    return this.runSearch(row);
+    return { request: row, done: this.runSearch(row) };
   }
 
   /** "Try again": a new, paid search round. */
@@ -109,7 +148,7 @@ export class RequestService {
     return this.setStatus(this.get(id), 'cancelled');
   }
 
-  private find(id: string): RequestRow | undefined {
+  find(id: string): RequestRow | undefined {
     return this.db.select().from(requests).where(eq(requests.id, id)).get();
   }
 
@@ -126,7 +165,9 @@ export class RequestService {
     }
     switch (outcome.kind) {
       case 'in_library':
-        return this.setStatus(request, 'in_library', { calibreBookId: outcome.calibreBookId });
+        return this.onInLibrary(
+          this.setStatus(request, 'in_library', { calibreBookId: outcome.calibreBookId }),
+        );
       case 'found':
         return this.onFound(request);
       case 'not_found':

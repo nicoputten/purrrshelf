@@ -12,6 +12,12 @@ import {
   type ImportLibrary,
   type PipelineSettings,
 } from './releases/pipeline.js';
+import {
+  Delivery,
+  noLibraryItems,
+  type KoboShelves,
+  type LibraryItems,
+} from './requests/delivery.js';
 import { RESUME_SEARCH_JOB, RequestService } from './requests/service.js';
 import type { DownloadClient } from './sabnzbd/client.js';
 import { titleMatchJudge } from './search/judge.js';
@@ -29,6 +35,10 @@ export interface DownloadsDeps {
   /** The library adapter, for the import check; null until configured. */
   importLibrary?: ImportLibrary | null;
   settings?: Partial<PipelineSettings>;
+  /** Puts finished books on Kobo shelves; null until the library (CWA) is configured. */
+  shelves?: KoboShelves | null;
+  /** Library items and ownership; records nothing until the library stream provides them. */
+  libraryItems?: LibraryItems;
 }
 
 const DEFAULT_SETTINGS: PipelineSettings = {
@@ -44,6 +54,7 @@ export interface Downloads {
   indexers: IndexerRepository;
   gateway: IndexerGateway;
   requests: RequestService;
+  delivery: Delivery;
   pipeline: ReleasePipeline;
   jobs: JobRunner;
 }
@@ -67,6 +78,12 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     titleMatchJudge,
     deps.clock,
   );
+  const delivery = new Delivery(
+    deps.db,
+    deps.libraryItems ?? noLibraryItems,
+    deps.shelves ?? null,
+    deps.clock,
+  );
   const holder: { jobs?: JobRunner } = {};
   const schedule = (type: string, payload: unknown, runAt: Date) =>
     holder.jobs?.schedule(type, payload, runAt);
@@ -79,6 +96,7 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     library: deps.importLibrary ?? null,
     schedule,
     settings: { ...DEFAULT_SETTINGS, ...deps.settings },
+    onImported: delivery.deliver,
   });
   const requests = new RequestService(
     deps.db,
@@ -86,6 +104,7 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     (requestId, runAt) => schedule(RESUME_SEARCH_JOB, { requestId }, runAt),
     (request) => pipeline.pick(request),
     deps.clock,
+    delivery.deliver,
   );
   /**
    * The job types. Only two can reach an indexer, both through the budget:
@@ -103,5 +122,5 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     deps.log,
   );
   holder.jobs = jobs;
-  return { budget, indexers, gateway, requests, pipeline, jobs };
+  return { budget, indexers, gateway, requests, delivery, pipeline, jobs };
 }

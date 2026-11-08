@@ -38,7 +38,10 @@ export interface Harness extends Downloads {
 
 /** The whole downloads stack against fake indexers (one FakeNewznab per host). */
 export async function makeHarness(
-  extra: Pick<DownloadsDeps, 'sab' | 'importLibrary' | 'settings'> = {},
+  extra: Pick<
+    DownloadsDeps,
+    'sab' | 'importLibrary' | 'settings' | 'shelves' | 'libraryItems'
+  > = {},
 ): Promise<Harness> {
   const database = openDatabase(':memory:');
   const clock = new TestClock();

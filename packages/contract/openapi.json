@@ -213,6 +213,158 @@
         ]
       }
     },
+    "/api/v1/readers": {
+      "get": {
+        "operationId": "readers",
+        "summary": "Readers of this server, as Kobo targets for a new book",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Readers"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/requests": {
+      "post": {
+        "operationId": "addRequest",
+        "summary": "Add a book: owns it right away when the library has it, otherwise starts the paid indexer search. Answers the open request when there is one.",
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRequest"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "requests",
+        "summary": "My requests, newest first",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/requests/{id}": {
+      "get": {
+        "operationId": "request",
+        "summary": "One of my requests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRequest"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/discover/search": {
       "get": {
         "operationId": "discoverSearch",
@@ -412,6 +564,119 @@
   },
   "components": {
     "schemas": {
+      "AddRequest": {
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string",
+            "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "nl"]
+          },
+          "pushTo": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": ["workId", "language", "pushTo"],
+        "additionalProperties": false
+      },
+      "BookRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "nl"]
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": ["ebook", "audiobook"]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "searching",
+              "waiting_budget",
+              "not_found",
+              "choose_release",
+              "downloading",
+              "download_failed",
+              "importing",
+              "import_failed",
+              "in_library",
+              "pushed",
+              "cancelled"
+            ]
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "type": ["string", "null"]
+          },
+          "pushTo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "workId",
+          "title",
+          "authors",
+          "language",
+          "mediaType",
+          "status",
+          "progress",
+          "error",
+          "pushTo",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
       "Budget": {
         "type": "object",
         "properties": {
@@ -611,6 +876,35 @@
         "required": ["id", "username", "displayName", "locale", "kobo"],
         "additionalProperties": false
       },
+      "Readers": {
+        "type": "object",
+        "properties": {
+          "readers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "me": {
+                  "type": "boolean"
+                },
+                "kobo": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["id", "displayName", "me", "kobo"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["readers"],
+        "additionalProperties": false
+      },
       "RefreshRequest": {
         "type": "object",
         "properties": {
@@ -620,6 +914,19 @@
           }
         },
         "required": ["refreshToken"],
+        "additionalProperties": false
+      },
+      "RequestList": {
+        "type": "object",
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookRequest"
+            }
+          }
+        },
+        "required": ["requests"],
         "additionalProperties": false
       },
       "SimilarWorks": {

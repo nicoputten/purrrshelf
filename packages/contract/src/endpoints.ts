@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { Budget } from './budget.js';
 import { ErrorResponse } from './errors.js';
+import { AddRequest, BookRequest, Readers, RequestList, RequestParams } from './requests.js';
 import {
   DiscoverSearchQuery,
   DiscoverSearchResult,
@@ -85,6 +86,41 @@ export const endpoints = {
     summary: 'Per indexer: searches and grabs left in the rolling hour, and the next free slot',
     auth: true,
     response: Budget,
+    status: 200,
+  },
+  readers: {
+    method: 'GET',
+    path: '/readers',
+    summary: 'Readers of this server, as Kobo targets for a new book',
+    auth: true,
+    response: Readers,
+    status: 200,
+  },
+  addRequest: {
+    method: 'POST',
+    path: '/requests',
+    summary:
+      'Add a book: owns it right away when the library has it, otherwise starts the paid indexer search. Answers the open request when there is one.',
+    auth: true,
+    body: AddRequest,
+    response: BookRequest,
+    status: 201,
+  },
+  requests: {
+    method: 'GET',
+    path: '/requests',
+    summary: 'My requests, newest first',
+    auth: true,
+    response: RequestList,
+    status: 200,
+  },
+  request: {
+    method: 'GET',
+    path: '/requests/:id',
+    summary: 'One of my requests',
+    auth: true,
+    params: RequestParams,
+    response: BookRequest,
     status: 200,
   },
   discoverSearch: {
