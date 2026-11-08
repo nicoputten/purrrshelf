@@ -1,6 +1,6 @@
 name: Android APK
 
-# Builds a sideloadable APK (ADR 0028, 0030).
+# Builds a sideloadable APK (ADR 0028, 0030, 0031).
 # - Release: called by release.yml when release-please cuts a mobile release
 #   (tags pushed with GITHUB_TOKEN never trigger other workflows, so the tag
 #   trigger below only fires for tags pushed by hand). Attaches the APK to the
@@ -68,23 +68,60 @@ jobs:
       - name: Generate the native project
         working-directory: apps/mobile
         run: pnpm expo prebuild --platform android --no-install
+      # Release builds are signed with our own key (ADR 0031, OPS-03), so the
+      # app can update itself: Android only installs an update signed with
+      # the same key. The key lives in Actions secrets, never in the repo.
+      - name: Load the release key
+        working-directory: apps/mobile/android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            if [ -n "$RELEASE_TAG" ]; then
+              echo "::error::Release builds need the ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets (deploy/android-signing.md)."
+              exit 1
+            fi
+            echo "::warning::No release key secrets: this test APK is signed with the public debug key and will not install over a release build."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          # Android Gradle Plugin's injected signing overrides the template's
+          # debug signing for every variant.
+          {
+            echo "android.injected.signing.store.file=$RUNNER_TEMP/release.keystore"
+            echo "android.injected.signing.store.password=$KEYSTORE_PASSWORD"
+            echo "android.injected.signing.key.alias=$KEY_ALIAS"
+            echo "android.injected.signing.key.password=$KEY_PASSWORD"
+          } >> gradle.properties
       - name: Build release APK (${{ env.ABIS }})
         working-directory: apps/mobile/android
         env:
           # React Native's CMake setup picks up ccache when it is on PATH.
           CMAKE_C_COMPILER_LAUNCHER: ccache
           CMAKE_CXX_COMPILER_LAUNCHER: ccache
-        # Signed with the debug key for sideloading; Play Store signing comes later.
         run: >-
           ./gradlew assembleRelease
           -PreactNativeArchitectures=${{ env.ABIS }}
           --build-cache --parallel
+      # The file name carries the version and ABIs, e.g. purrshelf-1.2.0-arm64-v8a.apk, so the
+      # broker (BRK-10) and people can tell releases apart.
+      - name: Name the APK after its version
+        id: apk
+        working-directory: apps/mobile
+        run: |
+          version=$(node -p "require('./package.json').version")
+          out="$RUNNER_TEMP/purrshelf-${version}-${ABIS//,/-}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$out"
+          echo "path=$out" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v7
         with:
           name: purrshelf-apk
-          path: apps/mobile/android/app/build/outputs/apk/release/*.apk
+          path: ${{ steps.apk.outputs.path }}
       - name: Attach to the release
         if: env.RELEASE_TAG != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$RELEASE_TAG" apps/mobile/android/app/build/outputs/apk/release/*.apk --clobber --repo "$GITHUB_REPOSITORY"
+        run: gh release upload "$RELEASE_TAG" "${{ steps.apk.outputs.path }}" --clobber --repo "$GITHUB_REPOSITORY"

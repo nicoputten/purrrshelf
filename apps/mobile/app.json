@@ -3,7 +3,6 @@
     "name": "Purrshelf",
     "slug": "purrshelf",
     "scheme": "purrshelf",
-    "version": "0.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon/icon.png",
     "userInterfaceStyle": "automatic",
