@@ -15,16 +15,21 @@ import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { AccessTokens } from './modules/auth/tokens.js';
 import { UserRepository } from './modules/auth/users.js';
-import { IndexerBudget } from './modules/budget/budget.js';
 import { budgetRoutes } from './modules/budget/routes.js';
+import type { FetchLike } from './modules/budget/newznab.js';
+import { createDownloads, type Downloads } from './modules/downloads.js';
+import type { LibraryLookup } from './modules/search/service.js';
 import { noLibraryCovers, type LibraryCovers } from './modules/covers/library-covers.js';
 import { coverRoutes } from './modules/covers/routes.js';
 import { CoverService } from './modules/covers/service.js';
 import { CoverStore } from './modules/covers/store.js';
 import { createDiscover, defaultProviders } from './modules/discover/index.js';
 import { hardcoverTokenCheck } from './modules/discover/hardcover-token.js';
-import type { FetchLike } from './modules/discover/http.js';
-import { emptyLibrary, type LibraryLookup } from './modules/discover/library-lookup.js';
+import type { FetchLike as MetadataFetch } from './modules/discover/http.js';
+import {
+  emptyLibrary as noLibraryState,
+  type LibraryLookup as LibraryStateLookup,
+} from './modules/discover/library-lookup.js';
 import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
@@ -36,24 +41,42 @@ export interface AppDeps {
   clock?: Clock;
   /** Extra dependency checks for /health (CWA, SABnzbd, … in later milestones). */
   healthChecks?: HealthCheck[];
+  /** Where indexer keys are read (INDEXER_<ID>_API_KEY). */
+  env?: NodeJS.ProcessEnv;
+  /** "Already in the library?" check before any indexer search; backed by the library adapter once BRK-03 lands. */
+  bookLookup?: LibraryLookup;
+  /** Tests swap the indexer HTTP client. */
+  indexerFetch?: FetchLike;
   /** Outbound HTTP for metadata providers; tests pass a fake. */
-  fetch?: FetchLike;
+  fetch?: MetadataFetch;
   /** Overrides the default Hardcover → Open Library → Google Books providers. */
   metadataProviders?: MetadataProvider[];
   /** Library state for search hits; empty until the library stream provides one. */
-  libraryLookup?: LibraryLookup;
+  libraryLookup?: LibraryStateLookup;
   /** Calibre covers of library books; none until the library stream provides them. */
   libraryCovers?: LibraryCovers;
 }
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    downloads: Downloads;
+  }
+}
+
+/** Until the library adapter lands (BRK-03): the library has nothing yet. */
+const emptyLibrary: LibraryLookup = { findBook: () => Promise.resolve(null) };
 
 export async function buildApp({
   config,
   database,
   clock = systemClock,
   healthChecks = [],
+  env = process.env,
+  bookLookup = emptyLibrary,
+  indexerFetch,
   fetch = (input, init) => globalThis.fetch(input, init),
   metadataProviders,
-  libraryLookup = emptyLibrary,
+  libraryLookup = noLibraryState,
   libraryCovers = noLibraryCovers,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
@@ -85,7 +108,17 @@ export async function buildApp({
   );
 
   const authenticated = requireAuth(accessTokens, clock);
-  const budget = new IndexerBudget(database.db, clock);
+  const downloads = createDownloads({
+    db: database.db,
+    clock,
+    env,
+    library: bookLookup,
+    log: app.log,
+    ...(indexerFetch ? { fetch: indexerFetch } : {}),
+  });
+  app.decorate('downloads', downloads);
+  app.addHook('onClose', () => downloads.jobs.stop());
+
   const discover = createDiscover({
     config,
     db: database.db,
@@ -130,7 +163,7 @@ export async function buildApp({
         loginRateLimitPerMinute: config.LOGIN_RATE_LIMIT_PER_MINUTE,
       });
       await api.register(meRoutes, { users, requireAuth: authenticated });
-      await api.register(budgetRoutes, { budget, requireAuth: authenticated });
+      await api.register(budgetRoutes, { budget: downloads.budget, requireAuth: authenticated });
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
       await api.register(coverRoutes, { covers, requireAuth: authenticated });
     },
