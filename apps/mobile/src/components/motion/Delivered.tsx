@@ -22,6 +22,9 @@ export const DELIVERED = { burst: 420, confetti: 900, end: 1800, collapse: 260 }
 /** Reduced motion: how long the end frame stays before it collapses. */
 export const DELIVERED_STILL_MS = 1200;
 const HEIGHT = 170;
+/** The cover fills the e-reader's screen edge to edge (no light margin). */
+const SCREEN_W = 88;
+const SCREEN_H = 120;
 
 /** Where each paw-print ends up, relative to the centre of the e-reader. */
 const CONFETTI = [
@@ -95,7 +98,7 @@ export function Delivered({ workId, title, onDone }: DeliveredProps) {
       <View style={styles.reader}>
         <View style={styles.screen}>
           <Animated.View style={reduced ? IN_PLACE : cover} testID="delivered-cover">
-            <BookCover workId={workId} title={title} width={56} height={84} size="s" />
+            <BookCover workId={workId} title={title} width={SCREEN_W} height={SCREEN_H} size="s" />
           </Animated.View>
         </View>
         {reduced
@@ -148,10 +151,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   screen: {
-    width: 88,
-    height: 120,
+    width: SCREEN_W,
+    height: SCREEN_H,
     borderRadius: 6,
-    backgroundColor: motion.readerScreen,
+    backgroundColor: motion.eye,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',

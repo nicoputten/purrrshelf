@@ -135,7 +135,6 @@ export const motion = {
   basketWeave: '#9A6230',
   basketRim: '#D08C4A',
   reader: '#3B3347',
-  readerScreen: '#E9E4DC',
   badgeText: '#2A1606',
   zzz: '#B9B0C2',
 } as const;
