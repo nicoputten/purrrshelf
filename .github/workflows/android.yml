@@ -87,7 +87,12 @@ jobs:
             echo "::warning::No release key secrets: this test APK is signed with the public debug key and will not install over a release build."
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          # Accept the secret however it was pasted: wrapped lines, Windows
+          # line endings, or certutil's BEGIN/END lines.
+          if ! printf '%s' "$KEYSTORE_BASE64" | grep -v -e '-----' | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/release.keystore"; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not valid base64. Re-create it with the command in deploy/android-signing.md."
+            exit 1
+          fi
           # Android Gradle Plugin's injected signing overrides the template's
           # debug signing for every variant.
           {
