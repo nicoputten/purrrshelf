@@ -1,6 +1,6 @@
 # OPS-03 Sign releases with our own key and real version numbers
 
-Status: in review
+Status: done
 Milestone: 9
 Depends on: OPS-01
 

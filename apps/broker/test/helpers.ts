@@ -23,6 +23,7 @@ export function testConfig(overrides: Record<string, string> = {}): Config {
     LOG_LEVEL: 'silent',
     JWT_SECRET: TEST_SECRET,
     COVERS_PATH: mkdtempSync(join(tmpdir(), 'purrshelf-covers-')),
+    APP_UPDATES_PATH: mkdtempSync(join(tmpdir(), 'purrshelf-app-updates-')),
     ...overrides,
   });
 }

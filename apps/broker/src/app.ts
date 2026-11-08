@@ -10,6 +10,9 @@ import { systemClock, type Clock } from './clock.js';
 import type { Config } from './config.js';
 import type { DatabaseHandle } from './db/index.js';
 import { registerErrorHandling } from './errors.js';
+import { GitHubReleases, type AppReleaseSource } from './modules/app-updates/github.js';
+import { appUpdateRoutes } from './modules/app-updates/routes.js';
+import { AppUpdates } from './modules/app-updates/service.js';
 import { requireAuth } from './modules/auth/authenticate.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
@@ -76,6 +79,8 @@ export interface AppDeps {
   library?: LibraryAdapter | null;
   /** Overrides the ownership store finished requests write to (tests). */
   libraryItems?: OwnershipStore;
+  /** Where app releases come from; GitHub (APP_RELEASES_REPO) by default. */
+  appReleases?: AppReleaseSource;
 }
 
 declare module 'fastify' {
@@ -102,6 +107,7 @@ export async function buildApp({
   libraryCovers = noLibraryCovers,
   library = null,
   libraryItems: ownershipOverride,
+  appReleases,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     // Open event streams (Requests screen) must not hold up a shutdown.
@@ -209,6 +215,26 @@ export async function buildApp({
     log: app.log,
   });
 
+  const releaseSource =
+    appReleases ??
+    (config.APP_RELEASES_REPO
+      ? new GitHubReleases(config.APP_RELEASES_REPO, {
+          fetch,
+          timeoutMs: config.METADATA_TIMEOUT_MS,
+        })
+      : null);
+  const appUpdates = releaseSource
+    ? new AppUpdates({
+        source: releaseSource,
+        dir: config.APP_UPDATES_PATH,
+        fetch,
+        clock,
+        checkIntervalMs: config.APP_UPDATE_CHECK_MINUTES * 60_000,
+        maxBytes: config.MAX_APK_MB * 1024 * 1024,
+        log: app.log,
+      })
+    : null;
+
   const checks: HealthCheck[] = [
     { name: 'database', check: database.ping },
     ...(library ? [{ name: 'library', check: () => library.ping() }] : []),
@@ -260,6 +286,7 @@ export async function buildApp({
         requireAuth: authenticated,
       });
       await api.register(coverRoutes, { covers, requireAuth: authenticated });
+      await api.register(appUpdateRoutes, { updates: appUpdates, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },
   );

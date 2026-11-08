@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { AppRelease } from './app-updates.js';
 import { Budget } from './budget.js';
 import { ErrorResponse } from './errors.js';
 import {
@@ -102,6 +103,14 @@ export const endpoints = {
     summary: 'Per indexer: searches and grabs left in the rolling 24 hours, and the next free slot',
     auth: true,
     response: Budget,
+    status: 200,
+  },
+  appLatest: {
+    method: 'GET',
+    path: '/app/latest',
+    summary: 'Newest app release, for the in-app updater',
+    auth: true,
+    response: AppRelease,
     status: 200,
   },
   readers: {

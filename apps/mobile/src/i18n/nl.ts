@@ -280,6 +280,7 @@ export const nl: Translations = {
     KOBO_SYNC_NOT_SET_UP:
       'Kobo-synchronisatie is nog niet ingesteld voor je account. Vraag de beheerder.',
     KOBO_NOT_LINKED: 'Deze Kobo is nog niet gekoppeld aan de bibliotheek. Vraag de beheerder.',
+    APP_UPDATE_UNAVAILABLE: 'Er is nu geen informatie over app-updates. Probeer het later opnieuw.',
     REQUEST_STATE: 'Dat kan nu niet met deze aanvraag.',
     RELEASE_UNAVAILABLE: 'Die release is niet meer beschikbaar. Kies een andere.',
     DOWNLOADS_NOT_SET_UP: 'Downloaden is nog niet ingesteld op de server. Vraag het de beheerder.',

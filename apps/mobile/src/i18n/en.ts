@@ -275,6 +275,7 @@ export const en = {
     KOBO_SHELF_MISSING: 'Your Kobo shelf is missing in the library. Ask the admin to create it.',
     KOBO_SYNC_NOT_SET_UP: 'Kobo sync is not set up for your account yet. Ask the admin.',
     KOBO_NOT_LINKED: 'This Kobo is not linked to the library yet. Ask the admin.',
+    APP_UPDATE_UNAVAILABLE: 'No app update information right now. Try again later.',
     REQUEST_STATE: 'That can’t be done with this request right now.',
     RELEASE_UNAVAILABLE: 'That release is no longer available. Pick another one.',
     DOWNLOADS_NOT_SET_UP: 'Downloads are not set up on the server yet. Ask the admin.',

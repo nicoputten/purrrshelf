@@ -81,6 +81,22 @@ const envSchema = z.object({
   IMPORT_TIMEOUT_MINUTES: z.coerce.number().int().positive().default(30),
   /** Size cap for the ebook file taken from a download. */
   MAX_BOOK_MB: z.coerce.number().positive().default(50),
+
+  // In-app updates (BRK-10, ADR 0031). Off unless the release repo is set.
+  /** GitHub repository (`owner/name`) whose `mobile-v*` releases carry the APK. */
+  APP_RELEASES_REPO: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v && v !== 'change-me' ? v : undefined))
+    .refine((v) => v === undefined || /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(v), {
+      message: 'must look like owner/name',
+    }),
+  /** The broker asks GitHub at most once per this many minutes, and only when the app asks. */
+  APP_UPDATE_CHECK_MINUTES: z.coerce.number().int().positive().default(60),
+  /** Where the downloaded APK is kept, on the /data volume. */
+  APP_UPDATES_PATH: z.string().min(1).default('/data/app-updates'),
+  MAX_APK_MB: z.coerce.number().positive().default(200),
 });
 
 const configSchema = envSchema.superRefine((env, ctx) => {
