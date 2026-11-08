@@ -22,8 +22,9 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0015](0015-styling-with-tokens.md)             | Styling: one token set with React Native StyleSheet                     | accepted                  |
 | [0016](0016-epub-in-library-kepub-at-sync.md)   | The library stores EPUB; KEPUB is made at Kobo sync time                | accepted                  |
 | [0017](0017-cwa-setup-contract.md)              | The CWA setup the broker relies on                                      | accepted                  |
-| [0018](0018-work-ids-and-metadata-merge.md)     | Work ids and how metadata hits are merged                               | accepted                  |
-| [0019](0019-covers-served-by-the-broker.md)     | Covers are served by the broker, never hot-linked                       | accepted                  |
+| [0018](0018-trust-only-the-proxy.md)            | Trust X-Forwarded-For only from the proxy                               | accepted                  |
+| [0019](0019-work-ids-and-metadata-merge.md)     | Work ids and how metadata hits are merged                               | accepted                  |
+| [0020](0020-covers-served-by-the-broker.md)     | Covers are served by the broker, never hot-linked                       | accepted                  |
 
 ## Template
 

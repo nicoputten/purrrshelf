@@ -24,7 +24,7 @@ No canvas board (no UI).
 ## Notes / decisions
 
 Built in milestone 2 because the search screen (APP-02) needs covers. See
-[ADR 0019](../decisions/0019-covers-served-by-the-broker.md).
+[ADR 0020](../decisions/0020-covers-served-by-the-broker.md).
 
 - Library covers come through `LibraryCovers`, which the library stream
   implements on the `LibraryAdapter`; until then every book uses metadata

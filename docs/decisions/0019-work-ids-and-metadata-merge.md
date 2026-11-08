@@ -1,4 +1,4 @@
-# 0018. Work ids and how metadata hits are merged
+# 0019. Work ids and how metadata hits are merged
 
 Status: accepted
 Date: 2026-11-08

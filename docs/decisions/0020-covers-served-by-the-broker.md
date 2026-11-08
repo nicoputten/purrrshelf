@@ -1,4 +1,4 @@
-# 0019. Covers are served by the broker, never hot-linked
+# 0020. Covers are served by the broker, never hot-linked
 
 Status: accepted
 Date: 2026-11-08

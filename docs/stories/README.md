@@ -20,7 +20,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-02](APP-02.md) | Search for a book by title and see covers and badges           | 2         | todo   |
 | [APP-04](APP-04.md) | See book details, series and owners                            | 2         | todo   |
 | [BRK-03](BRK-03.md) | Read and change Kobo shelves through CWA                       | 3         | todo   |
-| [BRK-04](BRK-04.md) | Track the indexer budget per hour                              | 4         | todo   |
+| [BRK-04](BRK-04.md) | Track the indexer budget per hour                              | 4         | done   |
 | [BRK-05](BRK-05.md) | Search the indexer only when a book is added                   | 4         | todo   |
 | [BRK-06](BRK-06.md) | Pick, download and import the best release                     | 4         | todo   |
 | [APP-03](APP-03.md) | Add a book to my library                                       | 4         | todo   |
@@ -32,7 +32,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-09](BRK-09.md) | Import the existing Calibre library                            | 6         | todo   |
 | [APP-08](APP-08.md) | See reading progress from the Kobo                             | 7         | todo   |
 | [APP-09](APP-09.md) | See similar books on a book's page                             | 7         | todo   |
-| [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | todo   |
+| [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | done   |
 
 ## Template
 

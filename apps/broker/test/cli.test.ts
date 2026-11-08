@@ -69,6 +69,77 @@ describe('purrshelf CLI', () => {
     expect(h.err.join('\n')).toMatch(/Usage|locale/);
   });
 
+  it('adds, updates, lists and removes an indexer', async () => {
+    const h = harness();
+    const add = [
+      'indexer',
+      'add',
+      'primary',
+      '--name',
+      'Primary',
+      '--url',
+      'https://indexer.example.invalid',
+    ];
+    expect(await runCli([...add, '--search-limit', '25', '--grab-limit', '20'], h.io)).toBe(0);
+    expect(h.out.at(-1)).toBe(
+      'Saved indexer primary; set INDEXER_PRIMARY_API_KEY in the environment',
+    );
+    expect(
+      await runCli([...add, '--search-limit', '10', '--grab-limit', '5', '--priority=-1'], h.io),
+    ).toBe(0);
+
+    expect(await runCli(['indexer', 'list'], h.io)).toBe(0);
+    expect(h.out.at(-1)).toBe(
+      'primary\tPrimary\tpriority -1\t10 searches/h\t5 grabs/h\tINDEXER_PRIMARY_API_KEY missing',
+    );
+    const withKey = { ...h.io, env: { ...h.io.env, INDEXER_PRIMARY_API_KEY: 'fake' } };
+    await runCli(['indexer', 'list'], withKey);
+    expect(h.out.at(-1)).toMatch(/\tkey set$/);
+
+    expect(await runCli(['indexer', 'remove', 'primary'], h.io)).toBe(0);
+    expect(h.out.at(-1)).toBe('Removed indexer primary');
+    expect(await runCli(['indexer', 'remove', 'primary'], h.io)).toBe(1);
+    expect(h.err.at(-1)).toBe('No indexer "primary"');
+  });
+
+  it.each([
+    [['--search-limit', 'many', '--grab-limit', '1'], /limit/],
+    [['--search-limit', '1', '--grab-limit', '1', '--priority', 'first'], /Priority/],
+  ])('reports invalid indexer values with exit code 1: %j', async (flags, message) => {
+    const h = harness();
+    const argv = [
+      'indexer',
+      'add',
+      'primary',
+      '--name',
+      'P',
+      '--url',
+      'https://indexer.example.invalid',
+    ];
+    expect(await runCli([...argv, ...flags], h.io)).toBe(1);
+    expect(h.err.at(-1)).toMatch(message);
+  });
+
+  it.each([
+    [['indexer']],
+    [['indexer', 'add', 'primary', '--name', 'P']],
+    [['indexer', 'remove']],
+    [['indexer', 'explode']],
+  ])('prints usage with exit code 2 for %j', async (argv) => {
+    const h = harness();
+    expect(await runCli(argv, h.io)).toBe(2);
+    expect(h.err.join('\n')).toMatch(/Usage/);
+  });
+
+  it('rethrows unexpected indexer errors', async () => {
+    const h = harness();
+    const io = {
+      ...h.io,
+      openDatabase: () => ({ ...h.io.openDatabase(':memory:'), db: undefined as never }),
+    };
+    await expect(runCli(['indexer', 'list'], io)).rejects.toThrow();
+  });
+
   it('prints help with exit code 0', async () => {
     const h = harness();
     expect(await runCli(['--help'], h.io)).toBe(0);

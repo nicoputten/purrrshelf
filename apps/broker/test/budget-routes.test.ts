@@ -1,0 +1,114 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { Budget, TokenPair } from '@purrshelf/contract';
+import { IndexerBudget } from '../src/modules/budget/budget.js';
+import { IndexerRepository } from '../src/modules/indexers/repository.js';
+import { login, makeTestApp, type TestContext } from './helpers.js';
+
+let ctx: TestContext;
+afterEach(async () => {
+  await ctx?.close();
+});
+
+async function getBudget(token?: string) {
+  return ctx.app.inject({
+    method: 'GET',
+    url: '/api/v1/budget',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+}
+
+async function token() {
+  return TokenPair.parse((await login(ctx.app)).json()).accessToken;
+}
+
+describe('GET /api/v1/budget', () => {
+  it('needs a login', async () => {
+    ctx = await makeTestApp();
+    const res = await getBudget();
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ code: 'UNAUTHORIZED' });
+  });
+
+  it('answers an empty list without indexers', async () => {
+    ctx = await makeTestApp();
+    const res = await getBudget(await token());
+    expect(res.statusCode).toBe(200);
+    expect(Budget.parse(res.json())).toEqual({
+      windowMinutes: 60,
+      searches: { limit: 0, left: 0, nextFreeAt: null },
+      indexers: [],
+    });
+  });
+
+  it('returns searches and grabs left per indexer and the next free slot', async () => {
+    ctx = await makeTestApp();
+    const repo = new IndexerRepository(ctx.database.db, ctx.clock.fn);
+    repo.upsert({
+      id: 'primary',
+      name: 'Primary',
+      url: 'https://indexer.example.invalid',
+      priority: 0,
+      searchLimitPerHour: 2,
+      grabLimitPerHour: 5,
+    });
+    repo.upsert({
+      id: 'backup',
+      name: 'Backup',
+      url: 'https://backup.example.invalid',
+      priority: 1,
+      searchLimitPerHour: 1,
+      grabLimitPerHour: 1,
+    });
+    const budget = new IndexerBudget(ctx.database.db, ctx.clock.fn);
+    const start = ctx.clock.now.getTime();
+    await budget.spend('primary', 'search', async () => undefined);
+    await budget.spend('primary', 'search', async () => undefined);
+    await budget.spend('primary', 'grab', async () => undefined);
+    await budget.spend('backup', 'search', async () => undefined);
+    ctx.clock.advance(5 * 60_000);
+
+    const body = Budget.parse((await getBudget(await token())).json());
+    const freeAt = new Date(start + 60 * 60_000).toISOString();
+    expect(body.searches).toEqual({ limit: 3, left: 0, nextFreeAt: freeAt });
+    expect(body.indexers).toEqual([
+      {
+        indexerId: 'primary',
+        name: 'Primary',
+        priority: 0,
+        searches: { limit: 2, used: 2, left: 0, nextFreeAt: freeAt, limitReachedUntil: null },
+        grabs: {
+          limit: 5,
+          used: 1,
+          left: 4,
+          nextFreeAt: ctx.clock.now.toISOString(),
+          limitReachedUntil: null,
+        },
+      },
+      expect.objectContaining({
+        indexerId: 'backup',
+        searches: expect.objectContaining({ left: 0 }),
+      }),
+    ]);
+    // Never leaks the indexer URL.
+    expect(JSON.stringify(body)).not.toContain('example.invalid');
+  });
+
+  it('shows the earliest free search over all indexers', async () => {
+    ctx = await makeTestApp();
+    const repo = new IndexerRepository(ctx.database.db, ctx.clock.fn);
+    for (const id of ['a', 'b']) {
+      repo.upsert({
+        id,
+        name: id,
+        url: 'https://indexer.example.invalid',
+        priority: 0,
+        searchLimitPerHour: 1,
+        grabLimitPerHour: 1,
+      });
+    }
+    const budget = new IndexerBudget(ctx.database.db, ctx.clock.fn);
+    budget.reportLimitReached('a', 'search', 'limit', new Date(ctx.clock.now.getTime() + 60_000));
+    const body = Budget.parse((await getBudget(await token())).json());
+    expect(body.searches).toEqual({ limit: 2, left: 1, nextFreeAt: ctx.clock.now.toISOString() });
+  });
+});
