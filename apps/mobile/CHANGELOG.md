@@ -5,7 +5,9 @@
 
 ### Bug Fixes
 
-* **mobile:** show the napping cat when a search finds nothing (DES-02) ([0bbb95e](https://github.com/nicoputten/purrrshelf/commit/0bbb95e59aa3f29f623fc4b247b6c31079cd8492))
+* **mobile:** show the napping cat when a search finds nothing (DES-02) ([6aa1dd0](https://github.com/nicoputten/purrrshelf/commit/6aa1dd070affd2dd2ec9eca94e87b8b098aafcde))
+* **mobile:** let the cover fill the e-reader screen in Delivered ([4f9f333](https://github.com/nicoputten/purrrshelf/commit/4f9f3330c3587e80e0d4f5e74097d7d4f2295877))
+* **mobile:** show the paw loader for every search, not just the first ([45ef8c6](https://github.com/nicoputten/purrrshelf/commit/45ef8c65f359673ede8ad36dee0f31b2e1b3bde8))
 
 ## [1.2.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.1.0...mobile-v1.2.0) (2026-11-08)
 
