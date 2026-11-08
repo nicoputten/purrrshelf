@@ -33,8 +33,8 @@ so that the app feels alive and I can tell at a glance what just happened.
       drops into an e-reader with a spring and four paw-print confetti burst
       out; notificationAsync(Success) haptic
 - [x] **Nap**: sleeping cat breathing (scaleY 1 → 1.05, 1.8 s alternate) with
-      three staggered floating "z"; used for not found, waiting for the daily
-      budget and empty library tabs
+      three staggered floating "z"; used for no search results, not found,
+      waiting for the daily budget and empty library tabs
 - [x] **EarsButton**: wraps primary buttons (Fetch it now, Send). On press the
       button scales to 0.9 and springs back, two ears spring up from behind
       it and a small heart floats up

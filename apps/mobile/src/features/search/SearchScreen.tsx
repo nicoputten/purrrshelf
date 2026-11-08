@@ -10,7 +10,7 @@ import { Chips } from '@/components/Chips';
 import { Logo } from '@/components/Logo';
 import { Screen } from '@/components/Screen';
 import { SearchField } from '@/components/SearchField';
-import { PawLoader } from '@/components/motion';
+import { Nap, PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { fonts } from '@/theme/tokens';
 import { SearchResult } from './SearchResult';
@@ -86,11 +86,12 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
         </View>
       ) : search.isPending ? (
         <View style={styles.state}>
-          <PawLoader label />
+          <PawLoader />
           <AppText variant="muted">{t('search.searching')}</AppText>
         </View>
       ) : hits.length === 0 ? (
         <View style={styles.state}>
+          <Nap />
           <AppText style={styles.bold}>{t('search.noResultsTitle')}</AppText>
           <AppText variant="muted">{t('search.noResultsHint')}</AppText>
         </View>

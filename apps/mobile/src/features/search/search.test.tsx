@@ -129,6 +129,8 @@ describe('Search (home)', () => {
       submitEditing: true,
     });
     expect(await screen.findByText('Couldn’t sniff anything out')).toBeOnTheScreen();
+    // The napping cat sits over the message (DES-02).
+    expect(screen.getByTestId('nap', { includeHiddenElements: true })).toBeOnTheScreen();
   });
 
   it('shows a translated error with a retry when search is down', async () => {
