@@ -14,7 +14,8 @@
         "foregroundImage": "./assets/icon/adaptive-icon-foreground.png",
         "monochromeImage": "./assets/icon/adaptive-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["REQUEST_INSTALL_PACKAGES"]
     },
     "plugins": [
       "expo-router",

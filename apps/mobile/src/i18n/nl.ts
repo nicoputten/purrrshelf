@@ -27,6 +27,7 @@ export const nl: Translations = {
     library: 'Bibliotheek',
     requests: 'Verzoeken',
     settings: 'Instellingen',
+    settingsUpdate: 'Instellingen, app-update staat klaar',
   },
   home: {
     heading: 'Wat gaan we hierna lezen?',
@@ -265,6 +266,25 @@ export const nl: Translations = {
     library: 'Bibliotheek',
     importLibrary: 'Calibre-bibliotheek importeren',
     logout: 'Uitloggen',
+  },
+  updates: {
+    title: 'App',
+    installed: 'Geïnstalleerde versie: {{version}}',
+    unknownVersion: 'onbekend',
+    check: 'Zoek naar updates',
+    upToDate: 'Je hebt de nieuwste versie.',
+    available: 'Versie {{version}} staat klaar',
+    update: 'Bijwerken',
+    downloading: 'Downloaden… {{percent}}%',
+    installing: 'Installatie openen…',
+    permissionHint:
+      'De eerste keer vraagt Android of Purrshelf apps mag installeren. Zet het aan en ga terug.',
+    failed: {
+      check: 'Kon niet zoeken naar updates. Probeer het later opnieuw.',
+      download: 'Het downloaden is mislukt. Controleer je verbinding en probeer het opnieuw.',
+      hash: 'De download was beschadigd en is verwijderd. Probeer het opnieuw.',
+      install: 'Android kon de installatie niet openen.',
+    },
   },
   errors: {
     required: 'Vul dit in',

@@ -5,6 +5,7 @@ import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
+import { UpdateSection } from '@/features/updates/UpdateSection';
 import {
   usePreferences,
   type LanguagePreference,
@@ -67,6 +68,8 @@ export function SettingsScreen({ onImport }: SettingsScreenProps) {
         <AppText variant="label">{t('settings.library')}</AppText>
         <Button variant="outline" label={t('settings.importLibrary')} onPress={onImport} />
       </View>
+
+      <UpdateSection />
 
       <View style={styles.section}>
         <AppText variant="label">{t('settings.account')}</AppText>
