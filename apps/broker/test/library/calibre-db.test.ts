@@ -68,6 +68,11 @@ describe('CalibreDb', () => {
     expect(ids(db.findBooks({ isbns: ['12345'] }))).toEqual([]);
   });
 
+  it('finds by any identifier, type compared case-insensitively', () => {
+    expect(ids(db.findBooks({ identifier: { type: 'GoodReads', value: '12345' } }))).toEqual([1]);
+    expect(ids(db.findBooks({ identifier: { type: 'goodreads', value: '999' } }))).toEqual([]);
+  });
+
   it('returns nothing for empty id, uuid or ISBN lists', () => {
     expect(db.findBooks({ ids: [] })).toEqual([]);
     expect(db.findBooks({ uuids: [] })).toEqual([]);

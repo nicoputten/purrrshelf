@@ -7,6 +7,8 @@ export interface FixtureBook {
   /** A syntactically valid ISBN-13 in the 979-8 range, invented. */
   isbn: string;
   series?: { name: string; index: number };
+  /** Written as a `kobopush` identifier, the way the importer tags downloads. */
+  requestId?: string;
 }
 
 export const FIXTURE_BOOKS: FixtureBook[] = [
@@ -15,6 +17,7 @@ export const FIXTURE_BOOKS: FixtureBook[] = [
     author: 'Ada Quillfeather',
     isbn: '9798000000014',
     series: { name: 'Harbour Tales', index: 1 },
+    requestId: 'req-fixture-1',
   },
   { title: 'A Map of Quiet Rivers', author: 'Bram Inkwell', isbn: '9798000000021' },
 ];
@@ -77,6 +80,7 @@ export function makeEpub(book: FixtureBook): Buffer {
     <dc:title>${xml(book.title)}</dc:title>
     <dc:creator opf:role="aut">${xml(book.author)}</dc:creator>
     <dc:identifier id="isbn" opf:scheme="ISBN">${book.isbn}</dc:identifier>
+    ${book.requestId ? `<dc:identifier opf:scheme="kobopush">${xml(book.requestId)}</dc:identifier>` : ''}
     <dc:language>en</dc:language>
     ${series}
   </metadata>

@@ -37,6 +37,8 @@ export interface FindBooksQuery {
   title?: string;
   /** Case-insensitive substring of any author's name. */
   author?: string;
+  /** A Calibre identifier, e.g. `{ type: 'kobopush', value: '<request id>' }`; type compared lower-case. */
+  identifier?: { type: string; value: string };
   limit?: number;
 }
 

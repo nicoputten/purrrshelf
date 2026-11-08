@@ -53,6 +53,10 @@ describe.skipIf(!fixture)('CwaAdapter against CWA v4.0.8', () => {
     });
     const byIsbn = await adapter.findBooks({ isbns: [FIXTURE_BOOKS[1]!.isbn] });
     expect(byIsbn.map((b) => b.id)).toEqual([bookB]);
+    const byRequest = await adapter.findBooks({
+      identifier: { type: 'kobopush', value: FIXTURE_BOOKS[0]!.requestId! },
+    });
+    expect(byRequest.map((b) => b.id)).toEqual([bookA]);
     const byAuthor = await adapter.findBooks({ author: 'quillfeather' });
     expect(byAuthor.map((b) => b.id)).toEqual([bookA]);
   });
