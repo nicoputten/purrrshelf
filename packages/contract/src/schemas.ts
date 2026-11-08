@@ -89,12 +89,25 @@ export const LibraryOwner = z.object({
 });
 export type LibraryOwner = z.infer<typeof LibraryOwner>;
 
+export const ReadStatus = z.enum(['unread', 'reading', 'finished']);
+export type ReadStatus = z.infer<typeof ReadStatus>;
+
+/** The asking reader's progress, from their Kobo's sync data in CWA (APP-08). */
+export const MyReading = z.object({
+  status: ReadStatus,
+  /** 0–100, null when the Kobo never reported a position. */
+  progressPercent: z.number().nullable(),
+});
+export type MyReading = z.infer<typeof MyReading>;
+
 /** Set when the book is already in the shared library (ADR 0009). */
 export const LibraryState = z
   .object({
     itemId: z.string(),
     owners: z.array(LibraryOwner),
     onMyKobo: z.boolean(),
+    /** My progress; null when my Kobo is not linked. */
+    reading: MyReading.nullable(),
   })
   .meta({ id: 'LibraryState' });
 export type LibraryState = z.infer<typeof LibraryState>;
@@ -250,9 +263,6 @@ export type ItemKoboParams = z.infer<typeof ItemKoboParams>;
 
 // --- Library (APP-07) -------------------------------------------------------
 
-export const ReadStatus = z.enum(['unread', 'reading', 'finished']);
-export type ReadStatus = z.infer<typeof ReadStatus>;
-
 export const LibraryBookEntry = z.object({
   itemId: z.string(),
   /** Null for a Calibre book that no search hit has been matched to yet. */
@@ -266,13 +276,7 @@ export const LibraryBookEntry = z.object({
   owners: z.array(LibraryOwner),
   onMyKobo: z.boolean(),
   /** The asking reader's progress from their Kobo; null when their Kobo is not linked. */
-  reading: z
-    .object({
-      status: ReadStatus,
-      /** 0–100, null when the Kobo never reported a position. */
-      progressPercent: z.number().nullable(),
-    })
-    .nullable(),
+  reading: MyReading.nullable(),
 });
 export type LibraryBookEntry = z.infer<typeof LibraryBookEntry>;
 

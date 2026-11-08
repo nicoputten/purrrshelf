@@ -59,7 +59,26 @@ describe('ItemLibraryLookup', () => {
       itemId: item.id,
       owners: [{ id: partner.id, displayName: 'Reader Two', me: false }],
       onMyKobo: true,
+      reading: { status: 'unread', progressPercent: null },
     });
+  });
+
+  it('adds my reading progress from the Kobo sync data', async () => {
+    items.ensure({ workId: 'hardcover:1', calibreBookId: 8, title: 'x' });
+    cwa.app.exec(`
+      insert into book_read_link (book_id, user_id, read_status, last_modified) values (8, 3, 2, '2026-03-01 10:00:00');
+      insert into kobo_reading_state (id, user_id, book_id, last_modified) values (1, 3, 8, '2026-03-02 21:30:00');
+      insert into kobo_bookmark (kobo_reading_state_id, progress_percent) values (1, 42.5);
+    `);
+    const result = await lookup.match(reader.id, [candidate('hardcover:1')]);
+    expect(result.get('hardcover:1')?.reading).toEqual({
+      status: 'reading',
+      progressPercent: 42.5,
+    });
+    cwa.app.exec('drop table kobo_bookmark');
+    expect(
+      (await lookup.match(reader.id, [candidate('hardcover:1')])).get('hardcover:1')?.reading,
+    ).toBeNull();
   });
 
   it('uses one item when two Calibre books share a work id', async () => {
@@ -77,7 +96,7 @@ describe('ItemLibraryLookup', () => {
     const item = items.byCalibreId(7)!;
     expect(item.workId).toBe('hardcover:3');
     expect([...result.entries()]).toEqual([
-      ['hardcover:3', { itemId: item.id, owners: [], onMyKobo: false }],
+      ['hardcover:3', { itemId: item.id, owners: [], onMyKobo: false, reading: expect.anything() }],
     ]);
   });
 
@@ -88,6 +107,7 @@ describe('ItemLibraryLookup', () => {
     expect(result.get('hardcover:1')).toMatchObject({
       owners: [{ id: partner.id, me: true }],
       onMyKobo: false,
+      reading: null,
     });
     cwa.app.exec("delete from shelf where name = 'Kobo'");
     expect(

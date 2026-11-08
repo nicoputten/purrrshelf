@@ -35,6 +35,7 @@ const havelaar = hit({
       { id: 'u2', displayName: 'Reader Two', me: false },
     ],
     onMyKobo: true,
+    reading: null,
   },
 });
 
@@ -196,10 +197,10 @@ describe('badges and second line', () => {
 
   it('says "Yours" when the book is mine but not on my Kobo, and "In library" otherwise', () => {
     const owner = { id: 'u1', displayName: 'Me', me: true };
-    expect(libraryBadges({ itemId: 'i', owners: [owner], onMyKobo: false }, t)).toEqual([
-      { label: 'Yours', tone: 'mine' },
-    ]);
-    expect(libraryBadges({ itemId: 'i', owners: [], onMyKobo: false }, t)).toEqual([
+    expect(
+      libraryBadges({ itemId: 'i', owners: [owner], onMyKobo: false, reading: null }, t),
+    ).toEqual([{ label: 'Yours', tone: 'mine' }]);
+    expect(libraryBadges({ itemId: 'i', owners: [], onMyKobo: false, reading: null }, t)).toEqual([
       { label: 'In library', tone: 'success' },
     ]);
     expect(libraryBadges(null, t)).toEqual([]);

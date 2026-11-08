@@ -1,4 +1,4 @@
-import type { LibraryBookEntry } from '@purrshelf/contract';
+import type { LibraryBookEntry, MyReading } from '@purrshelf/contract';
 
 export type LibraryTab = 'mine' | 'partner' | 'all';
 export type LibraryView = 'recent' | 'unread' | 'onKobo' | 'series';
@@ -55,7 +55,7 @@ export type ReadLabel =
   | { key: 'library.unread' | 'library.reading' | 'library.finished' };
 
 /** "42% read", "Unread", "Reading" or "Finished"; nothing without a linked Kobo. */
-export function readLabel(book: LibraryBookEntry): ReadLabel | null {
+export function readLabel(book: { reading: MyReading | null }): ReadLabel | null {
   const r = book.reading;
   if (!r) return null;
   if (r.status === 'finished') return { key: 'library.finished' };

@@ -157,6 +157,7 @@ describe('GET /discover/search', () => {
                   itemId: 'item-1',
                   owners: [{ id: 'u2', displayName: 'Reader Two', me: false }],
                   onMyKobo: false,
+                  reading: null,
                 },
               ]),
           ),
@@ -168,6 +169,7 @@ describe('GET /discover/search', () => {
       itemId: 'item-1',
       owners: [{ id: 'u2', displayName: 'Reader Two', me: false }],
       onMyKobo: false,
+      reading: null,
     });
     expect(body.hits[1]!.library).toBeNull();
     const userId = ctx.users.findByUsername('reader')!.id;

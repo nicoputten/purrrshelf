@@ -43,3 +43,11 @@ Built in APP-06:
   not set up has no button.
 - A tap changes the row at once; if the broker refuses, the row goes back and
   the translated error shows under the card.
+
+Built in APP-08:
+
+- Under the hero, for a library book: "You've read 42%" (bold) above an
+  8-high accent bar on `surfaceRaised` with a round paw thumb at the
+  position. "You've finished this one" shows a full bar; "You're reading this
+  one" (reading, no position yet) shows no bar. Nothing for an unread book or
+  when my Kobo is not linked. Screen readers hear "Reading progress, 42%".
