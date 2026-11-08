@@ -126,7 +126,10 @@ describe('auto-pick', () => {
     expect(h.budget.status('primary', 'grab').used).toBe(1);
     const rows = releaseRows(req.id);
     const best = rows.find((r) => r.status === 'grabbed')!;
-    expect(best.guid).toBe('https://indexer.example.invalid/details/aaa111');
+    // The permalink guid becomes the bare id that t=get accepts.
+    expect(best.guid).toBe('aaa111');
+    const get = fakeFor(h, HOST).calls.find((u) => u.searchParams.get('t') === 'get')!;
+    expect(get.searchParams.get('id')).toBe('aaa111');
     expect(best.score).toBeGreaterThan(60);
     const pdf = rows.find((r) => r.guid === 'ccc333')!;
     expect(JSON.parse(pdf.rejectedJson)).toContain('format_excluded');
