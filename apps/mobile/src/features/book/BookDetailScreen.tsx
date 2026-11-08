@@ -14,6 +14,7 @@ import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes } from '@/theme/tokens';
 import { positionLabel, seriesStates, type SeriesEntryState } from './series';
+import { KoboCard } from './KoboCard';
 import { SimilarBooks } from './SimilarBooks';
 import { useSimilarWorks, useWork, useWorkSeries } from './useWork';
 
@@ -146,17 +147,7 @@ function BookDetail({
         </View>
       </View>
 
-      {work.library ? (
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <AppText style={styles.section}>{t('book.devices')}</AppText>
-          <View style={styles.deviceRow}>
-            <AppText style={styles.deviceName}>{t('book.yourKobo')}</AppText>
-            <AppText style={{ color: work.library.onMyKobo ? colors.success : colors.textMuted }}>
-              {work.library.onMyKobo ? t('book.onDevice') : t('book.notOnDevice')}
-            </AppText>
-          </View>
-        </View>
-      ) : null}
+      {work.library ? <KoboCard itemId={work.library.itemId} /> : null}
 
       {work.description ? (
         <AppText style={{ color: colors.textBody }}>{work.description}</AppText>
@@ -248,10 +239,7 @@ const styles = StyleSheet.create({
   heroText: { flex: 1, gap: 6 },
   title: { fontFamily: fonts.heading, fontSize: fontSize.heading },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  card: { borderRadius: radius.card, padding: 16, gap: 10 },
   section: { fontFamily: fonts.heading, fontSize: fontSize.section },
-  deviceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  deviceName: { fontFamily: fonts.bodyBold },
   seriesWrap: { gap: 8 },
   seriesRow: {
     flexDirection: 'row',

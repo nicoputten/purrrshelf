@@ -96,6 +96,14 @@ docker exec -it <broker-container> node dist/cli-main.js user set-password <user
 docker exec -it <broker-container> node dist/cli-main.js user list
 ```
 
+Then link each reader to their own CWA user, so the app can put books on
+their Kobo. This reads CWA's `app.db` and warns when the reader's `Kobo`
+shelf or Kobo sync token is missing:
+
+```sh
+docker exec -it <broker-container> node dist/cli-main.js user link-cwa <username> --cwa-user <CWA user name>
+```
+
 ## 8. Remote access
 
 Expose only the broker, through Nginx Proxy Manager with HTTPS and HSTS. See

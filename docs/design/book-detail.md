@@ -31,3 +31,15 @@ Built in APP-09:
 - "Add next in series: <title>" is an outline button under the series list.
   Adding is always this explicit tap; it shows once APP-03 provides the Add
   action.
+
+Built in APP-06:
+
+- The Kobo card has one row per reader's Kobo, mine first: "Your Kobo", then
+  "Reader Two's Kobo". Each row shows its state under the name: "On the
+  device" (success), "Waiting for next sync", "Leaves at next sync", "Not on
+  the device" or "Not set up yet" (muted).
+- Each row has one compact button (44 high): **Send** (accent) or **Remove**
+  (outlined). Screen readers hear "Send to Reader Two's Kobo". A Kobo that is
+  not set up has no button.
+- A tap changes the row at once; if the broker refuses, the row goes back and
+  the translated error shows under the card.

@@ -26,7 +26,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-03](APP-03.md) | Add a book to my library                                       | 4         | todo        |
 | [APP-05](APP-05.md) | Follow a request and pick another release                      | 4         | todo        |
 | [BRK-07](BRK-07.md) | Serve and cache book covers                                    | 4         | done        |
-| [APP-06](APP-06.md) | Send a book to my or my partner's Kobo                         | 5         | todo        |
+| [APP-06](APP-06.md) | Send a book to my or my partner's Kobo                         | 5         | in review   |
 | [APP-07](APP-07.md) | Browse my, my partner's and all books                          | 5         | todo        |
 | [BRK-08](BRK-08.md) | Delete books nobody owns after 7 days                          | 5         | todo        |
 | [BRK-09](BRK-09.md) | Import the existing Calibre library                            | 6         | todo        |

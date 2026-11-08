@@ -29,7 +29,7 @@ const havelaar = hit({
   language: 'nl',
   series: null,
   library: {
-    itemId: 'item-1',
+    itemId: '00000000-0000-4000-8000-000000000001',
     owners: [
       { id: 'u1', displayName: 'Reader One', me: true },
       { id: 'u2', displayName: 'Reader Two', me: false },
