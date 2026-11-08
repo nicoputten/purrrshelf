@@ -1,6 +1,6 @@
 # BRK-08 Delete books nobody owns after 7 days
 
-Status: in review
+Status: done
 Milestone: 5
 Depends on: BRK-03
 

@@ -31,6 +31,7 @@ function RootStack() {
         <Stack.Protected guard={status === 'ready'}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="book/[id]" />
+          <Stack.Screen name="import" />
         </Stack.Protected>
       </Stack>
       {status === 'ready' ? <AddSheetHost onAdded={() => router.navigate('/requests')} /> : null}
