@@ -4,6 +4,7 @@ import { fetch as expoFetch } from 'expo/fetch';
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { useSession } from '@/session/session';
+import { libraryBooksKey } from '@/features/library/useLibrary';
 
 export interface ServerEvent {
   event: string;
@@ -27,8 +28,31 @@ export function parseEvents(buffer: string): { events: ServerEvent[]; rest: stri
   return { events, rest };
 }
 
+const delivered: readonly BookRequest['status'][] = ['in_library', 'pushed'];
+
+/**
+ * Reloads the library when a request has just reached it, so the new book
+ * shows on the Library tab without restarting the app.
+ */
+export function refreshLibraryOnDelivery(
+  client: QueryClient,
+  before: readonly Pick<BookRequest, 'id' | 'status'>[],
+  after: readonly Pick<BookRequest, 'id' | 'status'>[],
+): void {
+  const was = new Map(before.map((r) => [r.id, r.status]));
+  const arrived = after.some((r) => {
+    const old = was.get(r.id);
+    return old !== undefined && !delivered.includes(old) && delivered.includes(r.status);
+  });
+  if (arrived) void client.invalidateQueries({ queryKey: libraryBooksKey });
+}
+
 /** Puts a changed request into the cached list (newest first) and its own entry. */
 export function applyRequest(client: QueryClient, request: BookRequest): void {
+  const previous =
+    client.getQueryData<RequestList>(['requests'])?.requests.find((r) => r.id === request.id) ??
+    client.getQueryData<BookRequest>(['request', request.id]);
+  refreshLibraryOnDelivery(client, previous ? [previous] : [], [request]);
   client.setQueryData<RequestList>(['requests'], (list) => {
     if (!list) return list;
     const others = list.requests.filter((r) => r.id !== request.id);

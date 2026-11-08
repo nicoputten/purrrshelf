@@ -1,11 +1,14 @@
+import { QueryClient } from '@tanstack/react-query';
 import { act, screen } from '@testing-library/react-native';
 import { setFetch, useSession } from '@/session/session';
 import { bookRequest, budgetWithIndexer, fakeBroker, ok, readers } from '@/test/fakeBroker';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { RequestsScreen } from './RequestsScreen';
 import {
+  applyRequest,
   parseEvents,
   RECONNECT_MS,
+  refreshLibraryOnDelivery,
   setEventStream,
   useLiveRequests,
   type EventStream,
@@ -133,5 +136,52 @@ describe('parseEvents', () => {
       ],
       rest: 'event: req',
     });
+  });
+});
+
+describe('library refresh', () => {
+  const spyOn = () => {
+    const client = new QueryClient();
+    const invalidate = jest.spyOn(client, 'invalidateQueries').mockResolvedValue();
+    return { client, invalidate };
+  };
+
+  it('reloads the library once a request reaches it', () => {
+    const { client, invalidate } = spyOn();
+    refreshLibraryOnDelivery(
+      client,
+      [{ id: 'r1', status: 'importing' }],
+      [{ id: 'r1', status: 'pushed' }],
+    );
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['library', 'books'] });
+  });
+
+  it('leaves the library alone otherwise', () => {
+    const { client, invalidate } = spyOn();
+    refreshLibraryOnDelivery(
+      client,
+      [
+        { id: 'r1', status: 'in_library' },
+        { id: 'r2', status: 'searching' },
+      ],
+      [
+        { id: 'r1', status: 'pushed' },
+        { id: 'r2', status: 'downloading' },
+        { id: 'r3', status: 'pushed' },
+      ],
+    );
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it('notices delivery in a live event', () => {
+    const { client, invalidate } = spyOn();
+    client.setQueryData(['requests'], { requests: [bookRequest({ status: 'importing' })] });
+    applyRequest(client, bookRequest({ status: 'in_library' }) as never);
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    // A request seen only on its own page counts too.
+    const single = spyOn();
+    single.client.setQueryData(['request', 'r1'], bookRequest({ status: 'importing' }));
+    applyRequest(single.client, bookRequest({ status: 'pushed' }) as never);
+    expect(single.invalidate).toHaveBeenCalledTimes(1);
   });
 });

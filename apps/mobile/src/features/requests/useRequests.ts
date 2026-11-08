@@ -1,8 +1,13 @@
-import { settledStatuses, type AddRequest, type BookRequest } from '@purrshelf/contract';
+import {
+  settledStatuses,
+  type AddRequest,
+  type BookRequest,
+  type RequestList,
+} from '@purrshelf/contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/session/session';
 import { rememberRequest } from './motion';
-import { applyRequest, useLiveRequests } from './useRequestEvents';
+import { applyRequest, refreshLibraryOnDelivery, useLiveRequests } from './useRequestEvents';
 
 /** How often the Requests screen asks for news while a request is on its way. */
 export const REQUEST_POLL_MS = 3000;
@@ -16,9 +21,15 @@ export const isSettled = (r: Pick<BookRequest, 'status'>) => settledStatuses.inc
 export function useRequests() {
   const call = useSession((s) => s.call);
   const live = useLiveRequests((s) => s.live);
+  const client = useQueryClient();
   return useQuery({
     queryKey: ['requests'],
-    queryFn: () => call('requests'),
+    queryFn: async () => {
+      const before = client.getQueryData<RequestList>(['requests'])?.requests ?? [];
+      const list = await call('requests');
+      refreshLibraryOnDelivery(client, before, list.requests);
+      return list;
+    },
     refetchInterval: (query) =>
       !live && query.state.data?.requests.every(isSettled) === false ? REQUEST_POLL_MS : false,
   });
