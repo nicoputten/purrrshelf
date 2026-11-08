@@ -1,6 +1,6 @@
 # 0028. Fast Android test builds, APK on every mobile release
 
-Status: accepted
+Status: accepted, release ABIs superseded by 0030
 Date: 2026-11-08
 
 ## Context
