@@ -15,3 +15,9 @@ pnpm --filter @purrshelf/mobile test
 - `src/i18n/` English and Dutch strings; a test fails if a key is missing in either.
 - `src/theme/` design tokens from the canvas (`docs/design/design-choices.md`).
 - `.maestro/` end-to-end flows; values such as the server URL come from env.
+
+## Releases
+
+Each `mobile-v*` GitHub release carries a release-signed arm64 APK, built by
+`.github/workflows/android.yml` (ADR 0028, 0030, 0031). The app's update check
+offers it to phones on an older version.
