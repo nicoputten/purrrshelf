@@ -60,6 +60,24 @@ const envSchema = z.object({
 
   /** Downloaded covers in three sizes (BRK-07). */
   COVERS_PATH: z.string().min(1).default('/data/covers'),
+
+  // Calibre-Web-Automated (ADR 0017). Without CWA_BASE_URL the library is off.
+  CWA_BASE_URL: z.url().optional(),
+  CWA_SERVICE_USER: z.string().min(1).optional(),
+  CWA_SERVICE_PASSWORD: z.string().min(1).optional(),
+  CWA_KOBO_SHELF_NAME: z.string().min(1).default('Kobo'),
+  CALIBRE_LIBRARY_PATH: z.string().min(1).default('/calibre-library'),
+  CWA_CONFIG_PATH: z.string().min(1).default('/cwa-config'),
+  CWA_INGEST_PATH: z.string().min(1).default('/cwa-book-ingest'),
+});
+
+const configSchema = envSchema.superRefine((env, ctx) => {
+  if (env.CWA_BASE_URL) {
+    for (const key of ['CWA_SERVICE_USER', 'CWA_SERVICE_PASSWORD'] as const) {
+      if (!env[key])
+        ctx.addIssue({ code: 'custom', path: [key], message: 'required with CWA_BASE_URL' });
+    }
+  }
 });
 
 export type Config = z.infer<typeof envSchema>;
@@ -72,7 +90,7 @@ export class ConfigError extends Error {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const result = envSchema.safeParse(env);
+  const result = configSchema.safeParse(env);
   if (!result.success) {
     throw new ConfigError(
       result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`),

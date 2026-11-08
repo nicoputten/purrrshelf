@@ -19,7 +19,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-02](BRK-02.md) | Search book metadata from three providers                      | 2         | done        |
 | [APP-02](APP-02.md) | Search for a book by title and see covers and badges           | 2         | done        |
 | [APP-04](APP-04.md) | See book details, series and owners                            | 2         | in progress |
-| [BRK-03](BRK-03.md) | Read and change Kobo shelves through CWA                       | 3         | todo        |
+| [BRK-03](BRK-03.md) | Read and change Kobo shelves through CWA                       | 3         | done        |
 | [BRK-04](BRK-04.md) | Track the indexer budget per hour                              | 4         | done        |
 | [BRK-05](BRK-05.md) | Search the indexer only when a book is added                   | 4         | done        |
 | [BRK-06](BRK-06.md) | Pick, download and import the best release                     | 4         | todo        |

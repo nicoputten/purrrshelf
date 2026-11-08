@@ -1,5 +1,8 @@
 # Integration test stack (milestone 3+): the same CWA image as the server.
-# The fixture in BRK-03 recreates the server setup on top of it (ADR 0017).
+# The fixture (apps/broker/test/contract/cwa-fixture.ts) recreates the server
+# setup on top of it (ADR 0017). Data lives in bind mounts under
+# CWA_STACK_DIR so the broker's contract tests can read metadata.db and
+# app.db the way the broker does on the server.
 services:
   cwa:
     image: crocodilestick/calibre-web-automated:v4.0.8
@@ -8,13 +11,8 @@ services:
       - PGID=568
       - TZ=Etc/UTC
     volumes:
-      - cwa-config:/config
-      - calibre-library:/calibre-library
-      - cwa-ingest:/cwa-book-ingest
+      - ${CWA_STACK_DIR:?set CWA_STACK_DIR}/config:/config
+      - ${CWA_STACK_DIR:?set CWA_STACK_DIR}/calibre-library:/calibre-library
+      - ${CWA_STACK_DIR:?set CWA_STACK_DIR}/cwa-book-ingest:/cwa-book-ingest
     ports:
-      - '8083'
-
-volumes:
-  cwa-config:
-  calibre-library:
-  cwa-ingest:
+      - '127.0.0.1:${CWA_PORT:-8083}:8083'

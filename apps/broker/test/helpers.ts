@@ -9,6 +9,7 @@ import type { FetchLike } from '../src/modules/discover/http.js';
 import type { LibraryCovers } from '../src/modules/covers/library-covers.js';
 import type { LibraryLookup } from '../src/modules/discover/library-lookup.js';
 import type { HealthCheck } from '../src/modules/health/routes.js';
+import type { LibraryAdapter } from '../src/modules/library/types.js';
 import { UserRepository } from '../src/modules/auth/users.js';
 
 /** Fake secret for tests only. */
@@ -48,6 +49,7 @@ export async function makeTestApp(
     fetch?: FetchLike;
     libraryLookup?: LibraryLookup;
     libraryCovers?: LibraryCovers;
+    library?: LibraryAdapter;
   } = {},
 ): Promise<TestContext> {
   const database = openDatabase(':memory:');
@@ -74,6 +76,7 @@ export async function makeTestApp(
       }),
     ...(opts.libraryLookup ? { libraryLookup: opts.libraryLookup } : {}),
     ...(opts.libraryCovers ? { libraryCovers: opts.libraryCovers } : {}),
+    library: opts.library,
   });
   return {
     app,

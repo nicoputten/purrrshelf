@@ -36,13 +36,17 @@ Settings:
 2. Each user has **Sync only books in selected shelves with Kobo** on and owns
    one private shelf named `Kobo` with **Sync this shelf with Kobo device** on.
    Shelf IDs differ per user; the broker looks them up by owner and name.
-3. Each Kobo's `api_endpoint` in `.kobo/Kobo/Kobo eReader.conf` points at its
+3. Each user has generated their Kobo sync token (profile page, Kobo sync
+   "Create/View"). The broker changes the `Kobo` shelf through that token
+   (ADR 0021), so a reader without one gets `KOBO_SYNC_NOT_SET_UP`.
+4. Each Kobo's `api_endpoint` in `.kobo/Kobo/Kobo eReader.conf` points at its
    own user's sync URL.
 
 ## 4. Still to do before milestone 3
 
-- Create the broker's CWA service account (rights to edit other users' shelves
-  and delete books). Put its credentials in the broker's `.env` as
+- Create the broker's CWA service account: a normal (non-admin) user with
+  **download** and **delete books** rights only; it needs no shelf rights
+  (ADR 0021). Put its credentials in the broker's `.env` as
   `CWA_SERVICE_USER` / `CWA_SERVICE_PASSWORD`, never in the repo.
 
 ## 5. SABnzbd (before milestone 4)
@@ -54,13 +58,13 @@ Settings:
 
 Run the broker as `568:568` so CWA can read what it writes to ingest.
 
-| Mount              | Access     | Why                                                |
-| ------------------ | ---------- | -------------------------------------------------- |
-| `/data`            | read-write | broker SQLite database and logs (owned by 568)     |
-| `/calibre-library` | read-only  | read `metadata.db` to find and list books          |
-| `/cwa-config`      | read-only  | read Kobo reading and sync state from CWA's app.db |
-| `/cwa-book-ingest` | read-write | the same dataset as CWA's ingest folder            |
-| `/downloads`       | read-only  | SABnzbd's `kobopush` complete folder               |
+| Mount              | Access     | Why                                                  |
+| ------------------ | ---------- | ---------------------------------------------------- |
+| `/data`            | read-write | broker SQLite database and logs (owned by 568)       |
+| `/calibre-library` | read-only  | read `metadata.db` to find and list books            |
+| `/cwa-config`      | read-only  | read shelves, Kobo tokens and reading state (app.db) |
+| `/cwa-book-ingest` | read-write | the same dataset as CWA's ingest folder              |
+| `/downloads`       | read-only  | SABnzbd's `kobopush` complete folder                 |
 
 See `docker-compose.example.yml` for a starting point.
 

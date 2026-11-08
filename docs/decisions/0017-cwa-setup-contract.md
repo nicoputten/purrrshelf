@@ -1,6 +1,6 @@
 # 0017. The CWA setup the broker relies on
 
-Status: accepted
+Status: accepted (service-account shelf rights superseded by [0021](0021-shelf-edits-via-kobo-api.md))
 Date: 2026-11-08
 
 ## Context

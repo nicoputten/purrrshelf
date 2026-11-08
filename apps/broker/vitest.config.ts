@@ -18,6 +18,8 @@ export default defineConfig({
         // …and so do the request status machine and the search that spends it.
         'src/modules/requests/**': { lines: 100, functions: 100, branches: 100, statements: 100 },
         'src/modules/search/**': { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Library adapters need full coverage (CLAUDE.md).
+        'src/modules/library/**': { 100: true },
       },
     },
   },

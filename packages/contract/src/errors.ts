@@ -14,6 +14,9 @@ export const errorCodes = [
   'NOT_FOUND',
   'METADATA_UNAVAILABLE',
   'INTERNAL_ERROR',
+  'LIBRARY_UNAVAILABLE',
+  'KOBO_SHELF_MISSING',
+  'KOBO_SYNC_NOT_SET_UP',
 ] as const;
 
 export const ErrorCode = z.enum(errorCodes);

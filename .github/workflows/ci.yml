@@ -65,6 +65,28 @@ jobs:
           path: '**/coverage/lcov.info'
           if-no-files-found: ignore
 
+  cwa-contract:
+    name: CWA contract tests (v4.0.8)
+    runs-on: ubuntu-latest
+    env:
+      CWA_STACK_DIR: ${{ github.workspace }}/.cwa-stack
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @purrshelf/contract build
+      - name: Start CWA and recreate the server setup (ADR 0017, 0021)
+        run: pnpm --filter @purrshelf/broker cwa:fixture
+      - name: Contract tests
+        run: pnpm --filter @purrshelf/broker test:contract
+      - name: CWA logs
+        if: failure()
+        run: docker compose -f test/stack/docker-compose.yml logs --tail 300
+
   broker-image:
     name: Broker Docker image
     runs-on: ubuntu-latest

@@ -32,3 +32,6 @@ apps/mobile/ios/
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# CWA integration stack data (test/stack)
+.cwa-stack/

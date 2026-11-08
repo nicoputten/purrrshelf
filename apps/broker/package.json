@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "cli": "tsx src/cli-main.ts",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "cwa:fixture": "tsx test/contract/cwa-fixture.ts",
+    "test:contract": "vitest run test/contract"
   },
   "dependencies": {
     "@fastify/rate-limit": "^11.2.2",

@@ -104,6 +104,11 @@ export const nl: Translations = {
     NOT_FOUND: 'Niet gevonden.',
     METADATA_UNAVAILABLE: 'Boeken zoeken lukt even niet. Probeer het zo nog eens.',
     INTERNAL_ERROR: 'De server had een probleem. Probeer het later opnieuw.',
+    LIBRARY_UNAVAILABLE: 'De bibliotheekserver antwoordt niet. Probeer het later opnieuw.',
+    KOBO_SHELF_MISSING:
+      'Je Kobo-plank ontbreekt in de bibliotheek. Vraag de beheerder om hem aan te maken.',
+    KOBO_SYNC_NOT_SET_UP:
+      'Kobo-synchronisatie is nog niet ingesteld voor je account. Vraag de beheerder.',
     unknown: 'Er ging iets mis. Probeer het opnieuw.',
   },
 };

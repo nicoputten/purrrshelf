@@ -36,3 +36,14 @@ ADRs win.
   (`deploy/reverse-proxy.md`). Kobo sync stays on the home Wi-Fi.
 - **Client IPs:** the broker trusts `X-Forwarded-For` only from the proxy
   (`TRUST_PROXY`, default private networks). → ADR 0018.
+
+## 2026-11-08: BRK-03 (CWA adapter)
+
+- **Shelf changes** go through each reader's Kobo sync API with their own
+  Kobo token, because CWA lets only the owner change a private shelf. The
+  service account needs only download and delete-books rights, not "rights
+  to edit other users' shelves". → ADR 0021, `deploy/truenas.md`.
+- **Readers need a Kobo token** (generated in CWA) before the app can put a
+  book on their shelf; a missing one is the `KOBO_SYNC_NOT_SET_UP` error.
+- **New error codes:** `LIBRARY_UNAVAILABLE`, `KOBO_SHELF_MISSING`,
+  `KOBO_SYNC_NOT_SET_UP` (translated in the app).

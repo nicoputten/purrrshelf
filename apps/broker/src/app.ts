@@ -33,6 +33,7 @@ import {
 import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
+import type { LibraryAdapter } from './modules/library/types.js';
 import { meRoutes } from './modules/me/routes.js';
 
 export interface AppDeps {
@@ -55,6 +56,8 @@ export interface AppDeps {
   libraryLookup?: LibraryStateLookup;
   /** Calibre covers of library books; none until the library stream provides them. */
   libraryCovers?: LibraryCovers;
+  /** The library (CWA). Absent when CWA is not configured. */
+  library?: LibraryAdapter | null;
 }
 
 declare module 'fastify' {
@@ -78,6 +81,7 @@ export async function buildApp({
   metadataProviders,
   libraryLookup = noLibraryState,
   libraryCovers = noLibraryCovers,
+  library = null,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: {
@@ -138,7 +142,11 @@ export async function buildApp({
     log: app.log,
   });
 
-  const checks: HealthCheck[] = [{ name: 'database', check: database.ping }, ...healthChecks];
+  const checks: HealthCheck[] = [
+    { name: 'database', check: database.ping },
+    ...(library ? [{ name: 'library', check: () => library.ping() }] : []),
+    ...healthChecks,
+  ];
   if (config.HARDCOVER_API_TOKEN) {
     const tokenCheck = hardcoverTokenCheck(
       config.HARDCOVER_API_TOKEN,
