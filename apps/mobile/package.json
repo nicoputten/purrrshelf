@@ -1,6 +1,6 @@
 {
   "name": "@purrshelf/mobile",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/fredoka": "^0.4.1",
