@@ -16,6 +16,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes } from '@/theme/tokens';
 import { positionLabel, seriesStates, type SeriesEntryState } from './series';
 import { KoboCard } from './KoboCard';
+import { MyLibraryCard } from './MyLibraryCard';
 import { ReadingProgress } from './ReadingProgress';
 import { SimilarBooks } from './SimilarBooks';
 import { useSimilarWorks, useWork, useWorkSeries } from './useWork';
@@ -154,6 +155,8 @@ function BookDetail({
       ) : null}
 
       {work.library ? <ReadingProgress reading={work.library.reading} /> : null}
+
+      {work.library ? <MyLibraryCard library={work.library} /> : null}
 
       {work.library ? (
         <KoboCard itemId={work.library.itemId} workId={work.id} title={work.title} />

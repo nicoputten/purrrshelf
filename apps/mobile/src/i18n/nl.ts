@@ -55,6 +55,12 @@ export const nl: Translations = {
   },
   book: {
     back: 'Terug',
+    removeFromLibrary: 'Uit mijn bibliotheek halen',
+    addToMyLibrary: 'Aan mijn bibliotheek toevoegen',
+    removed: 'Uit je bibliotheek en van je Kobo gehaald.',
+    removedNobody:
+      'Weggehaald. Niemand heeft het boek nu, dus over 7 dagen wordt het verwijderd, tenzij iemand het houdt.',
+    undo: 'Ongedaan maken',
     yours: 'Van jou',
     ownerBook: 'Van {{name}}',
     devices: 'Kobo',

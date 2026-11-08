@@ -55,3 +55,14 @@ Motion (DES-02): **Send** is an ears-up button. When the broker confirms the
 send, the Delivered scene plays once at the top of the Kobo card (cover drops
 into an e-reader, paw-print confetti, success haptic) and then collapses.
 Loading shows the paw-print loader.
+
+My library (BRK-08, ADR 0009):
+
+- For a library book I own, an outlined **Remove from my library** button sits
+  under the reading progress. It takes the book off my library and my Kobo
+  (the Kobo card's Remove only takes it off the device). Right after, the
+  button becomes "Removed from your library and your Kobo." with a compact
+  **Undo**; when nobody owns the book any more the text says it is deleted in
+  7 days unless someone keeps it.
+- For a library book I don't own (the partner's), an accent **Add to my
+  library** button makes it mine at once: no search, no grab.

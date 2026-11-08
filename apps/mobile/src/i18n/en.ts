@@ -52,6 +52,12 @@ export const en = {
   },
   book: {
     back: 'Back',
+    removeFromLibrary: 'Remove from my library',
+    addToMyLibrary: 'Add to my library',
+    removed: 'Removed from your library and your Kobo.',
+    removedNobody:
+      'Removed. Nobody owns it now, so it is deleted in 7 days unless someone keeps it.',
+    undo: 'Undo',
     yours: 'Yours',
     ownerBook: '{{name}}’s',
     devices: 'Kobo',
