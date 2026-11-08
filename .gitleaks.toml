@@ -1,0 +1,14 @@
+# Default gitleaks rules plus a few project-specific ones.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "newznab-or-sabnzbd-apikey"
+description = "32-character hex API key (Newznab indexers, SABnzbd)"
+regex = '''(?i)(?:apikey|api_key|API_KEY)\s*[=:]\s*["']?([a-f0-9]{32})["']?'''
+secretGroup = 1
+keywords = ["apikey", "api_key"]
+
+[allowlist]
+description = "Placeholder values in examples and test fixtures"
+regexes = ['''change-me''', '''example\.invalid''', '''0{32}''']

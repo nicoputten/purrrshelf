@@ -1,0 +1,40 @@
+# Example stack: CWA + SABnzbd + broker. Placeholders only.
+# Copy next to a filled-in .env and adjust the host paths for your server.
+services:
+  broker:
+    image: ghcr.io/OWNER/purrshelf-broker:latest
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      - /path/to/broker-data:/data
+      - /path/to/calibre-library:/calibre-library:ro
+      - /path/to/cwa-config:/cwa-config:ro
+      - /path/to/cwa-ingest:/ingest
+      - /path/to/sabnzbd/complete/kobopush:/downloads:ro
+
+  cwa:
+    image: crocodilestick/calibre-web-automated:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /path/to/cwa-config:/config
+      - /path/to/calibre-library:/calibre-library
+      - /path/to/cwa-ingest:/cwa-book-ingest
+    ports:
+      - '8083:8083'
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /path/to/sabnzbd-config:/config
+      - /path/to/sabnzbd/complete:/downloads

@@ -1,0 +1,39 @@
+# Stories
+
+Every piece of work starts as a user story here. A PR names the story ID it
+implements and updates the story's status (in its file and in this table) in
+the same PR.
+
+ID prefixes: **SRV** server setup, **BRK** broker, **APP** mobile app,
+**DES** design, **OPS** CI, release and hosting.
+
+Statuses: `todo`, `in progress`, `done`.
+
+| ID                  | Story                                                          | Milestone | Status |
+| ------------------- | -------------------------------------------------------------- | --------- | ------ |
+| [SRV-01](SRV-01.md) | Replace Calibre + Calibre-Web with CWA on the existing library | 0         | todo   |
+| [SRV-02](SRV-02.md) | Separate Kobo shelves and sync for both readers                | 0         | todo   |
+| [OPS-01](OPS-01.md) | Monorepo, CI, secret scanning, Docker image                    | 1         | done   |
+| [BRK-01](BRK-01.md) | Log in with my own account                                     | 1         | todo   |
+| [APP-01](APP-01.md) | Connect the app to my server and log in                        | 1         | todo   |
+| [BRK-02](BRK-02.md) | Search book metadata from three providers                      | 2         | todo   |
+| [APP-02](APP-02.md) | Search for a book by title and see covers and badges           | 2         | todo   |
+| [APP-04](APP-04.md) | See book details, series and owners                            | 2         | todo   |
+| [BRK-03](BRK-03.md) | Read and change Kobo shelves through CWA                       | 3         | todo   |
+| [BRK-04](BRK-04.md) | Track the indexer budget per hour                              | 4         | todo   |
+| [BRK-05](BRK-05.md) | Search the indexer only when a book is added                   | 4         | todo   |
+| [BRK-06](BRK-06.md) | Pick, download and import the best release                     | 4         | todo   |
+| [APP-03](APP-03.md) | Add a book to my library                                       | 4         | todo   |
+| [APP-05](APP-05.md) | Follow a request and pick another release                      | 4         | todo   |
+| [BRK-07](BRK-07.md) | Serve and cache book covers                                    | 4         | todo   |
+| [APP-06](APP-06.md) | Send a book to my or my partner's Kobo                         | 5         | todo   |
+| [APP-07](APP-07.md) | Browse my, my partner's and all books                          | 5         | todo   |
+| [BRK-08](BRK-08.md) | Delete books nobody owns after 7 days                          | 5         | todo   |
+| [BRK-09](BRK-09.md) | Import the existing Calibre library                            | 6         | todo   |
+| [APP-08](APP-08.md) | See reading progress from the Kobo                             | 7         | todo   |
+| [APP-09](APP-09.md) | See similar books on a book's page                             | 7         | todo   |
+| [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | todo   |
+
+## Template
+
+Copy [`_template.md`](_template.md) to `<ID>.md`.

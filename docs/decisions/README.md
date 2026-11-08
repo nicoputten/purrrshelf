@@ -1,0 +1,36 @@
+# Architecture decisions
+
+One record per decision. ADRs are never deleted or rewritten: when a decision
+changes, add a new ADR and mark the old one `superseded by NNNN`.
+
+| ADR                                             | Decision                                                                | Status   |
+| ----------------------------------------------- | ----------------------------------------------------------------------- | -------- |
+| [0001](0001-expo-react-native.md)               | Mobile app: React Native with Expo                                      | accepted |
+| [0002](0002-typescript-broker.md)               | Backend: a TypeScript broker in Docker                                  | accepted |
+| [0003](0003-cwa-as-library.md)                  | Library and Kobo sync: Calibre-Web-Automated behind an adapter          | accepted |
+| [0004](0004-direct-newznab-and-sabnzbd.md)      | Downloads: talk to Newznab and SABnzbd directly                         | accepted |
+| [0005](0005-search-only-on-add.md)              | Searching: only when a user adds a book, within a visible hourly budget | accepted |
+| [0006](0006-auto-pick-releases.md)              | Release picking: auto-pick by score, with "Pick another"                | accepted |
+| [0007](0007-metadata-providers.md)              | Metadata: Hardcover first, plus Open Library and Google Books           | accepted |
+| [0008](0008-two-users.md)                       | Users: exactly two, each with their own login and Kobo                  | accepted |
+| [0009](0009-shared-library-ownership.md)        | Library: one shared copy per book, ownership per user                   | accepted |
+| [0010](0010-languages-and-dark-mode.md)         | Languages: Dutch and English books, bilingual UI, dark mode             | accepted |
+| [0011](0011-remote-access-via-proxy.md)         | Remote access: through the existing Nginx Proxy Manager                 | accepted |
+| [0012](0012-no-notifications-v1.md)             | Notifications: none in v1                                               | accepted |
+| [0013](0013-public-repo.md)                     | Repo: public, MIT licence, no secrets or personal data                  | accepted |
+| [0014](0014-later-audiobooks-and-play-store.md) | Later: audiobooks via Audiobookshelf, possible Play Store release       | accepted |
+
+## Template
+
+```markdown
+# NNNN. Title
+
+Status: proposed | accepted | superseded by NNNN
+Date: YYYY-MM-DD
+
+## Context
+
+## Decision
+
+## Consequences
+```

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", "group:monorepos"],
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "description": "Expo pins compatible versions of its own packages; let `expo install --fix` handle them.",
+      "matchPackageNames": ["expo", "expo-*", "react-native", "react", "react-dom", "jest-expo"],
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    }
+  ]
+}
