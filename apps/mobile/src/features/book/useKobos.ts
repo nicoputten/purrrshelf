@@ -48,6 +48,7 @@ export function useKoboChange(itemId: string) {
       // Owners and "on your Kobo" on book and search pages change with it.
       void client.invalidateQueries({ queryKey: ['work'] });
       void client.invalidateQueries({ queryKey: ['discover'] });
+      void client.invalidateQueries({ queryKey: ['library', 'books'] });
     },
   });
 }

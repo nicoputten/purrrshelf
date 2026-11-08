@@ -561,6 +561,39 @@
         ]
       }
     },
+    "/api/v1/library/books": {
+      "get": {
+        "operationId": "libraryBooks",
+        "summary": "Every book in the shared library with owners, my Kobo and my reading progress",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryBooks"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/library/items/{itemId}/kobos": {
       "get": {
         "operationId": "itemKobos",
@@ -1008,6 +1041,129 @@
           }
         },
         "required": ["kobos"],
+        "additionalProperties": false
+      },
+      "LibraryBooks": {
+        "type": "object",
+        "properties": {
+          "books": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "itemId": {
+                  "type": "string"
+                },
+                "workId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "mediaType": {
+                  "type": "string",
+                  "enum": ["ebook", "audiobook"]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "authors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "series": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "position": {
+                          "type": ["number", "null"]
+                        }
+                      },
+                      "required": ["name", "position"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "addedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                "owners": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "me": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["id", "displayName", "me"],
+                    "additionalProperties": false
+                  }
+                },
+                "onMyKobo": {
+                  "type": "boolean"
+                },
+                "reading": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": ["unread", "reading", "finished"]
+                        },
+                        "progressPercent": {
+                          "type": ["number", "null"]
+                        }
+                      },
+                      "required": ["status", "progressPercent"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "itemId",
+                "workId",
+                "mediaType",
+                "title",
+                "authors",
+                "series",
+                "addedAt",
+                "owners",
+                "onMyKobo",
+                "reading"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["books"],
         "additionalProperties": false
       },
       "LoginRequest": {

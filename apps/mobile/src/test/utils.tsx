@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClient } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
@@ -16,6 +17,7 @@ export function testQueryClient(): QueryClient {
 
 export async function resetApp(): Promise<void> {
   secureStore.clear();
+  await AsyncStorage.clear();
   setFetch(undefined);
   useSession.setState({ status: 'loading', serverUrl: null, accessToken: null });
   usePreferences.setState({ theme: 'system', language: 'system', bookLanguage: null });

@@ -33,6 +33,7 @@ import {
 import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
+import { LibraryBrowser } from './modules/library/browse.js';
 import { LibraryItems } from './modules/library/items.js';
 import { Kobos } from './modules/library/kobos.js';
 import { ItemLibraryLookup } from './modules/library/lookup.js';
@@ -129,6 +130,7 @@ export async function buildApp({
   const authenticated = requireAuth(accessTokens, clock);
   const libraryItems = new LibraryItems(database.db, clock);
   const kobos = new Kobos(libraryItems, users, library);
+  const libraryBrowser = new LibraryBrowser(libraryItems, library, (id) => users.findById(id));
   const downloadClient =
     sab !== undefined
       ? sab
@@ -227,7 +229,11 @@ export async function buildApp({
         requireAuth: authenticated,
         log: app.log,
       });
-      await api.register(libraryRoutes, { kobos, requireAuth: authenticated });
+      await api.register(libraryRoutes, {
+        kobos,
+        browser: libraryBrowser,
+        requireAuth: authenticated,
+      });
       await api.register(coverRoutes, { covers, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },

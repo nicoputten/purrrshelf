@@ -1,3 +1,4 @@
+import { offline } from '@/lib/offline';
 import {
   ApiError,
   createClient,
@@ -137,6 +138,7 @@ export const useSession = create<SessionState>((set, get) => {
           .call('logout', { refreshToken })
           .catch(() => undefined);
       }
+      await offline.clear();
       await dropSession();
     },
 

@@ -10,6 +10,7 @@ import {
   ItemKoboParams,
   ItemKobos,
   ItemParams,
+  LibraryBooks,
   LoginRequest,
   LogoutRequest,
   Me,
@@ -161,6 +162,14 @@ export const endpoints = {
     auth: true,
     params: WorkParams,
     response: SimilarWorks,
+    status: 200,
+  },
+  libraryBooks: {
+    method: 'GET',
+    path: '/library/books',
+    summary: 'Every book in the shared library with owners, my Kobo and my reading progress',
+    auth: true,
+    response: LibraryBooks,
     status: 200,
   },
   itemKobos: {
