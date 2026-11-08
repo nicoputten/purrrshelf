@@ -1,3 +1,4 @@
 {
-  "apps/broker": "0.0.0"
+  "apps/broker": "0.0.0",
+  "apps/mobile": "0.0.0"
 }

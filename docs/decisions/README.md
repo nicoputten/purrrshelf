@@ -19,6 +19,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0012](0012-no-notifications-v1.md)             | Notifications: none in v1                                               | accepted |
 | [0013](0013-public-repo.md)                     | Repo: public, MIT licence, no secrets or personal data                  | accepted |
 | [0014](0014-later-audiobooks-and-play-store.md) | Later: audiobooks via Audiobookshelf, possible Play Store release       | accepted |
+| [0015](0015-styling-with-tokens.md)             | Styling: one token set with React Native StyleSheet                     | accepted |
 
 ## Template
 

@@ -1,0 +1,21 @@
+# End-to-end: connect to a broker and log in.
+# Run against the broker test stack:
+#   SERVER_URL=http://10.0.2.2:8080 USERNAME=… PASSWORD=… maestro test apps/mobile/.maestro
+# Values come from the environment; none are stored here.
+appId: app.purrshelf
+---
+- launchApp:
+    clearState: true
+- assertVisible: 'Server address'
+- tapOn: 'Server address'
+- inputText: ${SERVER_URL}
+- tapOn: 'Connect'
+- tapOn: 'Username'
+- inputText: ${USERNAME}
+- tapOn: 'Password'
+- inputText: ${PASSWORD}
+- tapOn: 'Log in'
+- assertVisible: 'What are we reading next?'
+- tapOn: 'Settings'
+- tapOn: 'Log out'
+- assertVisible: 'Log in'

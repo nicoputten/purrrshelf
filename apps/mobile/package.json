@@ -1,0 +1,75 @@
+{
+  "name": "@purrshelf/mobile",
+  "version": "0.0.0",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@expo-google-fonts/fredoka": "^0.4.1",
+    "@expo-google-fonts/nunito": "^0.4.2",
+    "@hookform/resolvers": "^7.0.3",
+    "@purrshelf/contract": "workspace:*",
+    "@tanstack/react-query": "^5.107.1",
+    "expo": "~58.0.23",
+    "expo-constants": "~58.0.15",
+    "expo-font": "~58.0.11",
+    "expo-linking": "~58.0.16",
+    "expo-localization": "~58.0.5",
+    "expo-router": "~58.0.30",
+    "expo-secure-store": "~58.0.2",
+    "expo-splash-screen": "~58.0.13",
+    "expo-status-bar": "~58.0.4",
+    "expo-system-ui": "~58.0.7",
+    "i18next": "^27.0.1",
+    "react": "19.3.0",
+    "react-hook-form": "^7.91.0",
+    "react-i18next": "^18.0.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
+    "react-native-svg": "15.16.0",
+    "zod": "^4.6.7",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@purrshelf/config": "workspace:*",
+    "@testing-library/react-native": "^14.1.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jest": "^30.5.2",
+    "jest-expo": "^58.0.14",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --ci",
+    "test:coverage": "jest --ci --coverage"
+  },
+  "private": true,
+  "description": "Purrshelf Android app: a thin client for a self-hosted Purrshelf broker.",
+  "license": "MIT",
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/*.test.ts?(x)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.test.{ts,tsx}",
+      "!src/test/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 80,
+        "branches": 70,
+        "functions": 80,
+        "statements": 80
+      }
+    }
+  }
+}

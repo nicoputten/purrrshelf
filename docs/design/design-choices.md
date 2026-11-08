@@ -14,7 +14,7 @@ When a screen changes, update its file in this folder in the same PR.
 
 ## Colour (dark, primary theme)
 
-All colours come from one token set (`apps/mobile/src/theme/tokens.ts`).
+All colours come from one token set (`apps/mobile/src/theme/tokens.ts`); see ADR 0015.
 
 | Token                   | Hex                   | Used for                                            |
 | ----------------------- | --------------------- | --------------------------------------------------- |

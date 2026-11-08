@@ -5,6 +5,9 @@
   "packages": {
     "apps/broker": {
       "component": "broker"
+    },
+    "apps/mobile": {
+      "component": "mobile"
     }
   }
 }

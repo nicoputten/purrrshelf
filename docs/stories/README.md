@@ -15,7 +15,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [SRV-02](SRV-02.md) | Separate Kobo shelves and sync for both readers                | 0         | todo   |
 | [OPS-01](OPS-01.md) | Monorepo, CI, secret scanning, Docker image                    | 1         | done   |
 | [BRK-01](BRK-01.md) | Log in with my own account                                     | 1         | done   |
-| [APP-01](APP-01.md) | Connect the app to my server and log in                        | 1         | todo   |
+| [APP-01](APP-01.md) | Connect the app to my server and log in                        | 1         | done   |
 | [BRK-02](BRK-02.md) | Search book metadata from three providers                      | 2         | todo   |
 | [APP-02](APP-02.md) | Search for a book by title and see covers and badges           | 2         | todo   |
 | [APP-04](APP-04.md) | See book details, series and owners                            | 2         | todo   |
