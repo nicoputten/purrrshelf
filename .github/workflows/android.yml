@@ -1,12 +1,14 @@
 name: Android APK
 
-# Builds a sideloadable APK (ADR 0028).
+# Builds a sideloadable APK (ADR 0028, 0030).
 # - Release: called by release.yml when release-please cuts a mobile release
 #   (tags pushed with GITHUB_TOKEN never trigger other workflows, so the tag
-#   trigger below only fires for tags pushed by hand). Builds every ABI and
-#   attaches the APK to the GitHub release.
-# - Test: run by hand from the Actions tab. Builds arm64-v8a only (every
-#   current Android phone), which skips three quarters of the native compile.
+#   trigger below only fires for tags pushed by hand). Attaches the APK to the
+#   GitHub release.
+# - Test: run by hand from the Actions tab.
+# Every build makes arm64-v8a only (the phones we use), which skips three
+# quarters of the native compile and shares one cache. All four ABIs are a
+# choice in the Actions tab.
 on:
   push:
     tags: ['mobile-v*']
@@ -34,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ABIS: ${{ inputs.abis || 'armeabi-v7a,arm64-v8a,x86,x86_64' }}
+  ABIS: ${{ inputs.abis || 'arm64-v8a' }}
   RELEASE_TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
 
 jobs:
