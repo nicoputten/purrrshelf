@@ -1,6 +1,8 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { z } from 'zod';
-import { IndexerLimitReachedError } from './budget.js';
+import { IndexerLimitReachedError, IndexerRequestError } from './budget.js';
+
+export { IndexerRequestError };
 
 /**
  * Raw Newznab HTTP client. Only {@link IndexerGateway} may use it, so that
@@ -33,11 +35,6 @@ export interface NewznabCaps {
   bookSearch: boolean;
   /** Parameters `t=book` accepts, e.g. title, author. */
   bookParams: string[];
-}
-
-/** Any failure talking to the indexer that is not a limit. */
-export class IndexerRequestError extends Error {
-  override name = 'IndexerRequestError';
 }
 
 const TIMEOUT_MS = 20_000;
@@ -130,7 +127,7 @@ function checkError(doc: unknown): void {
   if (!err.success) return;
   const { code, description = 'Indexer error' } = err.data.error;
   if (LIMIT_CODES.has(code)) throw new IndexerLimitReachedError(description);
-  throw new IndexerRequestError(`Indexer error ${code}: ${description}`);
+  throw new IndexerRequestError(`Indexer error ${code}: ${description}`, { code });
 }
 
 function retryAfter(res: Response, now: Date): Date | undefined {

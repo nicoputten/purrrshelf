@@ -183,6 +183,53 @@ describe('auto-pick', () => {
     expect(releaseRows(req.id).find((r) => r.guid.endsWith('aaa111'))!.status).toBe('failed');
   });
 
+  describe('an indexer that refuses the same way every time', () => {
+    beforeEach(() => {
+      fakeFor(h, HOST).on('search', { body: fixture('search-many.xml') });
+    });
+
+    it('stops after the same error code twice, without spending more grabs', async () => {
+      fakeFor(h, HOST).on('get', { body: fixture('error-no-item.xml') });
+      const req = await add();
+      expect(req.status).toBe('download_failed');
+      expect(req.error).toMatch(
+        /Indexer error 300: No such item\. Stopped asking Primary so no more downloads are spent\. No other release left/,
+      );
+      expect(h.budget.status('primary', 'grab').used).toBe(2);
+      expect(releaseRows(req.id).filter((r) => r.status === 'candidate')).toHaveLength(2);
+    });
+
+    it('stops at once when the indexer refuses the account', async () => {
+      fakeFor(h, HOST).on('get', { body: fixture('error-key.xml') });
+      const req = await add();
+      expect(req.error).toMatch(/Incorrect user credentials\. Stopped asking Primary/);
+      expect(h.budget.status('primary', 'grab').used).toBe(1);
+    });
+
+    it('keeps going after one refusal when the next release works', async () => {
+      let calls = 0;
+      fakeFor(h, HOST).on('get', () =>
+        ++calls === 1 ? { body: fixture('error-no-item.xml') } : { body: fixture('release.nzb') },
+      );
+      const req = await add();
+      expect(req.status).toBe('downloading');
+      expect(h.budget.status('primary', 'grab').used).toBe(2);
+    });
+
+    it('keeps trying when the errors differ or are not indexer codes', async () => {
+      const replies = [
+        { body: fixture('error-no-item.xml') },
+        { status: 502, body: 'bad gateway' },
+        { body: fixture('error-no-item.xml') },
+        { body: fixture('release.nzb') },
+      ];
+      fakeFor(h, HOST).on('get', () => replies.shift()!);
+      const req = await add();
+      expect(req.status).toBe('downloading');
+      expect(h.budget.status('primary', 'grab').used).toBe(4);
+    });
+  });
+
   it('fails the download when SABnzbd refuses, without spending more grabs', async () => {
     sab.addError = new SabnzbdError('SABnzbd: API Key Incorrect');
     const req = await add();

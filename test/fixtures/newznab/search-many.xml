@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:newznab="http://www.newznab.com/DTD/2010/feeds/attributes/">
+  <channel>
+    <title>Fake indexer</title>
+    <item>
+      <title>Ada Quill - The Lighthouse Cartographer (2021) EPUB</title>
+      <guid>aaa111</guid>
+      <pubDate>Mon, 01 Mar 2021 10:00:00 +0000</pubDate>
+      <newznab:attr name="category" value="7020"/>
+      <newznab:attr name="size" value="2400000"/>
+      <newznab:attr name="grabs" value="42"/>
+      <newznab:attr name="language" value="English"/>
+    </item>
+    <item>
+      <title>Ada Quill - The Lighthouse Cartographer (2021) EPUB</title>
+      <guid>ddd444</guid>
+      <pubDate>Mon, 01 Mar 2021 10:00:00 +0000</pubDate>
+      <newznab:attr name="category" value="7020"/>
+      <newznab:attr name="size" value="2401000"/>
+      <newznab:attr name="grabs" value="30"/>
+      <newznab:attr name="language" value="English"/>
+    </item>
+    <item>
+      <title>Ada Quill - The Lighthouse Cartographer (2021) EPUB</title>
+      <guid>eee555</guid>
+      <pubDate>Mon, 01 Mar 2021 10:00:00 +0000</pubDate>
+      <newznab:attr name="category" value="7020"/>
+      <newznab:attr name="size" value="2402000"/>
+      <newznab:attr name="grabs" value="20"/>
+      <newznab:attr name="language" value="English"/>
+    </item>
+    <item>
+      <title>Ada Quill - The Lighthouse Cartographer (2021) EPUB</title>
+      <guid>fff666</guid>
+      <pubDate>Mon, 01 Mar 2021 10:00:00 +0000</pubDate>
+      <newznab:attr name="category" value="7020"/>
+      <newznab:attr name="size" value="2403000"/>
+      <newznab:attr name="grabs" value="10"/>
+      <newznab:attr name="language" value="English"/>
+    </item>
+  </channel>
+</rss>

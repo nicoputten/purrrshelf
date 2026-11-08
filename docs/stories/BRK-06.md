@@ -55,3 +55,6 @@ How it is built:
   nothing is grabbed.
 - Pushing to a Kobo shelf after `in_library` is APP-03/APP-06 work.
 - Before this story (manual): the SABnzbd `kobopush` category and API key exist.
+- An indexer that refuses two grabs in a row with the same Newznab error code
+  (or refuses the account) gets no more grabs for that request
+  ([ADR 0027](../decisions/0027-stop-on-repeated-indexer-refusals.md)).

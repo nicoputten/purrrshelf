@@ -30,6 +30,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | accepted                   |
 | [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                   |
 | [0025](0025-daily-indexer-budget.md)                        | The indexer budget counts per day, not per hour                         | accepted                   |
+| [0027](0027-stop-on-repeated-indexer-refusals.md)           | Stop grabbing when an indexer refuses the same way twice                | accepted                   |
 
 ## Template
 
