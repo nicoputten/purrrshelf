@@ -20,14 +20,14 @@ import { useMotionMode } from './useMotion';
 const STAGE_W = 576;
 const STAGE_H = 300;
 
-/** Swat timeline in ms (board 9b, squeezed to about 1.6 s). */
+/** Swat timeline in ms (board 9b): the swat itself takes about 1.6 s, then "Got it!" stays until 2.2 s. */
 export const SWAT = {
   tap1: 220,
   tap2: 400,
   swat: 680,
   land: 980,
   badge: 1080,
-  end: 1600,
+  end: 2200,
   collapse: 260,
 } as const;
 /** Reduced motion: how long the end frame stays before the card collapses. */

@@ -106,22 +106,19 @@ function KoboRow({
         <AppText style={[styles.name, { color: colors.text }]}>{name}</AppText>
         <AppText style={{ color: stateColor }}>{t(`book.kobo.${kobo.state}`)}</AppText>
       </View>
-      {action === 'send' ? (
+      {action ? (
+        // One button for both actions, so the ears from a Send keep playing
+        // when the row turns into Remove right after it.
         <EarsButton
           compact
-          label={t('book.send')}
-          accessibilityLabel={t('book.sendTo', { kobo: name })}
+          celebrate={action === 'send'}
+          label={t(`book.${action}`)}
+          accessibilityLabel={t(action === 'send' ? 'book.sendTo' : 'book.removeFrom', {
+            kobo: name,
+          })}
+          variant={action === 'send' ? 'primary' : 'outline'}
           busy={busy}
-          onPress={() => onAction('send')}
-        />
-      ) : action ? (
-        <Button
-          compact
-          label={t('book.remove')}
-          accessibilityLabel={t('book.removeFrom', { kobo: name })}
-          variant="outline"
-          busy={busy}
-          onPress={() => onAction('remove')}
+          onPress={() => onAction(action)}
         />
       ) : null}
     </View>
