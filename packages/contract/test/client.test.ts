@@ -1,6 +1,8 @@
+import { z } from 'zod';
 import { describe, expect, it, vi } from 'vitest';
 import {
   ApiError,
+  buildPath,
   NetworkError,
   coverUrl,
   createClient,
@@ -161,5 +163,21 @@ describe('coverUrl', () => {
     expect(coverUrl('https://x.example.invalid/', 'hardcover:1', 's')).toBe(
       'https://x.example.invalid/api/v1/covers/hardcover%3A1?size=s',
     );
+  });
+});
+
+describe('buildPath', () => {
+  it('leaves the path alone when every query parameter is empty', () => {
+    const ep = {
+      method: 'GET',
+      path: '/x',
+      summary: 'x',
+      auth: false,
+      query: z.object({ a: z.string().optional() }),
+      response: z.object({}),
+      status: 200,
+    } as const;
+    expect(buildPath(ep, {})).toBe('/x');
+    expect(buildPath(ep, { a: 'b c' })).toBe('/x?a=b+c');
   });
 });
