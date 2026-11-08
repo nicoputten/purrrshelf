@@ -3,9 +3,11 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { PreHandler } from '../auth/authenticate.js';
 import type { LibraryBrowser } from './browse.js';
 import type { Kobos } from './kobos.js';
+import type { Ownership } from './ownership.js';
 
 export interface LibraryRoutesOptions {
   kobos: Kobos;
+  ownership: Ownership;
   browser: LibraryBrowser;
   requireAuth: PreHandler;
 }
@@ -15,8 +17,26 @@ const userIdOf = (request: { userId?: string }): string => request.userId as str
 
 /** The shared library (APP-07) and its books on the readers' Kobos (APP-06). */
 export const libraryRoutes: FastifyPluginAsyncZod<LibraryRoutesOptions> = async (app, opts) => {
-  const { libraryBooks, itemKobos, sendToKobo, removeFromKobo } = endpoints;
-  const { kobos, browser, requireAuth } = opts;
+  const { libraryBooks, keepBook, removeBook, itemKobos, sendToKobo, removeFromKobo } = endpoints;
+  const { kobos, ownership, browser, requireAuth } = opts;
+
+  app.put(
+    keepBook.path,
+    {
+      preHandler: requireAuth,
+      schema: { params: keepBook.params, response: { 200: keepBook.response } },
+    },
+    async (request) => ownership.keep(request.params.itemId, userIdOf(request)),
+  );
+
+  app.delete(
+    removeBook.path,
+    {
+      preHandler: requireAuth,
+      schema: { params: removeBook.params, response: { 200: removeBook.response } },
+    },
+    (request) => ownership.remove(request.params.itemId, userIdOf(request)),
+  );
 
   app.get(
     libraryBooks.path,

@@ -34,6 +34,8 @@ import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import { LibraryBrowser } from './modules/library/browse.js';
+import { CleanupJobs, LibraryCleanup } from './modules/library/cleanup.js';
+import { Ownership } from './modules/library/ownership.js';
 import { LibraryItems } from './modules/library/items.js';
 import { Kobos } from './modules/library/kobos.js';
 import { ItemLibraryLookup } from './modules/library/lookup.js';
@@ -124,6 +126,17 @@ export async function buildApp({
   const authenticated = requireAuth(accessTokens, clock);
   const libraryItems = new LibraryItems(database.db, clock);
   const kobos = new Kobos(libraryItems, users, library);
+  const ownership = new Ownership(libraryItems, library, (id) => users.findById(id));
+  if (library) {
+    const cleanup = new CleanupJobs(
+      database.db,
+      clock,
+      new LibraryCleanup(libraryItems, library, app.log),
+      app.log,
+    );
+    app.addHook('onReady', async () => cleanup.start());
+    app.addHook('onClose', () => cleanup.stop());
+  }
   const libraryBrowser = new LibraryBrowser(libraryItems, library, (id) => users.findById(id));
   const downloadClient =
     sab !== undefined
@@ -215,6 +228,7 @@ export async function buildApp({
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
       await api.register(libraryRoutes, {
         kobos,
+        ownership,
         browser: libraryBrowser,
         requireAuth: authenticated,
       });
