@@ -1,0 +1,20 @@
+# Integration test stack (milestone 3+): the same CWA image as the server.
+# The fixture in BRK-03 recreates the server setup on top of it (ADR 0017).
+services:
+  cwa:
+    image: crocodilestick/calibre-web-automated:v4.0.8
+    environment:
+      - PUID=568
+      - PGID=568
+      - TZ=Etc/UTC
+    volumes:
+      - cwa-config:/config
+      - calibre-library:/calibre-library
+      - cwa-ingest:/cwa-book-ingest
+    ports:
+      - '8083'
+
+volumes:
+  cwa-config:
+  calibre-library:
+  cwa-ingest:

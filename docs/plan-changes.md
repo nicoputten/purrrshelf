@@ -1,0 +1,30 @@
+# Changes to the build plan
+
+The build plan document is the original handover. Changes decided later are
+recorded here and in the linked ADRs; where they differ, this file and the
+ADRs win.
+
+## 2026-11-08: milestone 0 done (server setup)
+
+- **Library server:** Calibre-Web-Automated v4.0.8 (TrueNAS community app).
+  Calibre desktop, Calibre-Web and Bookshelf are retired. → ADR 0017,
+  `deploy/truenas.md`.
+- **Formats:** the requirement "Auto-convert to KEPUB" is replaced. CWA's
+  auto-convert target is EPUB, the library stores EPUB, and CWA's kepubify
+  makes KEPUB at Kobo sync time. The broker never converts to KEPUB. → ADR 0016.
+- **CWA setup the adapter relies on:** readers are non-admin users with
+  selected-shelves sync; each owns a private `Kobo` shelf whose ID is looked up
+  per user at runtime; CWA runs as UID/GID 568; paths `/calibre-library` and
+  `/cwa-book-ingest`; CSRF login and a password policy. → ADR 0017.
+- **Broker volumes:** the ingest dataset is mounted in the broker at
+  `/cwa-book-ingest` (was `/ingest`), and the broker runs as 568:568.
+- **Config:** `CWA_BASE_URL`, `CWA_SERVICE_USER`, `CWA_SERVICE_PASSWORD`,
+  `CWA_KOBO_SHELF_NAME`, `CWA_INGEST_PATH`, `CALIBRE_LIBRARY_PATH` in
+  `.env.example` (placeholders). The service account is created by hand before
+  milestone 3.
+- **Integration tests:** the test stack pins the same CWA image; a fixture
+  recreates two readers with selected-shelves sync and one `Kobo` shelf each
+  (`test/stack/`).
+- **Moved out of milestone 0:** the broker's CWA service account (before
+  milestone 3) and the SABnzbd `kobopush` category and API key (before
+  milestone 4).

@@ -1,8 +1,11 @@
 # Example stack: CWA + SABnzbd + broker. Placeholders only.
 # Copy next to a filled-in .env and adjust the host paths for your server.
+# Everything runs as UID/GID 568 ("apps" on TrueNAS), so files the broker
+# drops into the ingest folder are readable by CWA.
 services:
   broker:
     image: ghcr.io/OWNER/purrshelf-broker:latest
+    user: '568:568'
     env_file: .env
     restart: unless-stopped
     ports:
@@ -11,15 +14,16 @@ services:
       - /path/to/broker-data:/data
       - /path/to/calibre-library:/calibre-library:ro
       - /path/to/cwa-config:/cwa-config:ro
-      - /path/to/cwa-ingest:/ingest
+      - /path/to/cwa-ingest:/cwa-book-ingest
       - /path/to/sabnzbd/complete/kobopush:/downloads:ro
 
   cwa:
-    image: crocodilestick/calibre-web-automated:latest
+    # Keep in step with test/stack (ADR 0017).
+    image: crocodilestick/calibre-web-automated:v4.0.8
     restart: unless-stopped
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=568
+      - PGID=568
       - TZ=Etc/UTC
     volumes:
       - /path/to/cwa-config:/config
@@ -32,8 +36,8 @@ services:
     image: lscr.io/linuxserver/sabnzbd:latest
     restart: unless-stopped
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=568
+      - PGID=568
       - TZ=Etc/UTC
     volumes:
       - /path/to/sabnzbd-config:/config

@@ -49,6 +49,11 @@ docs/decisions/     numbered ADRs
   machine and library adapters. These need 100% coverage; the broker overall
   needs 80%+.
 - Test fixtures use invented or public-domain books and fake keys.
+- **The library stores EPUB.** Never convert to KEPUB in the broker; CWA's
+  kepubify does that at Kobo sync time (ADR 0016).
+- **CWA shelf IDs are looked up per user at runtime** (owner + shelf name),
+  never configured or hard-coded (ADR 0017). Files written to the ingest
+  folder must be readable by UID 568.
 - The app ships with **no default server URL**.
 - Every user-facing string goes through i18n with both `en` and `nl`
   translations; a test fails if a key is missing in either.

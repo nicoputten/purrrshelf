@@ -1,6 +1,6 @@
 # 0003. Library and Kobo sync: Calibre-Web-Automated behind an adapter
 
-Status: accepted
+Status: accepted (format detail superseded by [0016](0016-epub-in-library-kepub-at-sync.md); setup in [0017](0017-cwa-setup-contract.md))
 Date: 2026-11-08
 
 ## Context

@@ -11,8 +11,8 @@ Statuses: `todo`, `in progress`, `done`.
 
 | ID                  | Story                                                          | Milestone | Status |
 | ------------------- | -------------------------------------------------------------- | --------- | ------ |
-| [SRV-01](SRV-01.md) | Replace Calibre + Calibre-Web with CWA on the existing library | 0         | todo   |
-| [SRV-02](SRV-02.md) | Separate Kobo shelves and sync for both readers                | 0         | todo   |
+| [SRV-01](SRV-01.md) | Replace Calibre + Calibre-Web with CWA on the existing library | 0         | done   |
+| [SRV-02](SRV-02.md) | Separate Kobo shelves and sync for both readers                | 0         | done   |
 | [OPS-01](OPS-01.md) | Monorepo, CI, secret scanning, Docker image                    | 1         | done   |
 | [BRK-01](BRK-01.md) | Log in with my own account                                     | 1         | done   |
 | [APP-01](APP-01.md) | Connect the app to my server and log in                        | 1         | done   |
