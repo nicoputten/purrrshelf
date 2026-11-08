@@ -33,6 +33,10 @@ import {
 import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
+import { LibraryItems } from './modules/library/items.js';
+import { Kobos } from './modules/library/kobos.js';
+import { ItemLibraryLookup } from './modules/library/lookup.js';
+import { libraryRoutes } from './modules/library/routes.js';
 import type { LibraryAdapter } from './modules/library/types.js';
 import { SabnzbdClient, type DownloadClient } from './modules/sabnzbd/client.js';
 import { libraryBookLookup } from './modules/search/library-book-lookup.js';
@@ -56,7 +60,7 @@ export interface AppDeps {
   fetch?: MetadataFetch;
   /** Overrides the default Hardcover → Open Library → Google Books providers. */
   metadataProviders?: MetadataProvider[];
-  /** Library state for search hits; empty until the library stream provides one. */
+  /** Library state for search hits; from library items and CWA by default. */
   libraryLookup?: LibraryStateLookup;
   /** Calibre covers of library books; none until the library stream provides them. */
   libraryCovers?: LibraryCovers;
@@ -84,7 +88,7 @@ export async function buildApp({
   indexerFetch,
   fetch = (input, init) => globalThis.fetch(input, init),
   metadataProviders,
-  libraryLookup = noLibraryState,
+  libraryLookup,
   libraryCovers = noLibraryCovers,
   library = null,
 }: AppDeps): Promise<FastifyInstance> {
@@ -117,6 +121,8 @@ export async function buildApp({
   );
 
   const authenticated = requireAuth(accessTokens, clock);
+  const libraryItems = new LibraryItems(database.db, clock);
+  const kobos = new Kobos(libraryItems, users, library);
   const downloadClient =
     sab !== undefined
       ? sab
@@ -155,7 +161,11 @@ export async function buildApp({
     db: database.db,
     clock,
     providers: metadataProviders ?? defaultProviders(config, fetch),
-    library: libraryLookup,
+    library:
+      libraryLookup ??
+      (library
+        ? new ItemLibraryLookup(libraryItems, library, (id) => users.findById(id))
+        : noLibraryState),
     log: app.log,
   });
 
@@ -201,6 +211,7 @@ export async function buildApp({
       await api.register(meRoutes, { users, requireAuth: authenticated });
       await api.register(budgetRoutes, { budget: downloads.budget, requireAuth: authenticated });
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
+      await api.register(libraryRoutes, { kobos, requireAuth: authenticated });
       await api.register(coverRoutes, { covers, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },

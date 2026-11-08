@@ -106,6 +106,14 @@ export class UserRepository {
       .run();
   }
 
+  /** Links the reader to their CWA account (by CWA's user id), or unlinks with null. */
+  setCwaUserId(username: string, cwaUserId: number | null): User {
+    const user = this.findByUsername(username);
+    if (!user) throw new UserError(`No user "${normaliseUsername(username)}"`);
+    this.db.update(users).set({ cwaUserId }).where(eq(users.id, user.id)).run();
+    return { ...user, cwaUserId };
+  }
+
   list(): User[] {
     return this.db.select().from(users).all();
   }

@@ -2,7 +2,9 @@ import { parseArgs } from 'node:util';
 import { Locale } from '@purrshelf/contract';
 import { systemClock } from './clock.js';
 import type { DatabaseHandle } from './db/index.js';
+import { join } from 'node:path';
 import { UserError, UserRepository } from './modules/auth/users.js';
+import { CwaAppDb } from './modules/library/cwa-app-db.js';
 import {
   BudgetExhaustedError,
   IndexerBudget,
@@ -31,6 +33,8 @@ const USAGE = `Usage:
   purrshelf user add <username> --name <display name> [--locale en|nl]
   purrshelf user set-password <username>
   purrshelf user list
+  purrshelf user link-cwa <username> --cwa-user <CWA user name>
+  purrshelf user unlink-cwa <username>
   purrshelf indexer add <id> --name <name> --url <url> --search-limit <n> --grab-limit <n> [--priority <n>]
   purrshelf indexer list
   purrshelf indexer remove <id>
@@ -39,7 +43,10 @@ const USAGE = `Usage:
 The password is read from PURRSHELF_PASSWORD or from the first line of stdin.
 Adding an existing indexer id updates it. The indexer's API key is never
 stored: set INDEXER_<ID>_API_KEY in the broker's environment.
-The database is DATABASE_PATH (default /data/purrshelf.db).`;
+The database is DATABASE_PATH (default /data/purrshelf.db).
+link-cwa reads CWA's app.db from CWA_CONFIG_PATH (default /cwa-config) and
+checks the reader's Kobo shelf (CWA_KOBO_SHELF_NAME, default Kobo) and Kobo
+sync token, so the app can send books to that reader's Kobo.`;
 
 /** Small admin CLI, so no account or password ever has to live in the repo. */
 export async function runCli(argv: string[], io: CliIo): Promise<number> {
@@ -55,6 +62,7 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
         priority: { type: 'string' },
         'search-limit': { type: 'string' },
         'grab-limit': { type: 'string' },
+        'cwa-user': { type: 'string' },
         help: { type: 'boolean' },
       },
     });
@@ -105,6 +113,23 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
         io.out(`Created user ${user.username}`);
         return 0;
       }
+      case 'link-cwa': {
+        const cwaUser = values['cwa-user'];
+        if (!username || !cwaUser) {
+          io.err(USAGE);
+          return 2;
+        }
+        return linkCwa(users, username, cwaUser, io);
+      }
+      case 'unlink-cwa': {
+        if (!username) {
+          io.err(USAGE);
+          return 2;
+        }
+        const user = users.setCwaUserId(username, null);
+        io.out(`Unlinked ${user.username} from CWA`);
+        return 0;
+      }
       case 'set-password': {
         if (!username) {
           io.err(USAGE);
@@ -126,6 +151,35 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
     throw e;
   } finally {
     database.close();
+  }
+}
+
+/** Links a broker user to a CWA user and says what is still missing for their Kobo. */
+function linkCwa(users: UserRepository, username: string, cwaUser: string, io: CliIo): number {
+  const appDb = new CwaAppDb(join(io.env.CWA_CONFIG_PATH ?? '/cwa-config', 'app.db'));
+  try {
+    const cwaUserId = appDb.userIdByName(cwaUser);
+    if (cwaUserId === null) {
+      io.err(`CWA has no user "${cwaUser}"`);
+      return 1;
+    }
+    const user = users.setCwaUserId(username, cwaUserId);
+    io.out(`Linked ${user.username} to CWA user ${cwaUser} (id ${cwaUserId})`);
+    const shelfName = io.env.CWA_KOBO_SHELF_NAME ?? 'Kobo';
+    const shelves = appDb.shelvesByName(cwaUserId, shelfName);
+    if (shelves.length !== 1 || !shelves[0]?.koboSync) {
+      io.err(`Warning: ${cwaUser} needs exactly one shelf "${shelfName}" with Kobo sync on`);
+    }
+    if (!appDb.koboToken(cwaUserId)) {
+      io.err(`Warning: ${cwaUser} has not set up Kobo sync in CWA yet`);
+    }
+    return 0;
+  } catch (e) {
+    if (e instanceof UserError) throw e;
+    io.err(`Cannot read CWA's app.db: ${(e as Error).message}`);
+    return 1;
+  } finally {
+    appDb.close();
   }
 }
 

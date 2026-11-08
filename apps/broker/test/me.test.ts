@@ -32,11 +32,11 @@ describe('GET /api/v1/me', () => {
     });
   });
 
-  it('reports a configured Kobo once the user has a shelf', async () => {
+  it('reports a configured Kobo once the user is linked to CWA', async () => {
     ctx = await makeTestApp();
     ctx.database.db
       .update(usersTable)
-      .set({ koboShelfId: 7 })
+      .set({ cwaUserId: 3 })
       .where(eq(usersTable.username, 'reader'))
       .run();
     const { accessToken } = TokenPair.parse((await login(ctx.app)).json());

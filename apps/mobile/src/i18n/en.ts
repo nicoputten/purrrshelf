@@ -104,6 +104,7 @@ export const en = {
     LIBRARY_UNAVAILABLE: 'The library server is not answering. Try again later.',
     KOBO_SHELF_MISSING: 'Your Kobo shelf is missing in the library. Ask the admin to create it.',
     KOBO_SYNC_NOT_SET_UP: 'Kobo sync is not set up for your account yet. Ask the admin.',
+    KOBO_NOT_LINKED: 'This Kobo is not linked to the library yet. Ask the admin.',
     unknown: 'Something went wrong. Try again.',
   },
 };

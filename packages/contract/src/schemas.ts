@@ -208,3 +208,42 @@ export const CoverSize = z.enum(['s', 'm', 'l']);
 export type CoverSize = z.infer<typeof CoverSize>;
 
 export const CoverQuery = z.object({ size: CoverSize.default('m') });
+
+// --- Kobos (APP-06) ---------------------------------------------------------
+
+/**
+ * Where a book stands on one reader's Kobo. `sending` and `removing` mean the
+ * shelf has changed and the Kobo picks it up at its next sync.
+ */
+export const KoboState = z.enum([
+  'on_device',
+  'sending',
+  'removing',
+  'not_on_device',
+  'not_set_up',
+]);
+export type KoboState = z.infer<typeof KoboState>;
+
+export const ItemKobo = z.object({
+  /** The reader whose Kobo this is. */
+  userId: z.string(),
+  displayName: z.string(),
+  /** True for the user who asked. */
+  me: z.boolean(),
+  state: KoboState,
+});
+export type ItemKobo = z.infer<typeof ItemKobo>;
+
+export const ItemKobos = z
+  .object({
+    /** Every reader's Kobo, the asking user's first. */
+    kobos: z.array(ItemKobo),
+  })
+  .meta({ id: 'ItemKobos' });
+export type ItemKobos = z.infer<typeof ItemKobos>;
+
+export const ItemParams = z.object({ itemId: z.uuid() });
+export type ItemParams = z.infer<typeof ItemParams>;
+
+export const ItemKoboParams = ItemParams.extend({ userId: z.string().min(1).max(64) });
+export type ItemKoboParams = z.infer<typeof ItemKoboParams>;

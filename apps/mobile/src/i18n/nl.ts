@@ -109,6 +109,7 @@ export const nl: Translations = {
       'Je Kobo-plank ontbreekt in de bibliotheek. Vraag de beheerder om hem aan te maken.',
     KOBO_SYNC_NOT_SET_UP:
       'Kobo-synchronisatie is nog niet ingesteld voor je account. Vraag de beheerder.',
+    KOBO_NOT_LINKED: 'Deze Kobo is nog niet gekoppeld aan de bibliotheek. Vraag de beheerder.',
     unknown: 'Er ging iets mis. Probeer het opnieuw.',
   },
 };

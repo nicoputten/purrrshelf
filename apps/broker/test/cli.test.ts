@@ -5,6 +5,7 @@ import { UserRepository } from '../src/modules/auth/users.js';
 import { verifyPassword } from '../src/modules/auth/passwords.js';
 import { PASSWORD, TestClock } from './helpers.js';
 import { FakeNewznab, fixture } from './fake-newznab.js';
+import { FakeCwa } from './library/fake-cwa.js';
 
 function harness(password = PASSWORD) {
   const handle = openDatabase(':memory:');
@@ -250,5 +251,80 @@ describe('purrshelf CLI', () => {
     await expect(runCli(['user', 'add', 'reader', '--name', 'R'], io)).rejects.toThrow(
       'stdin closed',
     );
+  });
+});
+
+describe('purrshelf user link-cwa', () => {
+  async function setup() {
+    const cwa = new FakeCwa();
+    const h = harness();
+    h.io.env.CWA_CONFIG_PATH = cwa.dir;
+    await runCli(['user', 'add', 'reader', '--name', 'Reader One'], h.io);
+    return { cwa, h };
+  }
+
+  it('links a reader to their CWA user and unlinks them', async () => {
+    const { cwa, h } = await setup();
+    try {
+      expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'Reader-A'], h.io)).toBe(0);
+      expect(h.out.at(-1)).toBe('Linked reader to CWA user Reader-A (id 3)');
+      expect(h.err).toEqual([]);
+      expect(h.users.findByUsername('reader')?.cwaUserId).toBe(3);
+
+      expect(await runCli(['user', 'unlink-cwa', 'reader'], h.io)).toBe(0);
+      expect(h.out.at(-1)).toBe('Unlinked reader from CWA');
+      expect(h.users.findByUsername('reader')?.cwaUserId).toBeNull();
+    } finally {
+      cwa.close();
+    }
+  });
+
+  it('links but warns when the Kobo shelf or sync token is missing', async () => {
+    const { cwa, h } = await setup();
+    try {
+      h.io.env.CWA_KOBO_SHELF_NAME = 'Holiday';
+      expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'no-shelf'], h.io)).toBe(0);
+      expect(h.err).toEqual([
+        'Warning: no-shelf needs exactly one shelf "Holiday" with Kobo sync on',
+        'Warning: no-shelf has not set up Kobo sync in CWA yet',
+      ]);
+      expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'reader-a'], h.io)).toBe(0);
+      expect(h.err.at(-1)).toMatch(/shelf "Holiday" with Kobo sync on/);
+    } finally {
+      cwa.close();
+    }
+  });
+
+  it('fails on an unknown CWA user, an unknown reader or an unreadable app.db', async () => {
+    const { cwa, h } = await setup();
+    try {
+      expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'nobody'], h.io)).toBe(1);
+      expect(h.err.at(-1)).toBe('CWA has no user "nobody"');
+      expect(await runCli(['user', 'link-cwa', 'ghost', '--cwa-user', 'reader-a'], h.io)).toBe(1);
+      expect(h.err.at(-1)).toBe('No user "ghost"');
+      expect(await runCli(['user', 'unlink-cwa', 'ghost'], h.io)).toBe(1);
+      h.io.env.CWA_CONFIG_PATH = `${cwa.dir}/missing`;
+      expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'reader-a'], h.io)).toBe(1);
+      expect(h.err.at(-1)).toMatch(/^Cannot read CWA's app.db: Cannot open CWA app.db/);
+    } finally {
+      cwa.close();
+    }
+  });
+
+  it.each([
+    [['user', 'link-cwa', 'reader']],
+    [['user', 'link-cwa', '--cwa-user', 'reader-a']],
+    [['user', 'unlink-cwa']],
+  ])('shows usage for %j', async (argv) => {
+    const h = harness();
+    expect(await runCli(argv, h.io)).toBe(2);
+    expect(h.err[0]).toMatch(/^Usage:/);
+  });
+
+  it('reads app.db from /cwa-config by default', async () => {
+    const h = harness();
+    await runCli(['user', 'add', 'reader', '--name', 'R'], h.io);
+    expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'a'], h.io)).toBe(1);
+    expect(h.err.at(-1)).toMatch(/Cannot open CWA app.db/);
   });
 });
