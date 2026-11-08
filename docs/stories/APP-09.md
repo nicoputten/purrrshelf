@@ -1,6 +1,6 @@
 # APP-09 See similar books on a book's page
 
-Status: in progress
+Status: done
 Milestone: 7
 Depends on: BRK-02
 
@@ -13,8 +13,7 @@ so that I find my next read without searching.
 
 - [x] Similar books only on the detail screen
 - [x] Built from same series, same author, then subject/genre
-- [x] "Add next in series" is an explicit action (the button and its tap are
-      built; it appears once APP-03 gives the detail page an Add handler)
+- [x] "Add next in series" is an explicit action (it opens the Add sheet, APP-03)
 
 ## Design
 
@@ -32,5 +31,5 @@ Canvas board: 2 · Book detail — `docs/design/book-detail.md`
   never spends an indexer search (ADR 0005). The discover zero-indexer test
   covers the new endpoint.
 - Suggestions are remembered like search hits, so tapping one opens its page.
-- Status stays "in progress" until APP-03 wires the "Add next in series"
-  handler on the route.
+- The route passes the Add sheet (APP-03) as the handler, so "Add next in
+  series" opens it for the next missing book.
