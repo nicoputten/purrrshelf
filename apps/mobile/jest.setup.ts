@@ -34,3 +34,11 @@ jest.mock('expo-haptics', () => ({
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
   NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
 }));
+
+// The in-app updater's native parts (APP-10); tests drive `updaterNative` directly.
+jest.mock('expo-file-system', () => ({ File: jest.fn(), Paths: { cache: {} } }));
+jest.mock('expo-intent-launcher', () => ({ startActivityAsync: jest.fn(async () => ({})) }));
+jest.mock('expo-crypto', () => ({
+  CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+  digest: jest.fn(),
+}));

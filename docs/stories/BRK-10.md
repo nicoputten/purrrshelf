@@ -1,6 +1,6 @@
 # BRK-10 Serve the latest app version
 
-Status: in review
+Status: done
 Milestone: 9
 Depends on: OPS-03
 

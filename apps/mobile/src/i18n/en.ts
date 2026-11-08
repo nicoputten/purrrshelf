@@ -26,6 +26,7 @@ export const en = {
     library: 'Library',
     requests: 'Requests',
     settings: 'Settings',
+    settingsUpdate: 'Settings, app update ready',
   },
   home: {
     heading: 'What are we reading next?',
@@ -262,6 +263,25 @@ export const en = {
     library: 'Library',
     importLibrary: 'Import Calibre library',
     logout: 'Log out',
+  },
+  updates: {
+    title: 'App',
+    installed: 'Installed version: {{version}}',
+    unknownVersion: 'unknown',
+    check: 'Check for updates',
+    upToDate: 'You have the newest version.',
+    available: 'Version {{version}} is ready',
+    update: 'Update',
+    downloading: 'Downloading… {{percent}}%',
+    installing: 'Opening the installer…',
+    permissionHint:
+      'The first time, Android asks you to allow installs from Purrshelf. Turn it on and go back.',
+    failed: {
+      check: 'Could not check for updates. Try again later.',
+      download: 'The download failed. Check your connection and try again.',
+      hash: 'The download was damaged, so it was deleted. Try again.',
+      install: 'Android could not open the installer.',
+    },
   },
   errors: {
     required: 'Fill this in',
