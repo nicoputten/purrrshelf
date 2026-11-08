@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { AppText } from '@/components/AppText';
 import { BookCover } from '@/components/BookCover';
@@ -16,6 +16,7 @@ import { Button } from '@/components/Button';
 import { CatEars } from '@/components/CatEars';
 import { Segmented } from '@/components/Segmented';
 import { PawIcon } from '@/components/TabIcons';
+import { EarsButton, PawLoader } from '@/components/motion';
 import { useWork } from '@/features/book/useWork';
 import { useAddRequest, useReaders } from '@/features/requests/useRequests';
 import { i18n } from '@/i18n';
@@ -136,7 +137,7 @@ export function AddSheet({
       <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
       {work.isPending ? (
-        <ActivityIndicator color={colors.accent} />
+        <PawLoader />
       ) : work.isError ? (
         <AppText accessibilityRole="alert">{errorMessage(work.error, t)}</AppText>
       ) : (
@@ -170,7 +171,7 @@ export function AddSheet({
           <View style={styles.group}>
             <AppText style={styles.section}>{t('add.sendTo')}</AppText>
             {readers.isPending ? (
-              <ActivityIndicator color={colors.accent} />
+              <PawLoader />
             ) : kobos.length === 0 ? (
               <AppText variant="muted">{t('add.noKobo')}</AppText>
             ) : (
@@ -217,7 +218,7 @@ export function AddSheet({
             </AppText>
           ) : null}
 
-          <Button
+          <EarsButton
             label={inLibrary ? t('add.own') : t('add.fetch')}
             onPress={submit}
             busy={add.isPending}

@@ -124,6 +124,8 @@ describe('Library', () => {
     const { view } = render(() => ok({ books: [] }));
     await view;
     expect(await screen.findByText('No books of yours yet. Find one on Search.')).toBeOnTheScreen();
+    // The napping cat sits over the message (DES-02).
+    expect(screen.getByTestId('nap', { includeHiddenElements: true })).toBeOnTheScreen();
   });
 
   it('saves a copy of the library on the phone', async () => {

@@ -69,8 +69,10 @@ considered designed.
   cover and the add sheet.
 - **Paw print:** the indexer-budget icon, the Search tab icon and the
   progress thumb on the reading bar.
-- **Walking cat** rides the download progress bar.
-- **Sleeping cat (zzz)** for "couldn't find it".
+- **Walking cat** rides the download progress bar (Trot, see Motion).
+- **Sleeping cat (zzz)** for "couldn't find it", waiting for a free search
+  and empty library tabs (Nap, see Motion).
+- **Paw prints** step in turn wherever something loads (PawLoader).
 - **Happy cat face** for "on your Kobo".
 - **Placeholder cover:** title on a coloured card with the cat ears, used while
   loading and when no cover exists.
@@ -104,6 +106,54 @@ considered designed.
   language, match) and groups what was left out with the reason.
 - **Add** opens a bottom sheet: language (remembered), Kobo targets, cost,
   then "Fetch it now" / "Not now".
+
+## Icon
+
+Canvas board: 8 · App icon final: Peekaboo (DES-01, ADR 0029).
+
+- A ginger cat (`#F6A65A`) peeking over an open book (`#F4EFEA` / `#E4D8CA`),
+  pink inner ears (`#F7B6C2`), eyes in the app background colour
+  (`#17141C`).
+- Android adaptive icon: transparent foreground on a flat `#2E2836`
+  (`surfaceRaised`) background, all artwork inside the 66 dp safe zone.
+- Monochrome layer for Android 13+ themed icons: no paws, eyes and the book's
+  spine cut out of the shape.
+- Splash: the adaptive foreground on `#17141C`.
+- Files and SVG sources: `apps/mobile/assets/icon/`.
+
+## Motion
+
+Canvas boards: 9 · Motion: little cat moments (items 1, 3, 4, 5, 6),
+9b · Pounce v2: Swat (replaces item 2 "Pounce"), 9c · Swat in the Requests
+screen (DES-02, ADR 0030). Components: `apps/mobile/src/components/motion/`.
+
+Colours: ginger `#F6A65A`, pink `#F7B6C2`, mint `#8FD8C8`, cream `#F4EFEA`
+(token `motion` in `theme/tokens.ts`, the same in light and dark).
+
+| Moment        | Component    | Where                                                         | Motion                                                                                                                                                                                  |
+| ------------- | ------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 · Sniffing  | `PawLoader`  | every loading state (replaces all spinners, also in buttons)  | three paw prints step in turn: scale 0.6 → 1 and opacity 0.15 → 1, 0.25 s apart, 1.5 s loop                                                                                             |
+| 2 · Swat      | `Swat`       | request card, under the title, when a release is grabbed      | one-shot, about 1.6 s: tail swish loop, two paw taps (book wobbles ±7°), wind-up, swat, book tumbles to 90° into a basket that squash-bounces, "Got it!" pops; then the scene collapses |
+| 3 · Trot      | `Trot`       | download progress bar                                         | cat runs on the bar at the real progress (0.6 s catch-up), 0.22 s bob loop while downloading                                                                                            |
+| 4 · Delivered | `Delivered`  | request card at "On your Kobo"; Kobo card after Send succeeds | one-shot: cover springs down into an e-reader, four paw-print confetti (ginger, pink, mint, ginger) burst out; collapses after 1.8 s                                                    |
+| 5 · Nap       | `Nap`        | not found, waiting for the daily budget, empty library tabs   | cream cat breathes (scaleY 1 → 1.05, 1.8 s alternate), three Zs float up 0.9 s apart                                                                                                    |
+| 6 · Ears up   | `EarsButton` | primary actions: Fetch it now, Add to my library, Send        | on press the button squishes to 0.9 and springs back, two ears spring up from behind it for 0.7 s, a pink heart floats up                                                               |
+
+Rules:
+
+- **Reduced motion** (the phone's setting): only the end state, no loops.
+  Swat and Delivered show their last frame (book in the basket with "Got
+  it!", cover on the e-reader) for about 1.2 s, then collapse.
+- **Never in the way:** one-shots take no touches and never delay a press or
+  navigation; loops pause while their screen is not focused.
+- **Once per event:** Swat plays once per grab (a new release counts as a new
+  grab) and Delivered once per confirmed push, never on re-render or when
+  coming back to a screen. A state the app first sees on opening a screen
+  only counts as the starting point.
+- **Haptics:** light on each Swat tap, medium on the landing, success on
+  Delivered.
+- Animations are decorative: the text next to them carries the meaning;
+  Swat and Delivered have a short screen-reader label.
 
 ## Screens
 

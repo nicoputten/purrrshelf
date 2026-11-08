@@ -1,13 +1,14 @@
 import type { LibraryBookEntry } from '@purrshelf/contract';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Badge } from '@/components/Badge';
 import { BookCover } from '@/components/BookCover';
 import { Button } from '@/components/Button';
 import { Chips } from '@/components/Chips';
 import { Screen } from '@/components/Screen';
+import { Nap, PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, space } from '@/theme/tokens';
@@ -34,7 +35,6 @@ const PADDING = space.xl;
 /** Library (APP-07, canvas board 6): Mine / Partner's / All, filters and a cover grid. */
 export function LibraryScreen({ onOpen }: LibraryScreenProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const [tab, setTab] = useState<LibraryTab>('mine');
   const [view, setView] = useState<LibraryView>('recent');
@@ -88,7 +88,7 @@ export function LibraryScreen({ onOpen }: LibraryScreenProps) {
           </View>
         ) : (
           <View style={styles.state}>
-            <ActivityIndicator color={colors.accent} />
+            <PawLoader />
           </View>
         )
       ) : (
@@ -117,6 +117,7 @@ function Grid({
   if (books.length === 0) {
     return (
       <View style={styles.state}>
+        <Nap />
         <AppText variant="muted">{empty}</AppText>
       </View>
     );

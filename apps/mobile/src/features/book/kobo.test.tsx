@@ -53,7 +53,9 @@ function render(
   setFetch(fetch);
   return {
     b,
-    view: renderWithProviders(<KoboCard itemId="00000000-0000-4000-8000-000000000001" />),
+    view: renderWithProviders(
+      <KoboCard itemId="00000000-0000-4000-8000-000000000001" workId="w-1" title="A Book" />,
+    ),
     answer: () => act(async () => release?.()),
   };
 }
@@ -88,6 +90,17 @@ describe('KoboCard', () => {
     );
     expect(await screen.findByRole('button', { name: 'Remove from Your Kobo' })).toBeOnTheScreen();
     expect(screen.getByText('Waiting for next sync')).toBeOnTheScreen();
+    // The confirmed send plays Delivered once (DES-02).
+    expect(screen.getAllByLabelText('The book lands on the Kobo')).toHaveLength(1);
+  });
+
+  it('plays Delivered only for a confirmed send', async () => {
+    const { view, answer } = render(kobos('on_device'));
+    await view;
+    await userEvent.press(await screen.findByRole('button', { name: 'Remove from Your Kobo' }));
+    await answer();
+    expect(await screen.findByText('Leaves at next sync')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('The book lands on the Kobo')).toBeNull();
   });
 
   it('sends to my partner’s Kobo', async () => {
@@ -133,7 +146,9 @@ describe('KoboCard', () => {
         apiError(502, 'LIBRARY_UNAVAILABLE'),
     });
     setFetch(b.fetch);
-    await renderWithProviders(<KoboCard itemId="00000000-0000-4000-8000-000000000001" />);
+    await renderWithProviders(
+      <KoboCard itemId="00000000-0000-4000-8000-000000000001" workId="w-1" title="A Book" />,
+    );
     expect(
       await screen.findByText('The library server is not answering. Try again later.'),
     ).toBeOnTheScreen();

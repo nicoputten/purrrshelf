@@ -2,7 +2,7 @@ import type { SearchLanguage } from '@purrshelf/contract';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { BudgetPill } from '@/components/BudgetPill';
 import { Button } from '@/components/Button';
@@ -10,8 +10,8 @@ import { Chips } from '@/components/Chips';
 import { Logo } from '@/components/Logo';
 import { Screen } from '@/components/Screen';
 import { SearchField } from '@/components/SearchField';
+import { PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
-import { useTheme } from '@/theme/ThemeProvider';
 import { fonts } from '@/theme/tokens';
 import { SearchResult } from './SearchResult';
 import {
@@ -32,7 +32,6 @@ export interface SearchScreenProps {
 /** Search (home): one field, language chips, results with covers and badges (APP-02). */
 export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [language, setLanguage] = useState<SearchLanguage>('any');
@@ -87,7 +86,7 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
         </View>
       ) : search.isPending ? (
         <View style={styles.state}>
-          <ActivityIndicator color={colors.accent} />
+          <PawLoader label />
           <AppText variant="muted">{t('search.searching')}</AppText>
         </View>
       ) : hits.length === 0 ? (

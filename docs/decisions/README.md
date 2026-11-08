@@ -34,6 +34,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0027](0027-stop-on-repeated-indexer-refusals.md)           | Stop grabbing when an indexer refuses the same way twice                | accepted                   |
 | [0028](0028-fast-android-test-builds.md)                    | Fast Android test builds, APK on every mobile release                   | accepted                   |
 | [0029](0029-app-icon.md)                                    | App icon "Peekaboo"                                                     | accepted                   |
+| [0030](0030-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
 
 ## Template
 

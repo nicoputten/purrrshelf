@@ -1,7 +1,7 @@
 import type { LibraryState, SimilarWorks, WorkDetail, WorkSeries } from '@purrshelf/contract';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { AppText } from '@/components/AppText';
 import { Badge, type BadgeTone } from '@/components/Badge';
@@ -9,6 +9,7 @@ import { BookCover } from '@/components/BookCover';
 import { Button } from '@/components/Button';
 import { CatEars } from '@/components/CatEars';
 import { Screen } from '@/components/Screen';
+import { PawLoader } from '@/components/motion';
 import { languageName } from '@/features/search/SearchResult';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -86,7 +87,7 @@ export function BookDetailScreen({ id, onBack, onOpen, onAdd }: BookDetailProps)
 
       {work.isPending ? (
         <View style={styles.state}>
-          <ActivityIndicator color={colors.accent} />
+          <PawLoader />
         </View>
       ) : work.isError ? (
         <View style={styles.state} accessibilityRole="alert">
@@ -154,7 +155,9 @@ function BookDetail({
 
       {work.library ? <ReadingProgress reading={work.library.reading} /> : null}
 
-      {work.library ? <KoboCard itemId={work.library.itemId} /> : null}
+      {work.library ? (
+        <KoboCard itemId={work.library.itemId} workId={work.id} title={work.title} />
+      ) : null}
 
       {work.description ? (
         <AppText style={{ color: colors.textBody }}>{work.description}</AppText>

@@ -1,6 +1,7 @@
 import { settledStatuses, type AddRequest, type BookRequest } from '@purrshelf/contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/session/session';
+import { rememberRequest } from './motion';
 import { applyRequest, useLiveRequests } from './useRequestEvents';
 
 /** How often the Requests screen asks for news while a request is on its way. */
@@ -73,7 +74,8 @@ export function useAddRequest() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (input: AddRequest) => call('addRequest', input),
-    onSuccess: async () => {
+    onSuccess: async (request) => {
+      rememberRequest(request);
       await Promise.all([
         client.invalidateQueries({ queryKey: ['requests'] }),
         client.invalidateQueries({ queryKey: ['budget'] }),

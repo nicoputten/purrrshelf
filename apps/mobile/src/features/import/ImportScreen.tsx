@@ -1,13 +1,14 @@
 import type { ImportStatus, LibraryBookEntry } from '@purrshelf/contract';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Chips } from '@/components/Chips';
 import { Screen } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
+import { PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radius, space } from '@/theme/tokens';
@@ -120,7 +121,7 @@ export function ImportScreen({ onBack }: ImportScreenProps) {
           </View>
         ) : (
           <View style={styles.state}>
-            <ActivityIndicator color={colors.accent} />
+            <PawLoader />
           </View>
         )
       ) : shown.length === 0 ? (

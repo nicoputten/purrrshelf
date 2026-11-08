@@ -1,7 +1,8 @@
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radius, sizes } from '@/theme/tokens';
 import { AppText } from './AppText';
+import { PawLoader } from './motion/PawLoader';
 
 interface ButtonProps {
   label: string;
@@ -44,7 +45,7 @@ export function Button({
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={variant === 'primary' ? colors.onAccent : colors.text} />
+        <PawLoader color={variant === 'primary' ? colors.onAccent : colors.text} size={12} />
       ) : (
         <AppText
           style={[

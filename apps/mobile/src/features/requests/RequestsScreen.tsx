@@ -2,18 +2,20 @@ import { MAX_SEARCHES_PER_INDEXER, type BookRequest } from '@purrshelf/contract'
 import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { BookCover } from '@/components/BookCover';
 import { BudgetPill } from '@/components/BudgetPill';
 import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
+import { Delivered, Nap, PawLoader, Swat, Trot, useOneShot } from '@/components/motion';
 import { languageName } from '@/features/search/SearchResult';
 import { useSearchBudget } from '@/features/search/useBookSearch';
 import { errorMessage } from '@/lib/errors';
 import { useSession } from '@/session/session';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, space } from '@/theme/tokens';
+import { deliveredEvent, deliveredScope, swatEvent, swatScope } from './motion';
 import { requestSteps, type Step } from './steps';
 import { useRequestEvents } from './useRequestEvents';
 import { useCancelRequest, useReaders, useRequests, useRetryRequest } from './useRequests';
@@ -53,7 +55,6 @@ export interface RequestsScreenProps {
 /** Requests & progress (APP-03, APP-05; canvas board 4): live over server-sent events. */
 export function RequestsScreen({ onPick, onFindBook }: RequestsScreenProps) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
   useRequestEvents();
   const requests = useRequests();
   const readers = useReaders();
@@ -72,7 +73,7 @@ export function RequestsScreen({ onPick, onFindBook }: RequestsScreenProps) {
         <BudgetPill budget={budget} onPress={() => undefined} />
       </View>
       {requests.isPending ? (
-        <ActivityIndicator color={colors.accent} />
+        <PawLoader />
       ) : requests.isError ? (
         <View style={styles.state} accessibilityRole="alert">
           <AppText>{errorMessage(requests.error, t)}</AppText>
@@ -133,6 +134,9 @@ function RequestCard({
     request.status,
   );
   const error = retry.error ?? cancel.error;
+  const swat = useOneShot(swatScope(request), swatEvent(request));
+  const delivered = useOneShot(deliveredScope(request), deliveredEvent(request));
+  const napping = notFound || request.status === 'waiting_budget';
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -174,6 +178,12 @@ function RequestCard({
           ) : null}
         </View>
       </View>
+
+      {swat.playing ? <Swat title={request.title} onDone={swat.done} /> : null}
+      {delivered.playing && finished ? (
+        <Delivered workId={request.workId} title={request.title} onDone={delivered.done} />
+      ) : null}
+      {napping ? <Nap size={96} /> : null}
 
       {finished || notFound || request.status === 'in_library' ? null : (
         <View style={styles.steps}>
@@ -257,14 +267,7 @@ function StepRow({
         </AppText>
         {step.detail ? <AppText variant="muted">{step.detail}</AppText> : null}
         {step.key === 'download' && step.state === 'current' ? (
-          <View style={[styles.bar, { backgroundColor: colors.surfaceRaised }]}>
-            <View
-              style={[
-                styles.barFill,
-                { backgroundColor: colors.accent, width: `${progress ?? 0}%` },
-              ]}
-            />
-          </View>
+          <Trot progress={progress ?? 0} />
         ) : null}
       </View>
       {onPick ? (
@@ -294,8 +297,6 @@ const styles = StyleSheet.create({
   steps: { gap: space.sm },
   step: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
   dot: { width: 12, height: 12, borderRadius: radius.pill, marginTop: 5 },
-  bar: { height: 8, borderRadius: radius.pill, overflow: 'hidden', marginTop: space.xs },
-  barFill: { height: 8, borderRadius: radius.pill },
   pill: {
     minHeight: 44,
     paddingHorizontal: space.md,

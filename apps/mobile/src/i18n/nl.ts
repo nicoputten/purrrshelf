@@ -285,4 +285,11 @@ export const nl: Translations = {
     DOWNLOADS_NOT_SET_UP: 'Downloaden is nog niet ingesteld op de server. Vraag het de beheerder.',
     unknown: 'Er ging iets mis. Probeer het opnieuw.',
   },
+  motion: {
+    loading: 'Laden',
+    sniffing: 'Op zoek naar boeken…',
+    swat: 'De kat tikt het boek in de downloadmand',
+    gotIt: 'Hebbes!',
+    delivered: 'Het boek landt op de Kobo',
+  },
 };

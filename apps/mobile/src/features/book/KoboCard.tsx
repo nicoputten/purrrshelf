@@ -1,8 +1,10 @@
 import type { ItemKobo, KoboState } from '@purrshelf/contract';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
+import { Delivered, EarsButton, PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius } from '@/theme/tokens';
@@ -15,17 +17,36 @@ export function koboAction(state: KoboState): KoboAction | null {
 }
 
 /** Device card on the book page: one row per reader's Kobo (APP-06, canvas board 2). */
-export function KoboCard({ itemId }: { itemId: string }) {
+export function KoboCard({
+  itemId,
+  workId,
+  title,
+}: {
+  itemId: string;
+  /** Cover and title for the Delivered animation. */
+  workId: string;
+  title: string;
+}) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const kobos = useKobos(itemId);
   const change = useKoboChange(itemId);
+  // Counts confirmed sends; each one plays Delivered once (DES-02).
+  const [delivery, setDelivery] = useState({ count: 0, playing: false });
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <AppText style={styles.section}>{t('book.devices')}</AppText>
+      {delivery.playing ? (
+        <Delivered
+          key={delivery.count}
+          workId={workId}
+          title={title}
+          onDone={() => setDelivery((d) => ({ ...d, playing: false }))}
+        />
+      ) : null}
       {kobos.isPending ? (
-        <ActivityIndicator color={colors.accent} />
+        <PawLoader />
       ) : kobos.isError ? (
         <View accessibilityRole="alert" style={styles.problem}>
           <AppText variant="muted">{errorMessage(kobos.error, t)}</AppText>
@@ -42,7 +63,17 @@ export function KoboCard({ itemId }: { itemId: string }) {
             key={kobo.userId}
             kobo={kobo}
             busy={change.isPending && change.variables.userId === kobo.userId}
-            onAction={(action) => change.mutate({ action, userId: kobo.userId })}
+            onAction={(action) =>
+              change.mutate(
+                { action, userId: kobo.userId },
+                {
+                  onSuccess: () => {
+                    if (action === 'send')
+                      setDelivery((d) => ({ count: d.count + 1, playing: true }));
+                  },
+                },
+              )
+            }
           />
         ))
       )}
@@ -75,16 +106,22 @@ function KoboRow({
         <AppText style={[styles.name, { color: colors.text }]}>{name}</AppText>
         <AppText style={{ color: stateColor }}>{t(`book.kobo.${kobo.state}`)}</AppText>
       </View>
-      {action ? (
+      {action === 'send' ? (
+        <EarsButton
+          compact
+          label={t('book.send')}
+          accessibilityLabel={t('book.sendTo', { kobo: name })}
+          busy={busy}
+          onPress={() => onAction('send')}
+        />
+      ) : action ? (
         <Button
           compact
-          label={t(`book.${action}`)}
-          accessibilityLabel={t(action === 'send' ? 'book.sendTo' : 'book.removeFrom', {
-            kobo: name,
-          })}
-          variant={action === 'send' ? 'primary' : 'outline'}
+          label={t('book.remove')}
+          accessibilityLabel={t('book.removeFrom', { kobo: name })}
+          variant="outline"
           busy={busy}
-          onPress={() => onAction(action)}
+          onPress={() => onAction('remove')}
         />
       ) : null}
     </View>

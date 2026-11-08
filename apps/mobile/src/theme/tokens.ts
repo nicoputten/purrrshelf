@@ -116,3 +116,26 @@ export const sizes = { touch: 44, primaryButton: 56, input: 56 } as const;
 
 export type ColorScheme = 'dark' | 'light';
 export const palettes: Record<ColorScheme, Palette> = { dark, light };
+
+/**
+ * Fixed colours of the cat animations (canvas boards 9, 9b, 9c). They are the
+ * same in light and dark: the scenes are little dark stages of their own.
+ */
+export const motion = {
+  ginger: '#F6A65A',
+  pink: '#F7B6C2',
+  mint: '#8FD8C8',
+  cream: '#F4EFEA',
+  nose: '#E88FA0',
+  eye: '#17141C',
+  stage: '#231F2A',
+  table: '#4A4254',
+  tableLeg: '#3B3347',
+  basket: '#B97A3E',
+  basketWeave: '#9A6230',
+  basketRim: '#D08C4A',
+  reader: '#3B3347',
+  readerScreen: '#E9E4DC',
+  badgeText: '#2A1606',
+  zzz: '#B9B0C2',
+} as const;

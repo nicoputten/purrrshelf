@@ -20,5 +20,6 @@ Built in APP-07:
   reported progress and a status line: "42% read", "Reading", "Unread",
   "Finished". Screen readers hear the title, author, badges and status.
 - Offline: a muted line "Offline: showing the library as it was last time."
-  above the saved grid. Empty tabs show one muted sentence.
+  above the saved grid. Empty tabs show the napping cat (Nap, DES-02) over
+  one muted sentence. Loading shows the paw-print loader.
 - The search button and the bottom-bar badge come later.

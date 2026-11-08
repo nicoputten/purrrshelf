@@ -25,3 +25,7 @@ Built (APP-03):
 - Already in the library: title "Add to your library?", no language or cost,
   button "Add to my library".
 - After Fetch the sheet closes and the app opens Requests.
+
+Motion (DES-02): "Fetch it now" and "Add to my library" are ears-up buttons
+(squish, ears pop up, a heart floats up); the press goes through at once.
+Loading parts of the sheet show the paw-print loader.

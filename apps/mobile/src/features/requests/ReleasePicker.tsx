@@ -2,12 +2,13 @@ import type { ReleaseList, ReleaseOption } from '@purrshelf/contract';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { PawIcon } from '@/components/TabIcons';
+import { PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes, space } from '@/theme/tokens';
@@ -87,7 +88,7 @@ export function ReleasePickerScreen({
       </AppText>
 
       {releases.isPending ? (
-        <ActivityIndicator color={colors.accent} />
+        <PawLoader />
       ) : releases.isError ? (
         <View style={styles.state} accessibilityRole="alert">
           <AppText>{errorMessage(releases.error, t)}</AppText>

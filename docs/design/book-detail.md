@@ -50,3 +50,8 @@ Built in APP-08:
   position. "You've finished this one" shows a full bar; "You're reading this
   one" (reading, no position yet) shows no bar. Nothing for an unread book or
   when my Kobo is not linked. Screen readers hear "Reading progress, 42%".
+
+Motion (DES-02): **Send** is an ears-up button. When the broker confirms the
+send, the Delivered scene plays once at the top of the Kobo card (cover drops
+into an e-reader, paw-print confetti, success haptic) and then collapses.
+Loading shows the paw-print loader.

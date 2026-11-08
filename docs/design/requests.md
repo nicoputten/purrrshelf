@@ -1,6 +1,7 @@
 # Requests & progress
 
-Canvas board: 4 · Requests & progress. Stories: APP-05.
+Canvas boards: 4 · Requests & progress, 9c · Swat in the Requests screen.
+Stories: APP-05, DES-02.
 
 - Title "Requests" and the budget pill.
 - Active request card: small cover, title, "For your Kobo · English", then a
@@ -30,3 +31,21 @@ Built (APP-03, APP-05):
   downloads and imports get the same two buttons.
 - Finished: "On your Kobo" in success, no steps. Dismissed requests leave the
   list.
+
+Motion (DES-02, board 9c; see design-choices.md, Motion):
+
+- **Swat** plays once inside the card, between the title row and the step
+  list, the moment a release is grabbed (the request turns to downloading, or
+  Pick another grabs a new release). The scene is 318 × 166 on a 390 wide
+  phone (the 576 × 300 board scene scaled to the card width) on its own dark
+  stage with rounded corners. After about 1.6 s it collapses and the step
+  list, already under it, moves up. A download that was already running when
+  the screen opened doesn't swat.
+- **Trot** replaces the plain bar on the Downloading step: the cat runs at the
+  real percentage from the live events and bobs while it downloads.
+- **Delivered** plays once in the finished card when the request reaches "On
+  your Kobo", then collapses to the finished card.
+- **Nap** sits under the title in the not-found card and while a request is
+  waiting for a free search.
+- Loading the list shows the paw-print loader; Try again shows it inside the
+  button.

@@ -280,6 +280,13 @@ export const en = {
     DOWNLOADS_NOT_SET_UP: 'Downloads are not set up on the server yet. Ask the admin.',
     unknown: 'Something went wrong. Try again.',
   },
+  motion: {
+    loading: 'Loading',
+    sniffing: 'Sniffing out books…',
+    swat: 'The cat swats the book into the download basket',
+    gotIt: 'Got it!',
+    delivered: 'The book lands on the Kobo',
+  },
 };
 
 /** Same shape as `en`, every leaf a string. */
