@@ -113,3 +113,4 @@ considered designed.
 | 4     | Requests & progress  | [requests.md](requests.md)                             |
 | 5     | Pick another release | [release-picker.md](release-picker.md)                 |
 | 6     | Library              | [library.md](library.md)                               |
+| —     | Import library       | [import.md](import.md) (not on the canvas yet)         |

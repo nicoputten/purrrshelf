@@ -299,3 +299,40 @@ export const ItemOwnership = z
   })
   .meta({ id: 'ItemOwnership' });
 export type ItemOwnership = z.infer<typeof ItemOwnership>;
+
+// --- Import (BRK-09) --------------------------------------------------------
+
+export const ImportStatus = z
+  .object({
+    /** True while books are still being matched to works in the background. */
+    running: z.boolean(),
+    startedAt: z.iso.datetime().nullable(),
+    finishedAt: z.iso.datetime().nullable(),
+    /** Calibre books seen by the last scan. */
+    scanned: z.number().int(),
+    /** Of those, books the broker had no record of yet. */
+    added: z.number().int(),
+    /** Books without a work that the last run tries to match. */
+    toMatch: z.number().int(),
+    matched: z.number().int(),
+    /** No search hit was clearly the same book. */
+    unmatched: z.number().int(),
+    /** Book search failed; the next run tries again. */
+    failed: z.number().int(),
+    /** Everyone who can own a book, the asking reader first. */
+    readers: z.array(LibraryOwner),
+  })
+  .meta({ id: 'ImportStatus' });
+export type ImportStatus = z.infer<typeof ImportStatus>;
+
+export const AssignOwnersRequest = z.object({
+  itemIds: z.array(z.uuid()).min(1).max(10_000),
+  /** The book's owners from now on; at least one. */
+  ownerIds: z.array(z.string().min(1).max(64)).min(1).max(20),
+});
+export type AssignOwnersRequest = z.infer<typeof AssignOwnersRequest>;
+
+export const AssignOwnersResult = z
+  .object({ updated: z.number().int() })
+  .meta({ id: 'AssignOwnersResult' });
+export type AssignOwnersResult = z.infer<typeof AssignOwnersResult>;

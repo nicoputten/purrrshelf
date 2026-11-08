@@ -22,7 +22,7 @@ Canvas boards: 4 · Requests & progress, 5 · Pick another release — `docs/des
 
 ## Notes / decisions
 
-- The live stream is `GET /requests/events` (ADR 0023). While it is down the
+- The live stream is `GET /requests/events` (ADR 0024). While it is down the
   screen polls, as in APP-03.
 - "Pick another" lists the stored results of the search already done
   (`GET /requests/:id/releases`), so browsing costs nothing. Picking stops a

@@ -61,6 +61,10 @@ export class CalibreDb {
       where.push('b.id in (select book from identifiers where lower(type) = ? and val = ?)');
       params.push(query.identifier.type.toLowerCase(), query.identifier.value);
     }
+    if (query.afterId !== undefined) {
+      where.push('b.id > ?');
+      params.push(query.afterId);
+    }
     if (query.title) {
       where.push(`b.title like ? escape '\\' collate nocase`);
       params.push(`%${escapeLike(query.title)}%`);

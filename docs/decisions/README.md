@@ -27,7 +27,8 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0020](0020-covers-served-by-the-broker.md)                 | Covers are served by the broker, never hot-linked                       | accepted                  |
 | [0021](0021-shelf-edits-via-kobo-api.md)                    | Shelf changes go through each reader's Kobo sync API                    | accepted                  |
 | [0022](0022-read-cwa-databases-through-read-only-mounts.md) | CWA's databases are read through read-only mounts                       | accepted                  |
-| [0023](0023-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                  |
+| [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | accepted                  |
+| [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                  |
 
 ## Template
 

@@ -39,6 +39,8 @@ export interface FindBooksQuery {
   author?: string;
   /** A Calibre identifier, e.g. `{ type: 'kobopush', value: '<request id>' }`; type compared lower-case. */
   identifier?: { type: string; value: string };
+  /** Only books with a higher id; with `limit`, pages through the whole library. */
+  afterId?: number;
   limit?: number;
 }
 

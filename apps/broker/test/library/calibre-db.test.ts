@@ -94,6 +94,12 @@ describe('CalibreDb', () => {
     expect(ids(db.findBooks({ limit: 0 }))).toEqual([1]);
   });
 
+  it('pages through the library by id', () => {
+    expect(ids(db.findBooks({ afterId: 0, limit: 2 }))).toEqual([1, 2]);
+    expect(ids(db.findBooks({ afterId: 2, limit: 2 }))).toEqual([3]);
+    expect(ids(db.findBooks({ afterId: 3 }))).toEqual([]);
+  });
+
   it('pings', () => {
     expect(() => db.ping()).not.toThrow();
   });

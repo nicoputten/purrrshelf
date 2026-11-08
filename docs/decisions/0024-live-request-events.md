@@ -1,4 +1,4 @@
-# 0023. Live request updates over a server-sent event stream
+# 0024. Live request updates over a server-sent event stream
 
 Status: accepted
 Date: 2026-11-08

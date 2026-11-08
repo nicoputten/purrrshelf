@@ -64,7 +64,7 @@ export const RECONNECT_MS = [1000, 2000, 5000, 15_000];
 /** Whether the live stream is up; Requests falls back to polling while it is not. */
 export const useLiveRequests = create<{ live: boolean }>(() => ({ live: false }));
 
-/** Follows my requests live over server-sent events while mounted (ADR 0012, 0023). */
+/** Follows my requests live over server-sent events while mounted (ADR 0012, 0024). */
 export function useRequestEvents(): void {
   const client = useQueryClient();
   const serverUrl = useSession((s) => s.serverUrl);

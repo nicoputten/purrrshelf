@@ -22,14 +22,14 @@ beforeEach(async () => {
 
 describe('SettingsScreen', () => {
   it('shows who is logged in and where', async () => {
-    await renderWithProviders(<SettingsScreen />);
+    await renderWithProviders(<SettingsScreen onImport={jest.fn()} />);
     expect(await screen.findByText('Logged in as Reader One')).toBeOnTheScreen();
     expect(screen.getByText('Server: https://shelf.example.invalid')).toBeOnTheScreen();
   });
 
   it('switches the UI to Dutch and back', async () => {
     const user = userEvent.setup();
-    await renderWithProviders(<SettingsScreen />);
+    await renderWithProviders(<SettingsScreen onImport={jest.fn()} />);
     await user.press(screen.getByRole('radio', { name: 'Nederlands' }));
     expect(await screen.findByText('Instellingen')).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Nederlands' })).toBeChecked();
@@ -40,15 +40,23 @@ describe('SettingsScreen', () => {
 
   it('changes the theme', async () => {
     const user = userEvent.setup();
-    await renderWithProviders(<SettingsScreen />);
+    await renderWithProviders(<SettingsScreen onImport={jest.fn()} />);
     await user.press(screen.getByRole('radio', { name: 'Light' }));
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
     expect(usePreferences.getState().theme).toBe('light');
   });
 
+  it('opens the library import', async () => {
+    const user = userEvent.setup();
+    const onImport = jest.fn();
+    await renderWithProviders(<SettingsScreen onImport={onImport} />);
+    await user.press(screen.getByRole('button', { name: 'Import Calibre library' }));
+    expect(onImport).toHaveBeenCalled();
+  });
+
   it('logs out and clears the stored token', async () => {
     const user = userEvent.setup();
-    await renderWithProviders(<SettingsScreen />);
+    await renderWithProviders(<SettingsScreen onImport={jest.fn()} />);
     await user.press(screen.getByRole('button', { name: 'Log out' }));
     expect(useSession.getState().status).toBe('needsLogin');
     expect(secureStore.has(StorageKeys.refreshToken)).toBe(false);
