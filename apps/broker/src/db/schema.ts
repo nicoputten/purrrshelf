@@ -232,3 +232,41 @@ export const metadataCache = sqliteTable(
   },
   (t) => [index('metadata_cache_expires_idx').on(t.expiresAt)],
 );
+
+/**
+ * One row per book in the shared Calibre library (ADR 0009). The book itself
+ * lives in Calibre; this links it to the work it was added as.
+ */
+export const libraryItems = sqliteTable(
+  'library_items',
+  {
+    id: text('id').primaryKey(),
+    /** Metadata work id the book was added as; null for books imported without one. */
+    workId: text('work_id'),
+    calibreBookId: integer('calibre_book_id').notNull().unique(),
+    mediaType: text('media_type', { enum: mediaTypes }).notNull().default('ebook'),
+    title: text('title').notNull(),
+    addedAt: integer('added_at', { mode: 'timestamp_ms' }).notNull(),
+    /** Set when the last owner left: the book is deleted after this (BRK-08). */
+    deleteAfter: integer('delete_after', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('library_items_work_idx').on(t.workId)],
+);
+
+/** Who owns which library book. A book with no owners is deleted after a grace period. */
+export const ownerships = sqliteTable(
+  'ownerships',
+  {
+    itemId: text('item_id')
+      .notNull()
+      .references(() => libraryItems.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    addedAt: integer('added_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.userId] }), index('ownerships_user_idx').on(t.userId)],
+);
+
+export type LibraryItemRow = typeof libraryItems.$inferSelect;
+export type OwnershipRow = typeof ownerships.$inferSelect;

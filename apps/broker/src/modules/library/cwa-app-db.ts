@@ -54,6 +54,16 @@ export class CwaAppDb {
     );
   }
 
+  /** CWA's id for a user name, compared case-insensitively like CWA's login. */
+  userIdByName(name: string): number | null {
+    return this.sqlite.run((db) => {
+      const row = db
+        .prepare('select id from user where lower(name) = lower(?) order by id limit 1')
+        .get(name) as { id: number } | undefined;
+      return row?.id ?? null;
+    });
+  }
+
   userExists(cwaUserId: number): boolean {
     return this.sqlite.run(
       (db) => db.prepare('select 1 from user where id = ?').get(cwaUserId) !== undefined,

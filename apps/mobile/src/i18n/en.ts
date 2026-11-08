@@ -56,8 +56,18 @@ export const en = {
     ownerBook: '{{name}}’s',
     devices: 'Kobo',
     yourKobo: 'Your Kobo',
-    onDevice: 'On the device',
-    notOnDevice: 'Not on the device',
+    ownerKobo: '{{name}}’s Kobo',
+    kobo: {
+      on_device: 'On the device',
+      sending: 'Waiting for next sync',
+      removing: 'Leaves at next sync',
+      not_on_device: 'Not on the device',
+      not_set_up: 'Not set up yet',
+    },
+    send: 'Send',
+    remove: 'Remove',
+    sendTo: 'Send to {{kobo}}',
+    removeFrom: 'Remove from {{kobo}}',
     seriesTitle: '{{name}} series',
     series: {
       thisBook: 'This book',
@@ -143,6 +153,7 @@ export const en = {
     LIBRARY_UNAVAILABLE: 'The library server is not answering. Try again later.',
     KOBO_SHELF_MISSING: 'Your Kobo shelf is missing in the library. Ask the admin to create it.',
     KOBO_SYNC_NOT_SET_UP: 'Kobo sync is not set up for your account yet. Ask the admin.',
+    KOBO_NOT_LINKED: 'This Kobo is not linked to the library yet. Ask the admin.',
     unknown: 'Something went wrong. Try again.',
   },
 };

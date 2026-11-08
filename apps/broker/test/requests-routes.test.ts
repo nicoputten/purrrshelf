@@ -7,7 +7,7 @@ import {
   TokenPair,
   requestStatuses as contractStatuses,
 } from '@purrshelf/contract';
-import { requestStatuses, users } from '../src/db/schema.js';
+import { ownerships, requestStatuses, users } from '../src/db/schema.js';
 import type { LibraryAdapter, LibraryOwner } from '../src/modules/library/types.js';
 import type { LibraryItems } from '../src/modules/requests/delivery.js';
 import { fakeProviders, ISBN_SALT_ROAD } from './metadata-fakes.js';
@@ -22,14 +22,15 @@ afterEach(async () => {
 function fakeLibrary(books: Record<string, number> = {}) {
   const shelved: { owner: LibraryOwner; bookId: number }[] = [];
   const findBooks = vi.fn(async (q: { isbns?: string[] }) => {
-    const id = q.isbns?.map((i) => books[i]).find((b) => b !== undefined);
-    return id === undefined ? [] : [{ id }];
+    const isbn = q.isbns?.find((i) => books[i] !== undefined);
+    return isbn === undefined ? [] : [{ id: books[isbn], isbns: [isbn], title: 'The Salt Road' }];
   });
   const library = {
     findBooks,
     addToKoboShelf: async (owner: LibraryOwner, bookId: number) => {
       shelved.push({ owner, bookId });
     },
+    getDeviceState: async () => ({ onKoboShelf: false }),
     ping: async () => undefined,
   } as unknown as LibraryAdapter;
   return { library, shelved, findBooks };
@@ -142,6 +143,17 @@ describe('POST /requests', () => {
     expect(ensured).toEqual([
       { workId: SALT_ROAD, calibreBookId: 77, title: 'The Salt Road', mediaType: 'ebook' },
     ]);
+  });
+
+  it('records ownership in the library items by default', async () => {
+    const lib = fakeLibrary({ [ISBN_SALT_ROAD]: 77 });
+    const { post, settled, me } = await setup({ library: lib.library });
+    const created = BookRequest.parse(
+      (await post({ workId: SALT_ROAD, language: 'en', pushTo: [] })).json(),
+    );
+    await settled(created.id, 'in_library');
+    const rows = ctx.database.db.select().from(ownerships).all();
+    expect(rows).toEqual([expect.objectContaining({ userId: me.id })]);
   });
 
   it('answers the open request instead of searching twice', async () => {

@@ -22,7 +22,8 @@ export const meRoutes: FastifyPluginAsyncZod<MeRoutesOptions> = async (app, opts
         username: user.username,
         displayName: user.displayName,
         locale: user.locale,
-        kobo: { configured: user.koboShelfId !== null },
+        // A reader's Kobo works once their CWA account is linked (`user link-cwa`).
+        kobo: { configured: user.cwaUserId !== null },
       };
     },
   );

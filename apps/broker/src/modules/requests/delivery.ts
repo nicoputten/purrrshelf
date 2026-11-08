@@ -14,7 +14,7 @@ export interface LibraryItems {
     workId: string;
     calibreBookId: number;
     title: string;
-    mediaType: 'ebook' | 'audiobook';
+    mediaType: 'ebook';
   }): { id: string } | Promise<{ id: string }>;
   own(itemId: string, userId: string): void | Promise<void>;
 }
@@ -50,7 +50,8 @@ export class Delivery {
       workId: request.workId,
       calibreBookId: bookId,
       title,
-      mediaType: request.mediaType,
+      // Requests are ebooks until audiobooks arrive; the library holds EPUB (ADR 0016).
+      mediaType: 'ebook',
     });
     await this.items.own(item.id, request.userId);
 

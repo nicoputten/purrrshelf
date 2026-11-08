@@ -59,8 +59,18 @@ export const nl: Translations = {
     ownerBook: 'Van {{name}}',
     devices: 'Kobo',
     yourKobo: 'Jouw Kobo',
-    onDevice: 'Op het apparaat',
-    notOnDevice: 'Niet op het apparaat',
+    ownerKobo: 'Kobo van {{name}}',
+    kobo: {
+      on_device: 'Op het apparaat',
+      sending: 'Wacht op volgende sync',
+      removing: 'Gaat eraf bij volgende sync',
+      not_on_device: 'Niet op het apparaat',
+      not_set_up: 'Nog niet ingesteld',
+    },
+    send: 'Sturen',
+    remove: 'Verwijderen',
+    sendTo: 'Sturen naar {{kobo}}',
+    removeFrom: 'Verwijderen van {{kobo}}',
     seriesTitle: 'Serie {{name}}',
     series: {
       thisBook: 'Dit boek',
@@ -148,6 +158,7 @@ export const nl: Translations = {
       'Je Kobo-plank ontbreekt in de bibliotheek. Vraag de beheerder om hem aan te maken.',
     KOBO_SYNC_NOT_SET_UP:
       'Kobo-synchronisatie is nog niet ingesteld voor je account. Vraag de beheerder.',
+    KOBO_NOT_LINKED: 'Deze Kobo is nog niet gekoppeld aan de bibliotheek. Vraag de beheerder.',
     unknown: 'Er ging iets mis. Probeer het opnieuw.',
   },
 };

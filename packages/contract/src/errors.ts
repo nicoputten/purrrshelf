@@ -17,6 +17,7 @@ export const errorCodes = [
   'LIBRARY_UNAVAILABLE',
   'KOBO_SHELF_MISSING',
   'KOBO_SYNC_NOT_SET_UP',
+  'KOBO_NOT_LINKED',
 ] as const;
 
 export const ErrorCode = z.enum(errorCodes);

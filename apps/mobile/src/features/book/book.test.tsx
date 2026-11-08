@@ -24,7 +24,11 @@ const owners = [
   { id: 'u2', displayName: 'Reader Two', me: false },
   { id: 'u1', displayName: 'Reader One', me: true },
 ];
-const inLibrary = (onMyKobo = false) => ({ itemId: 'item-1', owners, onMyKobo });
+const inLibrary = (onMyKobo = false) => ({
+  itemId: '00000000-0000-4000-8000-000000000001',
+  owners,
+  onMyKobo,
+});
 
 const lanternKeepers = {
   series: { id: 'hardcover:77', name: 'Lantern Keepers', total: 3 },
@@ -61,6 +65,13 @@ function render(
     'GET /works/hardcover:301': () => ok(detail),
     'GET /works/hardcover:301/series': () => ok(series),
     'GET /works/hardcover:301/similar': () => ok(similar),
+    'GET /library/items/00000000-0000-4000-8000-000000000001/kobos': () =>
+      ok({
+        kobos: [
+          { userId: 'u1', displayName: 'Reader One', me: true, state: 'on_device' },
+          { userId: 'u2', displayName: 'Reader Two', me: false, state: 'not_on_device' },
+        ],
+      }),
   });
   setFetch(b.fetch);
   const onBack = jest.fn();
@@ -99,11 +110,12 @@ describe('Book detail', () => {
     ).toBe('https://shelf.example.invalid/api/v1/covers/hardcover%3A301?size=l');
   });
 
-  it('shows whether the book is on my Kobo', async () => {
+  it('shows both Kobos for a book in the library', async () => {
     const { view } = render();
     await view;
     expect(await screen.findByText('Your Kobo')).toBeOnTheScreen();
     expect(screen.getByText('On the device')).toBeOnTheScreen();
+    expect(screen.getByText('Reader Two’s Kobo')).toBeOnTheScreen();
   });
 
   it('shows no owners, device or format for a book that is not in the library', async () => {
@@ -119,7 +131,6 @@ describe('Book detail', () => {
     const { view, onOpen } = render(work({ library: inLibrary(false) }));
     await view;
     expect(await screen.findByText('Lantern Keepers series')).toBeOnTheScreen();
-    expect(screen.getByText('Not on the device')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: '1 The Salt Road, This book' })).toBeDisabled();
     expect(
       screen.getByRole('button', { name: '2 The Glass Harbour, In library' }),

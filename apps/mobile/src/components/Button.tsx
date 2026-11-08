@@ -9,20 +9,33 @@ interface ButtonProps {
   variant?: 'primary' | 'outline' | 'text';
   busy?: boolean;
   disabled?: boolean;
+  /** A small inline button, e.g. Send / Remove on a device row. */
+  compact?: boolean;
+  /** Read by screen readers instead of the label, when the label alone is ambiguous. */
+  accessibilityLabel?: string;
 }
 
-export function Button({ label, onPress, variant = 'primary', busy, disabled }: ButtonProps) {
+export function Button({
+  label,
+  onPress,
+  variant = 'primary',
+  busy,
+  disabled,
+  compact,
+  accessibilityLabel,
+}: ButtonProps) {
   const { colors } = useTheme();
   const inactive = disabled || busy;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: !!inactive, busy: !!busy }}
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [
         variant === 'text' ? styles.text : styles.base,
+        compact && styles.compact,
         variant === 'primary' && {
           backgroundColor: pressed ? colors.accentPressed : colors.accent,
         },
@@ -36,6 +49,7 @@ export function Button({ label, onPress, variant = 'primary', busy, disabled }: 
         <AppText
           style={[
             styles.label,
+            compact && styles.compactLabel,
             {
               color:
                 variant === 'primary'
@@ -63,5 +77,7 @@ const styles = StyleSheet.create({
   },
   text: { minHeight: sizes.touch, alignItems: 'center', justifyContent: 'center', padding: 10 },
   label: { fontFamily: fonts.bodyBold, fontSize: 17 },
+  compact: { height: sizes.touch, paddingHorizontal: 16 },
+  compactLabel: { fontSize: 15 },
   inactive: { opacity: 0.6 },
 });
