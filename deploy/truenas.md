@@ -52,7 +52,13 @@ Settings:
 ## 5. SABnzbd (before milestone 4)
 
 1. Create a category `kobopush` with its own complete folder.
-2. Create an API key for the broker and put it in the broker's `.env`.
+2. Create an API key for the broker and put it in the broker's `.env`
+   (`SABNZBD_URL`, `SABNZBD_API_KEY`).
+3. Mount that complete folder read-only in the broker at `/downloads`. The
+   broker finds a finished download by its folder name, so the folder must be
+   the one SABnzbd reports for the `kobopush` category.
+
+Without `SABNZBD_URL` the broker still searches, but only lists the results.
 
 ## 6. Broker volumes
 

@@ -9,6 +9,8 @@ import type { RequestStatus } from '../../db/schema.js';
 export const transitions: Readonly<Record<RequestStatus, readonly RequestStatus[]>> = {
   searching: [
     'waiting_budget',
+    // Every NZB of the auto-pick failed, or SABnzbd refused it.
+    'download_failed',
     'not_found',
     'choose_release',
     'downloading',

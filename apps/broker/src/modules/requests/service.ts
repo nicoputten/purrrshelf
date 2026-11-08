@@ -40,11 +40,15 @@ export { InvalidTransitionError };
 /** Schedules a {@link RESUME_SEARCH_JOB} for a request at `runAt`. */
 export type ResumeScheduler = (requestId: string, runAt: Date) => void;
 
+/** What happens after a search stored releases: the pick (BRK-06). */
+export type OnFound = (request: RequestRow) => Promise<RequestRow>;
+
 export class RequestService {
   constructor(
     private readonly db: Db,
     private readonly search: IndexerSearch,
     private readonly scheduleResume: ResumeScheduler,
+    private readonly onFound: OnFound,
     private readonly clock: Clock,
   ) {}
 
@@ -124,8 +128,7 @@ export class RequestService {
       case 'in_library':
         return this.setStatus(request, 'in_library', { calibreBookId: outcome.calibreBookId });
       case 'found':
-        // Release scoring and the auto-pick arrive with BRK-06; until then the list is shown.
-        return this.setStatus(request, 'choose_release');
+        return this.onFound(request);
       case 'not_found':
         return this.setStatus(request, 'not_found', { error: outcome.reason });
       case 'waiting_budget': {

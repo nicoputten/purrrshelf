@@ -34,6 +34,8 @@ import { discoverRoutes } from './modules/discover/routes.js';
 import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import type { LibraryAdapter } from './modules/library/types.js';
+import { SabnzbdClient, type DownloadClient } from './modules/sabnzbd/client.js';
+import { libraryBookLookup } from './modules/search/library-book-lookup.js';
 import { meRoutes } from './modules/me/routes.js';
 
 export interface AppDeps {
@@ -44,8 +46,10 @@ export interface AppDeps {
   healthChecks?: HealthCheck[];
   /** Where indexer keys are read (INDEXER_<ID>_API_KEY). */
   env?: NodeJS.ProcessEnv;
-  /** "Already in the library?" check before any indexer search; backed by the library adapter once BRK-03 lands. */
+  /** "Already in the library?" check before any indexer search; defaults to the library adapter. */
   bookLookup?: LibraryLookup;
+  /** SABnzbd; defaults to the one from config (SABNZBD_URL), null without it. */
+  sab?: DownloadClient | null;
   /** Tests swap the indexer HTTP client. */
   indexerFetch?: FetchLike;
   /** Outbound HTTP for metadata providers; tests pass a fake. */
@@ -66,7 +70,7 @@ declare module 'fastify' {
   }
 }
 
-/** Until the library adapter lands (BRK-03): the library has nothing yet. */
+/** Without a library (CWA not configured) nothing is ever "already there". */
 const emptyLibrary: LibraryLookup = { findBook: () => Promise.resolve(null) };
 
 export async function buildApp({
@@ -75,7 +79,8 @@ export async function buildApp({
   clock = systemClock,
   healthChecks = [],
   env = process.env,
-  bookLookup = emptyLibrary,
+  bookLookup,
+  sab,
   indexerFetch,
   fetch = (input, init) => globalThis.fetch(input, init),
   metadataProviders,
@@ -112,12 +117,34 @@ export async function buildApp({
   );
 
   const authenticated = requireAuth(accessTokens, clock);
+  const downloadClient =
+    sab !== undefined
+      ? sab
+      : config.SABNZBD_URL && config.SABNZBD_API_KEY
+        ? new SabnzbdClient(
+            {
+              url: config.SABNZBD_URL,
+              apiKey: config.SABNZBD_API_KEY,
+              category: config.SABNZBD_CATEGORY,
+            },
+            (url, init) => globalThis.fetch(url, init),
+          )
+        : null;
   const downloads = createDownloads({
     db: database.db,
     clock,
     env,
-    library: bookLookup,
+    library: bookLookup ?? (library ? libraryBookLookup(library) : emptyLibrary),
     log: app.log,
+    sab: downloadClient,
+    importLibrary: library,
+    settings: {
+      downloadsPath: config.DOWNLOADS_PATH,
+      ingestPath: config.CWA_INGEST_PATH,
+      pollIntervalMs: config.DOWNLOAD_POLL_SECONDS * 1000,
+      importTimeoutMs: config.IMPORT_TIMEOUT_MINUTES * 60_000,
+      maxBookBytes: config.MAX_BOOK_MB * 1024 * 1024,
+    },
     ...(indexerFetch ? { fetch: indexerFetch } : {}),
   });
   app.decorate('downloads', downloads);
@@ -145,6 +172,7 @@ export async function buildApp({
   const checks: HealthCheck[] = [
     { name: 'database', check: database.ping },
     ...(library ? [{ name: 'library', check: () => library.ping() }] : []),
+    ...(downloadClient ? [{ name: 'sabnzbd', check: () => downloadClient.ping() }] : []),
     ...healthChecks,
   ];
   if (config.HARDCOVER_API_TOKEN) {

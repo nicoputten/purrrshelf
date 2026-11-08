@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { POLL_DOWNLOAD_JOB, WAIT_IMPORT_JOB } from '../src/modules/releases/pipeline.js';
 import { RESUME_SEARCH_JOB } from '../src/modules/requests/service.js';
 import { makeTestApp, type TestContext } from './helpers.js';
 
@@ -69,8 +70,21 @@ describe('the running broker', () => {
     await ctx?.close();
   });
 
-  it('runs exactly one job type: resuming a search that waited for budget', async () => {
+  it('runs only the known job types: no RSS, no "search missing", no retries', async () => {
     ctx = await makeTestApp();
-    expect(ctx.app.downloads.jobs.types).toEqual([RESUME_SEARCH_JOB]);
+    // Only the resume job searches; the download poll may grab the next NZB of the same list.
+    expect(ctx.app.downloads.jobs.types).toEqual([
+      RESUME_SEARCH_JOB,
+      POLL_DOWNLOAD_JOB,
+      WAIT_IMPORT_JOB,
+    ]);
+  });
+
+  it('only the search module and the CLI search; the pipeline only grabs', () => {
+    const searchers = sources()
+      .filter((f) => /gateway\.(search|caps)\(/.test(f.code))
+      .map((f) => f.path)
+      .sort();
+    expect(searchers).toEqual(['cli.ts', 'modules/search/service.ts']);
   });
 });

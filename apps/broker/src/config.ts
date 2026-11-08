@@ -69,6 +69,18 @@ const envSchema = z.object({
   CALIBRE_LIBRARY_PATH: z.string().min(1).default('/calibre-library'),
   CWA_CONFIG_PATH: z.string().min(1).default('/cwa-config'),
   CWA_INGEST_PATH: z.string().min(1).default('/cwa-book-ingest'),
+
+  // SABnzbd (BRK-06). Without SABNZBD_URL nothing is downloaded; results are only listed.
+  SABNZBD_URL: z.url().optional(),
+  SABNZBD_API_KEY: optionalSecret,
+  SABNZBD_CATEGORY: z.string().min(1).default('kobopush'),
+  /** SABnzbd's kobopush complete folder, mounted read-only in the broker. */
+  DOWNLOADS_PATH: z.string().min(1).default('/downloads'),
+  DOWNLOAD_POLL_SECONDS: z.coerce.number().int().positive().default(15),
+  /** How long to wait for CWA to show an ingested book in metadata.db. */
+  IMPORT_TIMEOUT_MINUTES: z.coerce.number().int().positive().default(30),
+  /** Size cap for the ebook file taken from a download. */
+  MAX_BOOK_MB: z.coerce.number().positive().default(50),
 });
 
 const configSchema = envSchema.superRefine((env, ctx) => {
@@ -77,6 +89,13 @@ const configSchema = envSchema.superRefine((env, ctx) => {
       if (!env[key])
         ctx.addIssue({ code: 'custom', path: [key], message: 'required with CWA_BASE_URL' });
     }
+  }
+  if (env.SABNZBD_URL && !env.SABNZBD_API_KEY) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['SABNZBD_API_KEY'],
+      message: 'required with SABNZBD_URL',
+    });
   }
 });
 

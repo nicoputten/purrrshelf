@@ -124,6 +124,10 @@ export const requests = sqliteTable(
     pushToJson: text('push_to_json').notNull().default('[]'),
     /** Set when the library already had the book or the import finished. */
     calibreBookId: integer('calibre_book_id'),
+    /** SABnzbd job id of the release being downloaded. */
+    downloadId: text('download_id'),
+    /** Download progress 0–100 while downloading. */
+    progress: integer('progress'),
     /** When the current search round began (Add or Try again); a budget wait resumes it. */
     searchStartedAt: integer('search_started_at', { mode: 'timestamp_ms' }).notNull(),
     error: text('error'),
@@ -184,6 +188,8 @@ export const releases = sqliteTable(
     publishedAt: integer('published_at', { mode: 'timestamp_ms' }),
     /** Set by release scoring (BRK-06). */
     score: real('score'),
+    /** JSON array of reasons the release was left out (see releases/scoring.ts). */
+    rejectedJson: text('rejected_json').notNull().default('[]'),
     status: text('status', { enum: releaseStatuses }).notNull().default('candidate'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   },

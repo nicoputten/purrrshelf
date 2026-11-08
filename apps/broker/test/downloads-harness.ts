@@ -1,6 +1,6 @@
 import { openDatabase, type DatabaseHandle } from '../src/db/index.js';
 import { UserRepository } from '../src/modules/auth/users.js';
-import { createDownloads, type Downloads } from '../src/modules/downloads.js';
+import { createDownloads, type Downloads, type DownloadsDeps } from '../src/modules/downloads.js';
 import type { IndexerInput } from '../src/modules/indexers/repository.js';
 import type { BookQuery } from '../src/modules/search/planner.js';
 import type { LibraryLookup } from '../src/modules/search/service.js';
@@ -37,7 +37,9 @@ export interface Harness extends Downloads {
 }
 
 /** The whole downloads stack against fake indexers (one FakeNewznab per host). */
-export async function makeHarness(): Promise<Harness> {
+export async function makeHarness(
+  extra: Pick<DownloadsDeps, 'sab' | 'importLibrary' | 'settings'> = {},
+): Promise<Harness> {
   const database = openDatabase(':memory:');
   const clock = new TestClock();
   const fakes = new Map<string, FakeNewznab>();
@@ -65,6 +67,7 @@ export async function makeHarness(): Promise<Harness> {
     library,
     log: { error: () => undefined },
     fetch,
+    ...extra,
   });
   const user = await new UserRepository(database.db, clock.fn).create({
     username: 'reader',

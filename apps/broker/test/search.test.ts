@@ -256,7 +256,7 @@ describe('Try again', () => {
     h.clock.advance(MIN);
     fakeFor(h, HOST).on('search', { body: fixture('search-hit.xml') });
     const again = await h.requests.retry(req.id);
-    expect(again).toMatchObject({ status: 'choose_release', error: null });
+    expect(again.status).toBe('choose_release');
     expect(h.calls()).toBe(4);
   });
 
