@@ -20,6 +20,19 @@ describe('buildOpenApi', () => {
     expect(doc.paths['/api/v1/auth/login']!.post!.requestBody).toBeDefined();
   });
 
+  it('documents path and query parameters', () => {
+    const work = doc.paths['/api/v1/works/{id}']!.get! as { parameters?: unknown[] };
+    expect(work.parameters).toEqual([
+      expect.objectContaining({ name: 'id', in: 'path', required: true }),
+    ]);
+    const search = doc.paths['/api/v1/discover/search']!.get! as { parameters?: unknown[] };
+    expect(search.parameters).toEqual([
+      expect.objectContaining({ name: 'q', in: 'query', required: true }),
+      expect.objectContaining({ name: 'author', in: 'query', required: false }),
+      expect.objectContaining({ name: 'language', in: 'query', required: false }),
+    ]);
+  });
+
   it('documents every error code', () => {
     expect(doc.components.schemas.ErrorResponse!.properties!.code!.enum).toEqual([...errorCodes]);
   });

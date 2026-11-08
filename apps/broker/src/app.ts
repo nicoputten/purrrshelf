@@ -15,6 +15,12 @@ import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { AccessTokens } from './modules/auth/tokens.js';
 import { UserRepository } from './modules/auth/users.js';
+import { createDiscover, defaultProviders } from './modules/discover/index.js';
+import { hardcoverTokenCheck } from './modules/discover/hardcover-token.js';
+import type { FetchLike } from './modules/discover/http.js';
+import { emptyLibrary, type LibraryLookup } from './modules/discover/library-lookup.js';
+import { discoverRoutes } from './modules/discover/routes.js';
+import type { MetadataProvider } from './modules/discover/types.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import { meRoutes } from './modules/me/routes.js';
 
@@ -24,6 +30,12 @@ export interface AppDeps {
   clock?: Clock;
   /** Extra dependency checks for /health (CWA, SABnzbd, … in later milestones). */
   healthChecks?: HealthCheck[];
+  /** Outbound HTTP for metadata providers; tests pass a fake. */
+  fetch?: FetchLike;
+  /** Overrides the default Hardcover → Open Library → Google Books providers. */
+  metadataProviders?: MetadataProvider[];
+  /** Library state for search hits; empty until the library stream provides one. */
+  libraryLookup?: LibraryLookup;
 }
 
 export async function buildApp({
@@ -31,6 +43,9 @@ export async function buildApp({
   database,
   clock = systemClock,
   healthChecks = [],
+  fetch = (input, init) => globalThis.fetch(input, init),
+  metadataProviders,
+  libraryLookup = emptyLibrary,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: {
@@ -60,16 +75,42 @@ export async function buildApp({
     clock,
   );
 
+  const authenticated = requireAuth(accessTokens, clock);
+  const discover = createDiscover({
+    config,
+    db: database.db,
+    clock,
+    providers: metadataProviders ?? defaultProviders(config, fetch),
+    library: libraryLookup,
+    log: app.log,
+  });
+
+  const checks: HealthCheck[] = [{ name: 'database', check: database.ping }, ...healthChecks];
+  if (config.HARDCOVER_API_TOKEN) {
+    const tokenCheck = hardcoverTokenCheck(
+      config.HARDCOVER_API_TOKEN,
+      clock,
+      config.HARDCOVER_TOKEN_WARN_DAYS,
+    );
+    checks.push(tokenCheck);
+    app.addHook('onReady', async () => {
+      try {
+        await tokenCheck.check();
+      } catch (err) {
+        app.log.warn((err as Error).message);
+      }
+    });
+  }
+
   await app.register(
     async (api) => {
-      await api.register(healthRoutes, {
-        checks: [{ name: 'database', check: database.ping }, ...healthChecks],
-      });
+      await api.register(healthRoutes, { checks });
       await api.register(authRoutes, {
         auth,
         loginRateLimitPerMinute: config.LOGIN_RATE_LIMIT_PER_MINUTE,
       });
-      await api.register(meRoutes, { users, requireAuth: requireAuth(accessTokens, clock) });
+      await api.register(meRoutes, { users, requireAuth: authenticated });
+      await api.register(discoverRoutes, { discover, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },
   );

@@ -125,3 +125,32 @@ describe('createClient', () => {
     spy.mockRestore();
   });
 });
+
+describe('path and query parameters', () => {
+  const emptySearch = { hits: [], providers: [] };
+
+  it('puts query parameters in the URL and drops empty ones', async () => {
+    const fetch = vi.fn<FetchLike>(async () => jsonResponse(200, emptySearch));
+    const client = createClient({ baseUrl: 'https://x.example.invalid', fetch });
+    await client.call('discoverSearch', { q: ' de avonden ', author: '' });
+    expect(fetch.mock.calls[0]![0]).toBe(
+      'https://x.example.invalid/api/v1/discover/search?q=de+avonden&language=any',
+    );
+  });
+
+  it('fills and encodes path parameters', async () => {
+    const fetch = vi.fn<FetchLike>(async () => jsonResponse(200, { series: null, entries: [] }));
+    const client = createClient({ baseUrl: 'https://x.example.invalid', fetch });
+    await client.call('workSeries', { id: 'openlibrary:OL1W' });
+    expect(fetch.mock.calls[0]![0]).toBe(
+      'https://x.example.invalid/api/v1/works/openlibrary%3AOL1W/series',
+    );
+  });
+
+  it('rejects an invalid work id before sending anything', async () => {
+    const fetch = vi.fn<FetchLike>();
+    const client = createClient({ baseUrl: 'https://x.example.invalid', fetch });
+    await expect(client.call('work', { id: '../admin' })).rejects.toThrow();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});

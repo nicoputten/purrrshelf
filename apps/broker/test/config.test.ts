@@ -33,4 +33,20 @@ describe('loadConfig', () => {
       expect((err as ConfigError).issues[0]).toMatch(/^PORT:/);
     }
   });
+
+  it('treats unset and empty provider keys as not configured', () => {
+    const unset = loadConfig({ JWT_SECRET: TEST_SECRET });
+    expect(unset.HARDCOVER_API_TOKEN).toBeUndefined();
+    expect(unset.METADATA_CACHE_DAYS).toBe(7);
+    const empty = loadConfig({
+      JWT_SECRET: TEST_SECRET,
+      HARDCOVER_API_TOKEN: ' ',
+      GOOGLE_BOOKS_API_KEY: 'change-me',
+    });
+    expect(empty.HARDCOVER_API_TOKEN).toBeUndefined();
+    expect(empty.GOOGLE_BOOKS_API_KEY).toBeUndefined();
+    expect(
+      loadConfig({ JWT_SECRET: TEST_SECRET, HARDCOVER_API_TOKEN: 'tok' }).HARDCOVER_API_TOKEN,
+    ).toBe('tok');
+  });
 });

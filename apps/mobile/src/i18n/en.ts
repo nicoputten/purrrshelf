@@ -58,6 +58,7 @@ export const en = {
     INVALID_REFRESH_TOKEN: 'Your session has ended. Please log in again.',
     RATE_LIMITED: 'Too many tries. Wait a minute and try again.',
     NOT_FOUND: 'Not found.',
+    METADATA_UNAVAILABLE: 'Book search is down for a moment. Try again soon.',
     INTERNAL_ERROR: 'The server had a problem. Try again later.',
     unknown: 'Something went wrong. Try again.',
   },

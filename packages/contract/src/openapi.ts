@@ -34,6 +34,11 @@ export function buildOpenApi(version: string): JsonObject {
         },
       },
     };
+    const parameters = [
+      ...paramsOf(ep.params, 'path', options),
+      ...paramsOf(ep.query, 'query', options),
+    ];
+    if (parameters.length) op.parameters = parameters;
     if (ep.auth) op.security = [{ bearer: [] }];
     if (ep.body) {
       op.requestBody = {
@@ -59,6 +64,24 @@ export function buildOpenApi(version: string): JsonObject {
       securitySchemes: { bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
     },
   };
+}
+
+function paramsOf(
+  schema: z.ZodObject | undefined,
+  location: 'path' | 'query',
+  options: Parameters<typeof z.toJSONSchema>[1],
+): JsonObject[] {
+  if (!schema) return [];
+  const json = z.toJSONSchema(schema, { ...options, io: 'input' }) as {
+    properties?: Record<string, JsonObject>;
+    required?: string[];
+  };
+  return Object.entries(json.properties ?? {}).map(([name, prop]) => ({
+    name,
+    in: location,
+    required: location === 'path' || (json.required ?? []).includes(name),
+    schema: prop,
+  }));
 }
 
 function strip(schema: JsonObject): JsonObject {

@@ -1,6 +1,8 @@
 import type { z } from 'zod';
 import { ErrorResponse } from './errors.js';
 import {
+  DiscoverSearchQuery,
+  DiscoverSearchResult,
   Empty,
   Health,
   LoginRequest,
@@ -8,6 +10,9 @@ import {
   Me,
   RefreshRequest,
   TokenPair,
+  WorkDetail,
+  WorkParams,
+  WorkSeries,
 } from './schemas.js';
 
 export const API_PREFIX = '/api/v1';
@@ -18,6 +23,10 @@ export interface Endpoint {
   summary: string;
   auth: boolean;
   body?: z.ZodType;
+  /** Path parameters, matching the `:name` segments in {@link Endpoint.path}. */
+  params?: z.ZodObject;
+  /** Query-string parameters. */
+  query?: z.ZodObject;
   response: z.ZodType;
   /** HTTP status of a successful response. */
   status: 200 | 201 | 204;
@@ -66,6 +75,34 @@ export const endpoints = {
     summary: 'Current user, locale and Kobo state',
     auth: true,
     response: Me,
+    status: 200,
+  },
+  discoverSearch: {
+    method: 'GET',
+    path: '/discover/search',
+    summary:
+      'Search book metadata (Hardcover, Open Library, Google Books). Never spends an indexer search.',
+    auth: true,
+    query: DiscoverSearchQuery,
+    response: DiscoverSearchResult,
+    status: 200,
+  },
+  work: {
+    method: 'GET',
+    path: '/works/:id',
+    summary: 'Details of one work, with library state',
+    auth: true,
+    params: WorkParams,
+    response: WorkDetail,
+    status: 200,
+  },
+  workSeries: {
+    method: 'GET',
+    path: '/works/:id/series',
+    summary: 'The series a work belongs to, in reading order',
+    auth: true,
+    params: WorkParams,
+    response: WorkSeries,
     status: 200,
   },
 } as const satisfies Record<string, Endpoint>;

@@ -179,10 +179,193 @@
           }
         ]
       }
+    },
+    "/api/v1/discover/search": {
+      "get": {
+        "operationId": "discoverSearch",
+        "summary": "Search book metadata (Hardcover, Open Library, Google Books). Never spends an indexer search.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoverSearchResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "author",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "type": "string",
+              "enum": ["any", "en", "nl"]
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/works/{id}": {
+      "get": {
+        "operationId": "work",
+        "summary": "Details of one work, with library state",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/works/{id}/series": {
+      "get": {
+        "operationId": "workSeries",
+        "summary": "The series a work belongs to, in reading order",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkSeries"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "DiscoverSearchResult": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkSummary"
+            }
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "enum": ["hardcover", "openlibrary", "googlebooks"]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["ok", "failed", "skipped"]
+                }
+              },
+              "required": ["provider", "status"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["hits", "providers"],
+        "additionalProperties": false
+      },
       "Empty": {
         "type": "object",
         "properties": {},
@@ -201,6 +384,7 @@
               "INVALID_REFRESH_TOKEN",
               "RATE_LIMITED",
               "NOT_FOUND",
+              "METADATA_UNAVAILABLE",
               "INTERNAL_ERROR"
             ]
           },
@@ -337,6 +521,211 @@
           "refreshToken",
           "refreshTokenExpiresAt"
         ],
+        "additionalProperties": false
+      },
+      "WorkDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": ["ebook", "audiobook"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": ["string", "null"]
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "language": {
+            "type": ["string", "null"]
+          },
+          "series": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": ["string", "null"]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "position": {
+                    "type": ["number", "null"]
+                  },
+                  "total": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["id", "name", "position", "total"],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publishedYear": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "isbns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hasCover": {
+            "type": "boolean"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "enum": ["hardcover", "openlibrary", "googlebooks"]
+                },
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": ["provider", "id"],
+              "additionalProperties": false
+            }
+          },
+          "library": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LibraryState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "type": ["string", "null"]
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pageCount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "mediaType",
+          "title",
+          "subtitle",
+          "authors",
+          "language",
+          "series",
+          "publishedYear",
+          "isbns",
+          "hasCover",
+          "sources",
+          "library",
+          "description",
+          "subjects",
+          "pageCount"
+        ],
+        "additionalProperties": false
+      },
+      "WorkSeries": {
+        "type": "object",
+        "properties": {
+          "series": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": ["string", "null"]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "total": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["id", "name", "total"],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": ["number", "null"]
+                },
+                "work": {
+                  "$ref": "#/components/schemas/WorkSummary"
+                }
+              },
+              "required": ["position", "work"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["series", "entries"],
         "additionalProperties": false
       }
     },

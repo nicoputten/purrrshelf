@@ -2,7 +2,16 @@ import type { z } from 'zod';
 import { ErrorResponse, type ErrorCode } from './errors.js';
 import { API_PREFIX, endpoints, type Endpoint, type Endpoints } from './endpoints.js';
 
-type BodyOf<E> = E extends { body: z.ZodType } ? z.input<E['body']> : undefined;
+type InputPart<E, K extends string> = E extends { [P in K]: z.ZodType } ? z.input<E[K]> : object;
+/**
+ * What `call` takes besides the endpoint name: the JSON body, or one object
+ * holding the path and query parameters.
+ */
+type InputOf<E> = E extends { body: z.ZodType }
+  ? z.input<E['body']>
+  : E extends { params: z.ZodType } | { query: z.ZodType }
+    ? InputPart<E, 'params'> & InputPart<E, 'query'>
+    : undefined;
 type ResponseOf<E> = E extends { response: z.ZodType } ? z.output<E['response']> : never;
 
 export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
@@ -35,7 +44,26 @@ export interface ClientOptions {
 }
 
 export type CallArgs<N extends keyof Endpoints> =
-  BodyOf<Endpoints[N]> extends undefined ? [] : [body: BodyOf<Endpoints[N]>];
+  InputOf<Endpoints[N]> extends undefined ? [] : [input: InputOf<Endpoints[N]>];
+
+/** Fills `:name` path segments and appends the query string. */
+export function buildPath(ep: Endpoint, input: unknown): string {
+  let path = ep.path;
+  if (ep.params) {
+    const params = ep.params.parse(input) as Record<string, unknown>;
+    path = path.replace(/:(\w+)/g, (_m, name: string) => encodeURIComponent(String(params[name])));
+  }
+  if (ep.query) {
+    const query = ep.query.parse(input) as Record<string, unknown>;
+    const search = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== '') search.set(key, String(value));
+    }
+    const qs = search.toString();
+    if (qs) path += `?${qs}`;
+  }
+  return path;
+}
 
 export interface ApiClient {
   call<N extends keyof Endpoints>(name: N, ...args: CallArgs<N>): Promise<ResponseOf<Endpoints[N]>>;
@@ -63,17 +91,18 @@ export function createClient(options: ClientOptions): ApiClient {
       const ep: Endpoint = endpoints[name];
       const headers: Record<string, string> = { accept: 'application/json' };
       const init: RequestInit = { method: ep.method, headers };
-      const [body] = args as unknown[];
+      const [input] = args as unknown[];
       if (ep.body) {
         headers['content-type'] = 'application/json';
-        init.body = JSON.stringify(ep.body.parse(body));
+        init.body = JSON.stringify(ep.body.parse(input));
       }
+      const path = buildPath(ep, input);
       const token = ep.auth ? options.getAccessToken?.() : undefined;
       if (token) headers.authorization = `Bearer ${token}`;
 
       let res: Response;
       try {
-        res = await doFetch(`${baseUrl}${API_PREFIX}${ep.path}`, init);
+        res = await doFetch(`${baseUrl}${API_PREFIX}${path}`, init);
       } catch (cause) {
         throw new NetworkError('Server not reachable', { cause });
       }

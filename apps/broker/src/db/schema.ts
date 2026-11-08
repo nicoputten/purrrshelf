@@ -35,3 +35,17 @@ export const refreshTokens = sqliteTable(
 
 export type User = typeof users.$inferSelect;
 export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
+
+/**
+ * Metadata provider replies, cached for 7 days (ADR 0007). Values are the
+ * broker's normalised JSON, never raw provider replies with keys in them.
+ */
+export const metadataCache = sqliteTable(
+  'metadata_cache',
+  {
+    key: text('key').primaryKey(),
+    value: text('value').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('metadata_cache_expires_idx').on(t.expiresAt)],
+);

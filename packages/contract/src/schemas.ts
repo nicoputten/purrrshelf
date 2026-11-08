@@ -59,3 +59,127 @@ export const Health = z
 export type Health = z.infer<typeof Health>;
 
 export const Empty = z.object({}).meta({ id: 'Empty' });
+
+// --- Discover (BRK-02) ------------------------------------------------------
+
+/** Kept on works and requests so audiobooks fit in later (ADR 0014). */
+export const MediaType = z.enum(['ebook', 'audiobook']);
+export type MediaType = z.infer<typeof MediaType>;
+
+/** Metadata providers, in the order their data wins when hits are merged (ADR 0007). */
+export const metadataProviders = ['hardcover', 'openlibrary', 'googlebooks'] as const;
+export const MetadataProviderName = z.enum(metadataProviders);
+export type MetadataProviderName = z.infer<typeof MetadataProviderName>;
+
+/** Language chips on the search screen. */
+export const SearchLanguage = z.enum(['any', 'en', 'nl']);
+export type SearchLanguage = z.infer<typeof SearchLanguage>;
+
+/** `<provider>:<provider id>`, for example `hardcover:123` or `openlibrary:OL27448W`. */
+export const WorkId = z
+  .string()
+  .regex(/^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$/, 'not a work id');
+export type WorkId = z.infer<typeof WorkId>;
+
+export const LibraryOwner = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  /** True for the user who asked. */
+  me: z.boolean(),
+});
+export type LibraryOwner = z.infer<typeof LibraryOwner>;
+
+/** Set when the book is already in the shared library (ADR 0009). */
+export const LibraryState = z
+  .object({
+    itemId: z.string(),
+    owners: z.array(LibraryOwner),
+    onMyKobo: z.boolean(),
+  })
+  .meta({ id: 'LibraryState' });
+export type LibraryState = z.infer<typeof LibraryState>;
+
+export const SeriesRef = z.object({
+  /** Provider-prefixed series id when the provider has one, e.g. `hardcover:42`. */
+  id: z.string().nullable(),
+  name: z.string(),
+  /** Position in the series; can be fractional (2.5 for a novella). */
+  position: z.number().nullable(),
+  /** Number of main books in the series, when known. */
+  total: z.number().int().nullable(),
+});
+export type SeriesRef = z.infer<typeof SeriesRef>;
+
+export const WorkSource = z.object({ provider: MetadataProviderName, id: z.string() });
+export type WorkSource = z.infer<typeof WorkSource>;
+
+export const WorkSummary = z
+  .object({
+    id: WorkId,
+    mediaType: MediaType,
+    title: z.string(),
+    subtitle: z.string().nullable(),
+    authors: z.array(z.string()),
+    /** ISO 639-1 code (`en`, `nl`, …) when a provider knows it. */
+    language: z.string().nullable(),
+    series: SeriesRef.nullable(),
+    publishedYear: z.number().int().nullable(),
+    /** ISBN-13s, normalised. */
+    isbns: z.array(z.string()),
+    /** Whether any provider has a cover; the image itself comes from the broker. */
+    hasCover: z.boolean(),
+    /** Every provider record merged into this hit, best first. */
+    sources: z.array(WorkSource),
+    library: LibraryState.nullable(),
+  })
+  .meta({ id: 'WorkSummary' });
+export type WorkSummary = z.infer<typeof WorkSummary>;
+
+export const DiscoverSearchQuery = z.object({
+  /** Title, or any words from it. */
+  q: z.string().trim().min(1).max(200),
+  author: z.string().trim().max(200).optional(),
+  language: SearchLanguage.default('any'),
+});
+export type DiscoverSearchQuery = z.infer<typeof DiscoverSearchQuery>;
+
+export const ProviderStatus = z.object({
+  provider: MetadataProviderName,
+  /** `skipped` when the provider is not configured on this server. */
+  status: z.enum(['ok', 'failed', 'skipped']),
+});
+export type ProviderStatus = z.infer<typeof ProviderStatus>;
+
+export const DiscoverSearchResult = z
+  .object({
+    hits: z.array(WorkSummary),
+    providers: z.array(ProviderStatus),
+  })
+  .meta({ id: 'DiscoverSearchResult' });
+export type DiscoverSearchResult = z.infer<typeof DiscoverSearchResult>;
+
+export const WorkParams = z.object({ id: WorkId });
+export type WorkParams = z.infer<typeof WorkParams>;
+
+export const WorkDetail = WorkSummary.extend({
+  description: z.string().nullable(),
+  subjects: z.array(z.string()),
+  pageCount: z.number().int().nullable(),
+}).meta({ id: 'WorkDetail' });
+export type WorkDetail = z.infer<typeof WorkDetail>;
+
+export const SeriesEntry = z.object({
+  position: z.number().nullable(),
+  work: WorkSummary,
+});
+export type SeriesEntry = z.infer<typeof SeriesEntry>;
+
+export const WorkSeries = z
+  .object({
+    series: z
+      .object({ id: z.string().nullable(), name: z.string(), total: z.number().int().nullable() })
+      .nullable(),
+    entries: z.array(SeriesEntry),
+  })
+  .meta({ id: 'WorkSeries' });
+export type WorkSeries = z.infer<typeof WorkSeries>;

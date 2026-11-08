@@ -59,6 +59,7 @@ export const nl: Translations = {
     INVALID_REFRESH_TOKEN: 'Je sessie is verlopen. Log opnieuw in.',
     RATE_LIMITED: 'Te vaak geprobeerd. Wacht een minuut en probeer het opnieuw.',
     NOT_FOUND: 'Niet gevonden.',
+    METADATA_UNAVAILABLE: 'Boeken zoeken lukt even niet. Probeer het zo nog eens.',
     INTERNAL_ERROR: 'De server had een probleem. Probeer het later opnieuw.',
     unknown: 'Er ging iets mis. Probeer het opnieuw.',
   },

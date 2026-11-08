@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 import { loadConfig, type Config } from '../src/config.js';
 import { openDatabase, type DatabaseHandle } from '../src/db/index.js';
+import type { FetchLike } from '../src/modules/discover/http.js';
+import type { LibraryLookup } from '../src/modules/discover/library-lookup.js';
 import type { HealthCheck } from '../src/modules/health/routes.js';
 import { UserRepository } from '../src/modules/auth/users.js';
 
@@ -30,7 +32,13 @@ export interface TestContext {
 }
 
 export async function makeTestApp(
-  opts: { config?: Record<string, string>; healthChecks?: HealthCheck[]; withUser?: boolean } = {},
+  opts: {
+    config?: Record<string, string>;
+    healthChecks?: HealthCheck[];
+    withUser?: boolean;
+    fetch?: FetchLike;
+    libraryLookup?: LibraryLookup;
+  } = {},
 ): Promise<TestContext> {
   const database = openDatabase(':memory:');
   const clock = new TestClock();
@@ -48,6 +56,13 @@ export async function makeTestApp(
     database,
     clock: clock.fn,
     healthChecks: opts.healthChecks ?? [],
+    // Tests never reach the internet: an unexpected request fails loudly.
+    fetch:
+      opts.fetch ??
+      (async (input) => {
+        throw new Error(`unexpected request to ${input}`);
+      }),
+    ...(opts.libraryLookup ? { libraryLookup: opts.libraryLookup } : {}),
   });
   return {
     app,

@@ -12,6 +12,7 @@ export const errorCodes = [
   'INVALID_REFRESH_TOKEN',
   'RATE_LIMITED',
   'NOT_FOUND',
+  'METADATA_UNAVAILABLE',
   'INTERNAL_ERROR',
 ] as const;
 
