@@ -28,3 +28,11 @@ ADRs win.
 - **Moved out of milestone 0:** the broker's CWA service account (before
   milestone 3) and the SABnzbd `kobopush` category and API key (before
   milestone 4).
+
+## 2026-11-08: OPS-02 ahead of milestone 8
+
+- **Remote access** (OPS-02) is done in parallel with milestone 2 instead of in
+  milestone 8: one NPM proxy host for the broker, HTTPS with HSTS
+  (`deploy/reverse-proxy.md`). Kobo sync stays on the home Wi-Fi.
+- **Client IPs:** the broker trusts `X-Forwarded-For` only from the proxy
+  (`TRUST_PROXY`, default private networks). → ADR 0018.

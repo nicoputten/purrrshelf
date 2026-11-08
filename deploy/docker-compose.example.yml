@@ -8,6 +8,8 @@ services:
     user: '568:568'
     env_file: .env
     restart: unless-stopped
+    # LAN only. Remote access goes through Nginx Proxy Manager with HTTPS and
+    # HSTS (deploy/reverse-proxy.md); never forward this port on the router.
     ports:
       - '8080:8080'
     volumes:
@@ -29,6 +31,7 @@ services:
       - /path/to/cwa-config:/config
       - /path/to/calibre-library:/calibre-library
       - /path/to/cwa-ingest:/cwa-book-ingest
+    # LAN only: no proxy host and no router port forward (ADR 0011).
     ports:
       - '8083:8083'
 

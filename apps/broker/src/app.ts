@@ -38,7 +38,7 @@ export async function buildApp({
       // Never log credentials or tokens.
       redact: ['req.headers.authorization', 'req.headers.cookie'],
     },
-    trustProxy: true,
+    trustProxy: config.TRUST_PROXY,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);

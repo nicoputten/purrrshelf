@@ -74,3 +74,8 @@ docker exec -it <broker-container> node dist/cli-main.js user add <username> --n
 docker exec -it <broker-container> node dist/cli-main.js user set-password <username>
 docker exec -it <broker-container> node dist/cli-main.js user list
 ```
+
+## 8. Remote access
+
+Expose only the broker, through Nginx Proxy Manager with HTTPS and HSTS. See
+[reverse-proxy.md](reverse-proxy.md).
