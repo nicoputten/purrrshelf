@@ -52,6 +52,8 @@ docs/decisions/     numbered ADRs
 - The app ships with **no default server URL**.
 - Every user-facing string goes through i18n with both `en` and `nl`
   translations; a test fails if a key is missing in either.
+- Every file in `apps/mobile/src/app/` is a route: keep tests and helpers
+  elsewhere (CI bundles the app to catch this).
 - API errors use `{ code, message, details? }` with a stable `code` the app
   translates.
 
