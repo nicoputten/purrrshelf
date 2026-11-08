@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.0...mobile-v1.2.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* **mobile:** show the napping cat when a search finds nothing (DES-02) ([0bbb95e](https://github.com/nicoputten/purrrshelf/commit/0bbb95e59aa3f29f623fc4b247b6c31079cd8492))
+
 ## [1.2.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.1.0...mobile-v1.2.0) (2026-11-08)
 
 
