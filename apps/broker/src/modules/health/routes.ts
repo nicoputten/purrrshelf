@@ -1,26 +1,28 @@
-import type { FastifyPluginAsync } from 'fastify';
+import { endpoints, type Health } from '@purrshelf/contract';
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { VERSION } from '../../version.js';
 
 export interface HealthCheck {
   name: string;
-  check: () => Promise<void>;
+  check: () => Promise<void> | void;
 }
 
 export interface HealthRoutesOptions {
   checks: HealthCheck[];
 }
 
-type CheckResult = { name: string; status: 'ok' | 'fail'; error?: string };
+type CheckResult = Health['checks'][number];
 
 /**
  * Liveness plus dependency checks. Later milestones register checks for
- * CWA, SABnzbd, indexers and metadata providers; a failing check turns the
- * overall status to "degraded" but the endpoint itself still answers 200 so
- * container restarts are driven by liveness only.
+ * CWA, SABnzbd, indexers and metadata providers. A failing check turns the
+ * status to "degraded" but the endpoint still answers 200, so container
+ * restarts are driven by liveness only.
  */
-export const healthRoutes: FastifyPluginAsync<HealthRoutesOptions> = async (app, opts) => {
-  app.get('/health', async () => {
-    const results: CheckResult[] = await Promise.all(
+export const healthRoutes: FastifyPluginAsyncZod<HealthRoutesOptions> = async (app, opts) => {
+  const { health } = endpoints;
+  app.get(health.path, { schema: { response: { 200: health.response } } }, async () => {
+    const checks = await Promise.all(
       opts.checks.map(async ({ name, check }): Promise<CheckResult> => {
         try {
           await check();
@@ -30,7 +32,7 @@ export const healthRoutes: FastifyPluginAsync<HealthRoutesOptions> = async (app,
         }
       }),
     );
-    const status = results.every((r) => r.status === 'ok') ? 'ok' : 'degraded';
-    return { status, version: VERSION, checks: results };
+    const status: Health['status'] = checks.every((r) => r.status === 'ok') ? 'ok' : 'degraded';
+    return { service: 'purrshelf-broker' as const, status, version: VERSION, checks };
   });
 };

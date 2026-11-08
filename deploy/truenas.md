@@ -52,5 +52,16 @@ In CWA:
 
 See `docker-compose.example.yml` for a starting point.
 
+## 6. Broker accounts
+
+Create one broker account per reader. The password is read from stdin (or
+`PURRSHELF_PASSWORD`), so it never ends up in shell history or the repo:
+
+```sh
+docker exec -it <broker-container> node dist/cli-main.js user add <username> --name "<display name>" --locale nl
+docker exec -it <broker-container> node dist/cli-main.js user set-password <username>
+docker exec -it <broker-container> node dist/cli-main.js user list
+```
+
 **Done when:** a book added by hand to each user's `Kobo` shelf appears on the
 right Kobo only.

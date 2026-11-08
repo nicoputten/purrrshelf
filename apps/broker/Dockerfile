@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Build from the repo root: docker build -f apps/broker/Dockerfile .
 
-FROM node:22-bookworm-slim AS base
+# The full bookworm image has python3, make and g++ for native modules (better-sqlite3).
+FROM node:22-bookworm AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
 RUN corepack enable
 WORKDIR /repo

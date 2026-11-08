@@ -1,13 +1,18 @@
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
+import { openDatabase } from './db/index.js';
 
 const config = loadConfig();
-const app = await buildApp({ config });
+const database = openDatabase(config.DATABASE_PATH);
+const app = await buildApp({ config, database });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
     app.log.info({ signal }, 'shutting down');
-    void app.close().then(() => process.exit(0));
+    void app.close().then(() => {
+      database.close();
+      process.exit(0);
+    });
   });
 }
 

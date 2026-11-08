@@ -1,28 +1,28 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app.js';
-import { loadConfig } from '../src/config.js';
+import { Health } from '@purrshelf/contract';
+import { makeTestApp, type TestContext } from './helpers.js';
 
-let app: FastifyInstance | undefined;
+let ctx: TestContext | undefined;
 afterEach(async () => {
-  await app?.close();
-  app = undefined;
+  await ctx?.close();
+  ctx = undefined;
 });
 
-const config = loadConfig({ LOG_LEVEL: 'silent' });
-
 describe('GET /api/v1/health', () => {
-  it('answers ok with no checks registered', async () => {
-    app = await buildApp({ config });
-    const res = await app.inject({ method: 'GET', url: '/api/v1/health' });
+  it('answers ok with the database check and no auth', async () => {
+    ctx = await makeTestApp();
+    const res = await ctx.app.inject({ method: 'GET', url: '/api/v1/health' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ status: 'ok', checks: [] });
-    expect(typeof res.json().version).toBe('string');
+    const body = Health.parse(res.json());
+    expect(body).toMatchObject({
+      service: 'purrshelf-broker',
+      status: 'ok',
+      checks: [{ name: 'database', status: 'ok' }],
+    });
   });
 
   it('reports degraded with the failing check, but still answers 200', async () => {
-    app = await buildApp({
-      config,
+    ctx = await makeTestApp({
       healthChecks: [
         { name: 'good', check: async () => {} },
         {
@@ -31,21 +31,28 @@ describe('GET /api/v1/health', () => {
             throw new Error('unreachable');
           },
         },
-        {
-          name: 'weird',
-          check: () => Promise.reject('plain string'),
-        },
+        { name: 'weird', check: () => Promise.reject('plain string') },
       ],
     });
-    const res = await app.inject({ method: 'GET', url: '/api/v1/health' });
+    const res = await ctx.app.inject({ method: 'GET', url: '/api/v1/health' });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({
       status: 'degraded',
       checks: [
+        { name: 'database', status: 'ok' },
         { name: 'good', status: 'ok' },
         { name: 'bad', status: 'fail', error: 'unreachable' },
         { name: 'weird', status: 'fail', error: 'plain string' },
       ],
     });
+  });
+
+  it('fails the database check once the database is closed', async () => {
+    ctx = await makeTestApp();
+    ctx.database.close();
+    const res = await ctx.app.inject({ method: 'GET', url: '/api/v1/health' });
+    expect(res.json().checks[0]).toMatchObject({ name: 'database', status: 'fail' });
+    await ctx.app.close();
+    ctx = undefined;
   });
 });
