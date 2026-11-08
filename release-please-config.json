@@ -7,7 +7,60 @@
       "component": "broker"
     },
     "apps/mobile": {
-      "component": "mobile"
+      "component": "mobile",
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "New tricks"
+        },
+        {
+          "type": "fix",
+          "section": "Fixed scratches"
+        },
+        {
+          "type": "perf",
+          "section": "Faster paws"
+        },
+        {
+          "type": "revert",
+          "section": "Fixed scratches"
+        },
+        {
+          "type": "docs",
+          "section": "Docs",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Chores",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Refactors",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Tests",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "CI",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Build",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Style",
+          "hidden": true
+        }
+      ]
     }
   }
 }

@@ -78,7 +78,9 @@ docker build -f apps/broker/Dockerfile .
 
 - TypeScript strict everywhere; validate every external input with Zod.
 - Conventional commits (`feat(broker): …`, `fix(mobile): …`, `docs: …`);
-  release-please builds versions and changelogs from them.
+  release-please builds versions and changelogs from them. Mobile release
+  notes are shown in the app: curate them before merging a release PR
+  (`docs/releases.md`, ADR 0033).
 - Broker modules sit behind interfaces so tests can use fakes and adapters
   can be swapped (CWA today, Grimmory later).
 - Keep `media_type` on works and requests so audiobooks fit in later.

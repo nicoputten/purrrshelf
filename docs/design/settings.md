@@ -8,7 +8,8 @@ Library, App, Account.
 - Label **App**, then "Installed version: 1.2.0" in muted text.
 - When the broker has a newer version: a card (surface background, accent
   border, card radius) with "Version 1.3.0 is ready" in bold, up to eight lines
-  of release notes in muted text, a primary **Update** button and a muted hint:
+  of release notes in muted text (plain, cat-styled sections such as "New
+  tricks" and "Fixed scratches", ADR 0033), a primary **Update** button and a muted hint:
   "The first time, Android asks you to allow installs from Purrshelf. Turn it on
   and go back."
 - While downloading, the Update button is disabled and reads

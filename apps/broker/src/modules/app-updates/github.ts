@@ -1,4 +1,4 @@
-import { appVersionCode } from '@purrshelf/contract';
+import { appVersionCode, readableReleaseNotes } from '@purrshelf/contract';
 import { z } from 'zod';
 import { USER_AGENT, type HttpOptions } from '../discover/http.js';
 
@@ -67,7 +67,7 @@ export function pickLatest(raw: unknown): LatestApp | null {
     best = {
       version,
       versionCode,
-      notes: (release.body ?? '').slice(0, MAX_NOTES),
+      notes: readableReleaseNotes(release.body ?? '').slice(0, MAX_NOTES),
       publishedAt: new Date(release.published_at).toISOString(),
       apk: { url: asset.browser_download_url, size: asset.size, ...(sha256 ? { sha256 } : {}) },
     };

@@ -37,6 +37,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0030](0030-arm64-only-release-apk.md)                      | Release APKs are arm64-only too                                         | accepted                   |
 | [0031](0031-in-app-updates.md)                              | In-app updates: APK self-update through the broker                      | accepted                   |
 | [0032](0032-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
+| [0033](0033-readable-cat-styled-release-notes.md)           | Release notes are short, plain and cat-styled                           | accepted                   |
 
 ## Template
 

@@ -1,3 +1,4 @@
+import { readableReleaseNotes } from '@purrshelf/contract';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -17,6 +18,8 @@ export function UpdateSection() {
     useAppUpdate();
   const installed = updaterNative.installedVersion();
   const busy = status === 'downloading' || status === 'installing';
+  // Older brokers pass release-please Markdown through; tidy it here too (ADR 0033).
+  const notes = release ? readableReleaseNotes(release.notes) : '';
 
   return (
     <View style={styles.section}>
@@ -33,9 +36,9 @@ export function UpdateSection() {
           <AppText style={styles.heading}>
             {t('updates.available', { version: release.version })}
           </AppText>
-          {release.notes ? (
+          {notes ? (
             <AppText variant="muted" numberOfLines={8}>
-              {release.notes.slice(0, MAX_NOTES)}
+              {notes.slice(0, MAX_NOTES)}
             </AppText>
           ) : null}
           <Button
