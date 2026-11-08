@@ -65,6 +65,13 @@ export const en = {
       addNext: 'Add next',
       add: 'Add',
     },
+    addNextInSeries: 'Add next in series: {{title}}',
+    similar: {
+      title: 'Similar books',
+      series: 'Same series',
+      author: 'Same author',
+      subject: 'Similar subject',
+    },
   },
   settings: {
     title: 'Settings',

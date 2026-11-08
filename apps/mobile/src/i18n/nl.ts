@@ -68,6 +68,13 @@ export const nl: Translations = {
       addNext: 'Volgende toevoegen',
       add: 'Toevoegen',
     },
+    addNextInSeries: 'Volgende in de serie toevoegen: {{title}}',
+    similar: {
+      title: 'Vergelijkbare boeken',
+      series: 'Zelfde serie',
+      author: 'Zelfde schrijver',
+      subject: 'Vergelijkbaar onderwerp',
+    },
   },
   settings: {
     title: 'Instellingen',

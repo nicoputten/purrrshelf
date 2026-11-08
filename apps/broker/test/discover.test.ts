@@ -277,6 +277,8 @@ describe('zero indexer calls on discover endpoints', () => {
       '/works/openlibrary:OL202W',
       '/works/googlebooks:gbTulips22',
       '/works/hardcover:301/series',
+      '/works/hardcover:301/similar',
+      '/works/hardcover:101/similar',
     ]) {
       expect((await get(url)).statusCode).toBe(200);
     }

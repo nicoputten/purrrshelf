@@ -22,3 +22,12 @@ Built so far (APP-04, milestone 2):
   Kobo come with APP-06. Reading progress comes with APP-08.
 - Series rows: position, small cover, title and a label (This book, In library,
   Add next, Add). A row opens that book; Add becomes an action with APP-03.
+
+Built in APP-09:
+
+- "Similar books" is a horizontal row under the series list: cover, title and
+  why it is suggested (Same series, Same author, Similar subject). A tap opens
+  that book. The row is hidden when there is nothing similar.
+- "Add next in series: <title>" is an outline button under the series list.
+  Adding is always this explicit tap; it shows once APP-03 provides the Add
+  action.

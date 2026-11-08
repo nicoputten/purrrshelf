@@ -72,8 +72,10 @@ export class OpenLibraryProvider implements MetadataProvider {
   constructor(private readonly http: HttpOptions) {}
 
   async search(query: MetadataQuery): Promise<ProviderWork[]> {
-    const params = new URLSearchParams({ title: query.title, fields: SEARCH_FIELDS, limit: '20' });
+    const params = new URLSearchParams({ fields: SEARCH_FIELDS, limit: '20' });
+    if (query.title) params.set('title', query.title);
     if (query.author) params.set('author', query.author);
+    if (query.subject) params.set('subject', query.subject);
     if (query.language !== 'any') params.set('language', LANGUAGE_PARAM[query.language]);
     const json = await requestJson(this.http, `${OPEN_LIBRARY_URL}/search.json?${params}`);
     const parsed = SearchResponse.safeParse(json);

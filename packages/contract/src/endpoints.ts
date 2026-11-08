@@ -10,6 +10,7 @@ import {
   LogoutRequest,
   Me,
   RefreshRequest,
+  SimilarWorks,
   TokenPair,
   WorkDetail,
   WorkParams,
@@ -112,6 +113,15 @@ export const endpoints = {
     auth: true,
     params: WorkParams,
     response: WorkSeries,
+    status: 200,
+  },
+  workSimilar: {
+    method: 'GET',
+    path: '/works/:id/similar',
+    summary: 'Similar books: same series, then same author, then subject. Metadata only.',
+    auth: true,
+    params: WorkParams,
+    response: SimilarWorks,
     status: 200,
   },
 } as const satisfies Record<string, Endpoint>;

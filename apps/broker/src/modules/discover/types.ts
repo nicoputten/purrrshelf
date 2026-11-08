@@ -21,9 +21,12 @@ export interface ProviderWork {
   pageCount?: number | null;
 }
 
+/** At least one of title, author or subject is set. */
 export interface MetadataQuery {
-  title: string;
+  title?: string;
   author?: string;
+  /** A subject or genre, for similar books (APP-09). */
+  subject?: string;
   language: SearchLanguage;
 }
 

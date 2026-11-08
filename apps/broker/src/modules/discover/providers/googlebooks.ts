@@ -54,7 +54,11 @@ export class GoogleBooksProvider implements MetadataProvider {
   }
 
   async search(query: MetadataQuery): Promise<ProviderWork[]> {
-    const q = [`intitle:${query.title}`, query.author ? `inauthor:${query.author}` : null]
+    const q = [
+      query.title ? `intitle:${query.title}` : null,
+      query.author ? `inauthor:${query.author}` : null,
+      query.subject ? `subject:${query.subject}` : null,
+    ]
       .filter(Boolean)
       .join(' ');
     const params = new URLSearchParams({ q, maxResults: '20', printType: 'books' });

@@ -4,12 +4,15 @@ import type {
   LibraryState,
   MetadataProviderName,
   ProviderStatus,
+  SimilarReason,
+  SimilarWorks,
   WorkDetail,
   WorkSeries,
 } from '@purrshelf/contract';
 import type { FastifyBaseLogger } from 'fastify';
 import { AppError } from '../../errors.js';
 import type { MetadataCache } from './cache.js';
+import { workKey } from './normalise.js';
 import type { LibraryLookup } from './library-lookup.js';
 import {
   coverUrls,
@@ -23,6 +26,10 @@ import {
 import type { MetadataProvider, MetadataQuery, ProviderSeries, ProviderWork } from './types.js';
 
 const MAX_HITS = 30;
+/** Similar books (APP-09): at most this many in all, and per reason. */
+const MAX_SIMILAR = 12;
+const SIMILAR_PER_REASON: Record<SimilarReason, number> = { series: 4, author: 4, subject: 12 };
+const SIMILAR_SUBJECTS = 2;
 
 export interface DiscoverDeps {
   /** In priority order: Hardcover, Open Library, Google Books. */
@@ -38,7 +45,7 @@ function unavailable(): AppError {
 
 function queryKey(q: MetadataQuery): string {
   const norm = (s = '') => s.trim().toLowerCase().replace(/\s+/g, ' ');
-  return `${norm(q.title)}|${norm(q.author)}|${q.language}`;
+  return `${norm(q.title)}|${norm(q.author)}|${norm(q.subject)}|${q.language}`;
 }
 
 /**
@@ -52,12 +59,10 @@ export class DiscoverService {
     return this.deps.providers.find((p) => p.name === name && p.configured);
   }
 
-  async search(userId: string, query: DiscoverSearchQuery): Promise<DiscoverSearchResult> {
-    const q: MetadataQuery = {
-      title: query.q,
-      language: query.language,
-      ...(query.author ? { author: query.author } : {}),
-    };
+  /** Asks every configured provider in parallel; a failing provider is logged and skipped. */
+  private async fanOut(
+    q: MetadataQuery,
+  ): Promise<{ lists: ProviderWork[][]; statuses: ProviderStatus[] }> {
     const statuses: ProviderStatus[] = [];
     const lists = await Promise.all(
       this.deps.providers.map(async (p): Promise<ProviderWork[]> => {
@@ -78,6 +83,16 @@ export class DiscoverService {
         }
       }),
     );
+    return { lists, statuses };
+  }
+
+  async search(userId: string, query: DiscoverSearchQuery): Promise<DiscoverSearchResult> {
+    const q: MetadataQuery = {
+      title: query.q,
+      language: query.language,
+      ...(query.author ? { author: query.author } : {}),
+    };
+    const { lists, statuses } = await this.fanOut(q);
     if (!statuses.some((s) => s.status === 'ok')) throw unavailable();
 
     const groups = mergeResults(lists)
@@ -194,6 +209,61 @@ export class DiscoverService {
       this.deps.log.warn({ err, provider: provider.name }, 'metadata series lookup failed');
       return null;
     }
+  }
+
+  /**
+   * Similar books (APP-09): other books in the series (the ones after this
+   * one first), then more by the first author, then books sharing a subject.
+   * Built from metadata only, so it never touches an indexer (ADR 0005).
+   * When the book's language is known, other languages are left out.
+   */
+  async getSimilar(userId: string, id: string): Promise<SimilarWorks> {
+    const group = await this.workGroup(id);
+    const flat = flatten(group);
+    const seen = new Set([workKey(flat.title, flat.authors)]);
+    const works: SimilarWorks['works'] = [];
+    const add = (reason: SimilarReason, candidates: SimilarWorks['works'][number]['work'][]) => {
+      let added = 0;
+      for (const work of candidates) {
+        if (works.length >= MAX_SIMILAR || added >= SIMILAR_PER_REASON[reason]) return;
+        const key = workKey(work.title, work.authors);
+        if (seen.has(key) || work.id === id) continue;
+        seen.add(key);
+        works.push({ reason, work });
+        added++;
+      }
+    };
+
+    if (flat.series) {
+      const { entries } = await this.getSeries(userId, id);
+      const here = flat.series.position ?? 0;
+      const after = entries.filter((e) => (e.position ?? 0) > here);
+      const before = entries.filter((e) => (e.position ?? 0) <= here);
+      add(
+        'series',
+        [...after, ...before].map((e) => e.work),
+      );
+    }
+
+    const sameLanguage = (g: MergedWork) => {
+      const lang = flatten(g).language;
+      return !flat.language || !lang || lang === flat.language;
+    };
+    const related = async (q: MetadataQuery) => {
+      const { lists } = await this.fanOut(q);
+      const groups = mergeResults(lists).filter(sameLanguage);
+      for (const g of groups) this.deps.cache.set(`hit:${mergedId(g)}`, g);
+      const library = await this.matchLibrary(userId, groups);
+      return groups.map((g) => toSummary(g, library.get(mergedId(g)) ?? null));
+    };
+
+    const author = flat.authors[0];
+    if (author) add('author', await related({ author, language: 'any' }));
+    for (const subject of (flat.subjects ?? []).slice(0, SIMILAR_SUBJECTS)) {
+      if (works.length >= MAX_SIMILAR) break;
+      add('subject', await related({ subject, language: 'any' }));
+    }
+    return { works };
   }
 
   /** Title and authors for a placeholder cover. */

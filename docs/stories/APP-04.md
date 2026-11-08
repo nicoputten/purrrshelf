@@ -18,7 +18,7 @@ so that I can decide what to do with it in one place.
 - [ ] Partner's Kobo row and Send / Remove actions (APP-06)
 - [x] Series list with This book / In library / Add / Add next labels
 - [ ] Add / Add next as actions (APP-03, the Add sheet)
-- [ ] Similar books row (filled by APP-09)
+- [x] Similar books row (filled by APP-09)
 
 ## Design
 

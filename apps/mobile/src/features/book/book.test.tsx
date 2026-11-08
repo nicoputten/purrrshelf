@@ -33,20 +33,46 @@ const lanternKeepers = {
   ],
 };
 
-function render(detail = work({ library: inLibrary(true) }), series: unknown = lanternKeepers) {
+const similarBooks = {
+  works: [
+    { reason: 'series', work: hit({ id: 'hardcover:302', title: 'The Glass Harbour' }) },
+    {
+      reason: 'author',
+      work: hit({ id: 'openlibrary:OL902W', title: 'The Ember Tide', series: null }),
+    },
+    {
+      reason: 'subject',
+      work: hit({ id: 'openlibrary:OL905W', title: 'Lamps of Kerrow', series: null }),
+    },
+  ],
+};
+
+function render(
+  detail = work({ library: inLibrary(true) }),
+  series: unknown = lanternKeepers,
+  { similar = { works: [] } as unknown, withAdd = false } = {},
+) {
   const b = fakeBroker({
     'GET /works/hardcover:301': () => ok(detail),
     'GET /works/hardcover:301/series': () => ok(series),
+    'GET /works/hardcover:301/similar': () => ok(similar),
   });
   setFetch(b.fetch);
   const onBack = jest.fn();
   const onOpen = jest.fn();
+  const onAdd = jest.fn();
   return {
     b,
     onBack,
     onOpen,
+    onAdd,
     view: renderWithProviders(
-      <BookDetailScreen id="hardcover:301" onBack={onBack} onOpen={onOpen} />,
+      <BookDetailScreen
+        id="hardcover:301"
+        onBack={onBack}
+        onOpen={onOpen}
+        {...(withAdd ? { onAdd } : {})}
+      />,
     ),
   };
 }
@@ -96,6 +122,49 @@ describe('Book detail', () => {
     const next = screen.getByRole('button', { name: '3 The Ember Tide, Add next' });
     await userEvent.setup().press(next);
     expect(onOpen).toHaveBeenCalledWith('hardcover:303');
+  });
+
+  it('shows similar books with why they are suggested, and opens one', async () => {
+    const { view, onOpen } = render(undefined, undefined, { similar: similarBooks });
+    await view;
+    expect(await screen.findByRole('header', { name: 'Similar books' })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: 'The Glass Harbour, Same series' }),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'The Ember Tide, Same author' })).toBeOnTheScreen();
+    await userEvent
+      .setup()
+      .press(screen.getByRole('button', { name: 'Lamps of Kerrow, Similar subject' }));
+    expect(onOpen).toHaveBeenCalledWith('openlibrary:OL905W');
+  });
+
+  it('hides the similar row when there is nothing similar', async () => {
+    const { view, b } = render();
+    await view;
+    expect(await screen.findByText('Lantern Keepers series')).toBeOnTheScreen();
+    expect(b.calls.map((c) => c.route)).toContain('GET /works/hardcover:301/similar');
+    expect(screen.queryByText('Similar books')).toBeNull();
+  });
+
+  it('adds the next book in the series only on an explicit tap', async () => {
+    const { view, onAdd, onOpen } = render(work({ library: inLibrary() }), undefined, {
+      withAdd: true,
+    });
+    await view;
+    const add = await screen.findByRole('button', {
+      name: 'Add next in series: The Ember Tide',
+    });
+    expect(onAdd).not.toHaveBeenCalled();
+    await userEvent.setup().press(add);
+    expect(onAdd).toHaveBeenCalledWith('hardcover:303');
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it('has no Add next button without a way to add', async () => {
+    const { view } = render();
+    await view;
+    expect(await screen.findByText('Lantern Keepers series')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /Add next in series/ })).toBeNull();
   });
 
   it('goes back', async () => {

@@ -31,7 +31,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-08](BRK-08.md) | Delete books nobody owns after 7 days                          | 5         | todo        |
 | [BRK-09](BRK-09.md) | Import the existing Calibre library                            | 6         | todo        |
 | [APP-08](APP-08.md) | See reading progress from the Kobo                             | 7         | todo        |
-| [APP-09](APP-09.md) | See similar books on a book's page                             | 7         | todo        |
+| [APP-09](APP-09.md) | See similar books on a book's page                             | 7         | in progress |
 | [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | done        |
 
 ## Template

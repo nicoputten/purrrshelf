@@ -1,4 +1,4 @@
-import type { LibraryState, WorkDetail, WorkSeries } from '@purrshelf/contract';
+import type { LibraryState, SimilarWorks, WorkDetail, WorkSeries } from '@purrshelf/contract';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
@@ -14,13 +14,19 @@ import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes } from '@/theme/tokens';
 import { positionLabel, seriesStates, type SeriesEntryState } from './series';
-import { useWork, useWorkSeries } from './useWork';
+import { SimilarBooks } from './SimilarBooks';
+import { useSimilarWorks, useWork, useWorkSeries } from './useWork';
 
 export interface BookDetailProps {
   id: string;
   onBack: () => void;
-  /** Opens another book (a series entry). */
+  /** Opens another book (a series entry or a similar book). */
   onOpen: (workId: string) => void;
+  /**
+   * Adds a book to the library. Adding is always an explicit tap, never
+   * automatic (APP-09); without a handler the "Add next" button is hidden.
+   */
+  onAdd?: (workId: string) => void;
 }
 
 /** "Lantern Keepers · 1/3 · English · EPUB". */
@@ -48,11 +54,12 @@ export function ownerBadges(library: LibraryState | null, t: TFunction) {
 }
 
 /** Book detail (APP-04, canvas board 2). */
-export function BookDetailScreen({ id, onBack, onOpen }: BookDetailProps) {
+export function BookDetailScreen({ id, onBack, onOpen, onAdd }: BookDetailProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const work = useWork(id);
   const series = useWorkSeries(id, Boolean(work.data?.series));
+  const similar = useSimilarWorks(id, work.isSuccess);
 
   return (
     <Screen>
@@ -85,7 +92,14 @@ export function BookDetailScreen({ id, onBack, onOpen }: BookDetailProps) {
           <Button label={t('search.retry')} variant="outline" onPress={() => void work.refetch()} />
         </View>
       ) : (
-        <BookDetail work={work.data} series={series.data} onOpen={onOpen} t={t} />
+        <BookDetail
+          work={work.data}
+          series={series.data}
+          similar={similar.data}
+          onOpen={onOpen}
+          onAdd={onAdd}
+          t={t}
+        />
       )}
     </Screen>
   );
@@ -94,12 +108,16 @@ export function BookDetailScreen({ id, onBack, onOpen }: BookDetailProps) {
 function BookDetail({
   work,
   series,
+  similar,
   onOpen,
+  onAdd,
   t,
 }: {
   work: WorkDetail;
   series: WorkSeries | undefined;
+  similar: SimilarWorks | undefined;
   onOpen: (id: string) => void;
+  onAdd: ((id: string) => void) | undefined;
   t: TFunction;
 }) {
   const { colors } = useTheme();
@@ -145,8 +163,10 @@ function BookDetail({
       ) : null}
 
       {series && series.series && series.entries.length > 0 ? (
-        <SeriesList series={series} currentId={work.id} onOpen={onOpen} t={t} />
+        <SeriesList series={series} currentId={work.id} onOpen={onOpen} onAdd={onAdd} t={t} />
       ) : null}
+
+      {similar ? <SimilarBooks similar={similar} onOpen={onOpen} /> : null}
     </>
   );
 }
@@ -162,15 +182,18 @@ function SeriesList({
   series,
   currentId,
   onOpen,
+  onAdd,
   t,
 }: {
   series: WorkSeries;
   currentId: string;
   onOpen: (id: string) => void;
+  onAdd: ((id: string) => void) | undefined;
   t: TFunction;
 }) {
   const { colors } = useTheme();
   const states = seriesStates(series, currentId);
+  const next = series.entries[states.indexOf('addNext')];
   return (
     <View style={styles.seriesWrap}>
       <AppText style={styles.section} accessibilityRole="header">
@@ -201,6 +224,13 @@ function SeriesList({
           </Pressable>
         );
       })}
+      {next && onAdd ? (
+        <Button
+          label={t('book.addNextInSeries', { title: next.work.title })}
+          variant="outline"
+          onPress={() => onAdd(next.work.id)}
+        />
+      ) : null}
     </View>
   );
 }

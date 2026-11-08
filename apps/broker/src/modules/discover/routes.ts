@@ -16,7 +16,7 @@ function userIdOf(request: { userId?: string }): string {
 
 /** Free metadata endpoints. None of them may spend an indexer search. */
 export const discoverRoutes: FastifyPluginAsyncZod<DiscoverRoutesOptions> = async (app, opts) => {
-  const { discoverSearch, work, workSeries } = endpoints;
+  const { discoverSearch, work, workSeries, workSimilar } = endpoints;
   const { discover, requireAuth } = opts;
 
   app.get(
@@ -41,5 +41,14 @@ export const discoverRoutes: FastifyPluginAsyncZod<DiscoverRoutesOptions> = asyn
       schema: { params: workSeries.params, response: { 200: workSeries.response } },
     },
     async (request) => discover.getSeries(userIdOf(request), request.params.id),
+  );
+
+  app.get(
+    workSimilar.path,
+    {
+      preHandler: requireAuth,
+      schema: { params: workSimilar.params, response: { 200: workSimilar.response } },
+    },
+    async (request) => discover.getSimilar(userIdOf(request), request.params.id),
   );
 };

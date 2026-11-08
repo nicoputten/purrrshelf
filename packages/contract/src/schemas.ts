@@ -184,6 +184,23 @@ export const WorkSeries = z
   .meta({ id: 'WorkSeries' });
 export type WorkSeries = z.infer<typeof WorkSeries>;
 
+// --- Similar books (APP-09) -------------------------------------------------
+
+/** Why a book is suggested: same series first, then same author, then subject. */
+export const SimilarReason = z.enum(['series', 'author', 'subject']);
+export type SimilarReason = z.infer<typeof SimilarReason>;
+
+export const SimilarWork = z.object({ reason: SimilarReason, work: WorkSummary });
+export type SimilarWork = z.infer<typeof SimilarWork>;
+
+export const SimilarWorks = z
+  .object({
+    /** At most 12, best first. Never includes the work itself. */
+    works: z.array(SimilarWork),
+  })
+  .meta({ id: 'SimilarWorks' });
+export type SimilarWorks = z.infer<typeof SimilarWorks>;
+
 // --- Covers (BRK-07) --------------------------------------------------------
 
 /** `s` for lists, `m` for grids, `l` for the detail page. */

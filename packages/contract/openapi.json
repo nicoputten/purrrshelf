@@ -364,6 +364,50 @@
           }
         ]
       }
+    },
+    "/api/v1/works/{id}/similar": {
+      "get": {
+        "operationId": "workSimilar",
+        "summary": "Similar books: same series, then same author, then subject. Metadata only.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimilarWorks"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -573,6 +617,30 @@
           }
         },
         "required": ["refreshToken"],
+        "additionalProperties": false
+      },
+      "SimilarWorks": {
+        "type": "object",
+        "properties": {
+          "works": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "type": "string",
+                  "enum": ["series", "author", "subject"]
+                },
+                "work": {
+                  "$ref": "#/components/schemas/WorkSummary"
+                }
+              },
+              "required": ["reason", "work"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["works"],
         "additionalProperties": false
       },
       "TokenPair": {

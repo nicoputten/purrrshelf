@@ -161,7 +161,7 @@ export class HardcoverProvider implements MetadataProvider {
   }
 
   async search(query: MetadataQuery): Promise<ProviderWork[]> {
-    const q = [query.title, query.author].filter(Boolean).join(' ');
+    const q = [query.title, query.author, query.subject].filter(Boolean).join(' ');
     const parsed = SearchResponse.safeParse(await this.graphql(SEARCH_QUERY, { q }));
     if (!parsed.success) throw new ProviderError('Hardcover search reply has an unknown shape');
     const hits = parsed.data.data.search.results?.hits ?? [];
