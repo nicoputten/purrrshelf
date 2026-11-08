@@ -15,8 +15,10 @@ import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { AccessTokens } from './modules/auth/tokens.js';
 import { UserRepository } from './modules/auth/users.js';
-import { IndexerBudget } from './modules/budget/budget.js';
 import { budgetRoutes } from './modules/budget/routes.js';
+import type { FetchLike } from './modules/budget/newznab.js';
+import { createDownloads, type Downloads } from './modules/downloads.js';
+import type { LibraryLookup } from './modules/search/service.js';
 import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import { meRoutes } from './modules/me/routes.js';
 
@@ -26,13 +28,31 @@ export interface AppDeps {
   clock?: Clock;
   /** Extra dependency checks for /health (CWA, SABnzbd, … in later milestones). */
   healthChecks?: HealthCheck[];
+  /** Where indexer keys are read (INDEXER_<ID>_API_KEY). */
+  env?: NodeJS.ProcessEnv;
+  /** "Already in the library?" check before any indexer search; backed by the library adapter once BRK-03 lands. */
+  bookLookup?: LibraryLookup;
+  /** Tests swap the indexer HTTP client. */
+  indexerFetch?: FetchLike;
 }
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    downloads: Downloads;
+  }
+}
+
+/** Until the library adapter lands (BRK-03): the library has nothing yet. */
+const emptyLibrary: LibraryLookup = { findBook: () => Promise.resolve(null) };
 
 export async function buildApp({
   config,
   database,
   clock = systemClock,
   healthChecks = [],
+  env = process.env,
+  bookLookup = emptyLibrary,
+  indexerFetch,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: {
@@ -63,7 +83,16 @@ export async function buildApp({
   );
 
   const authenticated = requireAuth(accessTokens, clock);
-  const budget = new IndexerBudget(database.db, clock);
+  const downloads = createDownloads({
+    db: database.db,
+    clock,
+    env,
+    library: bookLookup,
+    log: app.log,
+    ...(indexerFetch ? { fetch: indexerFetch } : {}),
+  });
+  app.decorate('downloads', downloads);
+  app.addHook('onClose', () => downloads.jobs.stop());
 
   await app.register(
     async (api) => {
@@ -75,7 +104,7 @@ export async function buildApp({
         loginRateLimitPerMinute: config.LOGIN_RATE_LIMIT_PER_MINUTE,
       });
       await api.register(meRoutes, { users, requireAuth: authenticated });
-      await api.register(budgetRoutes, { budget, requireAuth: authenticated });
+      await api.register(budgetRoutes, { budget: downloads.budget, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },
   );

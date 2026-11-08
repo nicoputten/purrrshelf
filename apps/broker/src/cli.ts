@@ -3,6 +3,17 @@ import { Locale } from '@purrshelf/contract';
 import { systemClock } from './clock.js';
 import type { DatabaseHandle } from './db/index.js';
 import { UserError, UserRepository } from './modules/auth/users.js';
+import {
+  BudgetExhaustedError,
+  IndexerBudget,
+  IndexerLimitReachedError,
+} from './modules/budget/budget.js';
+import {
+  createIndexerGateway,
+  IndexerRequestError,
+  MissingApiKeyError,
+} from './modules/budget/gateway.js';
+import type { FetchLike } from './modules/budget/newznab.js';
 import { IndexerError, IndexerRepository } from './modules/indexers/repository.js';
 
 export interface CliIo {
@@ -12,6 +23,8 @@ export interface CliIo {
   out: (line: string) => void;
   err: (line: string) => void;
   openDatabase: (path: string) => DatabaseHandle;
+  /** Tests swap the indexer HTTP client. */
+  fetch?: FetchLike;
 }
 
 const USAGE = `Usage:
@@ -21,6 +34,7 @@ const USAGE = `Usage:
   purrshelf indexer add <id> --name <name> --url <url> --search-limit <n> --grab-limit <n> [--priority <n>]
   purrshelf indexer list
   purrshelf indexer remove <id>
+  purrshelf indexer caps <id>      (reads t=caps once; costs one search from the budget)
 
 The password is read from PURRSHELF_PASSWORD or from the first line of stdin.
 Adding an existing indexer id updates it. The indexer's API key is never
@@ -59,13 +73,7 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   const database = io.openDatabase(io.env.DATABASE_PATH ?? '/data/purrshelf.db');
   if (group === 'indexer') {
     try {
-      return indexerCommand(
-        command,
-        username,
-        values,
-        new IndexerRepository(database.db, systemClock),
-        io,
-      );
+      return await indexerCommand(command, username, values, database, io);
     } finally {
       database.close();
     }
@@ -134,13 +142,14 @@ function int(value: string | undefined): number {
   return value !== undefined && /^-?\d+$/.test(value) ? Number(value) : Number.NaN;
 }
 
-function indexerCommand(
+async function indexerCommand(
   command: string,
   id: string | undefined,
   flags: IndexerFlags,
-  repo: IndexerRepository,
+  database: DatabaseHandle,
   io: CliIo,
-): number {
+): Promise<number> {
+  const repo = new IndexerRepository(database.db, systemClock);
   try {
     switch (command) {
       case 'list': {
@@ -171,6 +180,27 @@ function indexerCommand(
         );
         return 0;
       }
+      case 'caps': {
+        const indexer = id ? repo.get(id) : undefined;
+        if (!id || !indexer) {
+          io.err(id ? `No indexer "${id}"` : USAGE);
+          return id ? 1 : 2;
+        }
+        const gateway = createIndexerGateway({
+          budget: new IndexerBudget(database.db, systemClock),
+          indexers: repo,
+          env: io.env,
+          clock: systemClock,
+          ...(io.fetch ? { fetch: io.fetch } : {}),
+        });
+        const caps = await gateway.caps(indexer);
+        io.out(
+          caps.bookSearch
+            ? `${id}: book search with ${caps.bookParams.join(', ') || 'no parameters'}`
+            : `${id}: no book search; free-text search only`,
+        );
+        return 0;
+      }
       case 'remove': {
         if (!id) {
           io.err(USAGE);
@@ -188,7 +218,13 @@ function indexerCommand(
         return 2;
     }
   } catch (e) {
-    if (e instanceof IndexerError) {
+    if (
+      e instanceof IndexerError ||
+      e instanceof BudgetExhaustedError ||
+      e instanceof MissingApiKeyError ||
+      e instanceof IndexerRequestError ||
+      e instanceof IndexerLimitReachedError
+    ) {
       io.err(e.message);
       return 1;
     }

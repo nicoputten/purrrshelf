@@ -92,4 +92,8 @@ docker exec -it <broker-container> node dist/cli-main.js indexer list
 ```
 
 `indexer list` says whether the key variable is set. Adding the same id again
-updates it; a lower `--priority` is queried first.
+updates it; a lower `--priority` is queried first; `--search-limit 0` switches
+an indexer off.
+
+Optionally run `indexer caps <id>` once. It costs one search from the budget
+and lets the broker use the indexer's book search (title + author) first.

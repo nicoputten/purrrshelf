@@ -1,4 +1,4 @@
-import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -85,3 +85,130 @@ export const budgetBlocks = sqliteTable(
 export type User = typeof users.$inferSelect;
 export type Indexer = typeof indexers.$inferSelect;
 export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
+
+/** Every status of the "add a book" lifecycle; see modules/requests/status.ts for the transitions. */
+export const requestStatuses = [
+  'searching',
+  'waiting_budget',
+  'not_found',
+  'choose_release',
+  'downloading',
+  'download_failed',
+  'importing',
+  'import_failed',
+  'in_library',
+  'pushed',
+  'cancelled',
+] as const;
+export type RequestStatus = (typeof requestStatuses)[number];
+
+export const mediaTypes = ['ebook', 'audiobook'] as const;
+export type MediaType = (typeof mediaTypes)[number];
+
+/** One "add a book" request by one user. */
+export const requests = sqliteTable(
+  'requests',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** The work the user added (metadata id); the works table arrives with BRK-02. */
+    workId: text('work_id').notNull(),
+    /** Snapshot of what is searched for: title, authors, ISBN (see BookQuery). */
+    queryJson: text('query_json').notNull(),
+    language: text('language', { enum: ['en', 'nl'] }).notNull(),
+    mediaType: text('media_type', { enum: mediaTypes }).notNull().default('ebook'),
+    status: text('status', { enum: requestStatuses }).notNull(),
+    /** JSON array of user ids whose Kobo gets the book. */
+    pushToJson: text('push_to_json').notNull().default('[]'),
+    /** Set when the library already had the book or the import finished. */
+    calibreBookId: integer('calibre_book_id'),
+    /** When the current search round began (Add or Try again); a budget wait resumes it. */
+    searchStartedAt: integer('search_started_at', { mode: 'timestamp_ms' }).notNull(),
+    error: text('error'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('requests_user_idx').on(t.userId), index('requests_status_idx').on(t.status)],
+);
+
+/** One indexer call made for a request; feeds the hit-rate ordering of query variants. */
+export const searchAttempts = sqliteTable(
+  'search_attempts',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    requestId: text('request_id')
+      .notNull()
+      .references(() => requests.id, { onDelete: 'cascade' }),
+    indexerId: text('indexer_id')
+      .notNull()
+      .references(() => indexers.id, { onDelete: 'cascade' }),
+    variant: text('variant').notNull(),
+    query: text('query').notNull(),
+    resultCount: integer('result_count').notNull(),
+    /** At least one acceptable release came back. */
+    hit: integer('hit', { mode: 'boolean' }).notNull(),
+    /** Indexer calls spent (1 per attempt). */
+    cost: integer('cost').notNull(),
+    error: text('error'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [
+    index('search_attempts_request_idx').on(t.requestId),
+    index('search_attempts_variant_idx').on(t.indexerId, t.variant),
+  ],
+);
+
+export const releaseStatuses = ['candidate', 'grabbed', 'failed', 'rejected'] as const;
+
+/** Every release a search returned, kept for "Pick another" and failure retries. */
+export const releases = sqliteTable(
+  'releases',
+  {
+    id: text('id').primaryKey(),
+    requestId: text('request_id')
+      .notNull()
+      .references(() => requests.id, { onDelete: 'cascade' }),
+    indexerId: text('indexer_id')
+      .notNull()
+      .references(() => indexers.id, { onDelete: 'cascade' }),
+    guid: text('guid').notNull(),
+    title: text('title').notNull(),
+    size: integer('size'),
+    category: text('category'),
+    /** Guessed from the title (epub, azw3, mobi, pdf, …), when it says. */
+    format: text('format'),
+    language: text('language'),
+    grabs: integer('grabs'),
+    publishedAt: integer('published_at', { mode: 'timestamp_ms' }),
+    /** Set by release scoring (BRK-06). */
+    score: real('score'),
+    status: text('status', { enum: releaseStatuses }).notNull().default('candidate'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('releases_request_idx').on(t.requestId)],
+);
+
+/** Small persisted job queue (no Redis). */
+export const jobs = sqliteTable(
+  'jobs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    type: text('type').notNull(),
+    payloadJson: text('payload_json').notNull(),
+    runAt: integer('run_at', { mode: 'timestamp_ms' }).notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    lockedUntil: integer('locked_until', { mode: 'timestamp_ms' }),
+    lastError: text('last_error'),
+    /** Failed jobs are kept for inspection and never retried automatically. */
+    failedAt: integer('failed_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('jobs_run_at_idx').on(t.runAt)],
+);
+
+export type RequestRow = typeof requests.$inferSelect;
+export type SearchAttempt = typeof searchAttempts.$inferSelect;
+export type ReleaseRow = typeof releases.$inferSelect;
+export type JobRow = typeof jobs.$inferSelect;

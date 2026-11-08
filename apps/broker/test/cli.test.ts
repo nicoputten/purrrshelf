@@ -4,6 +4,7 @@ import { openDatabase, type DatabaseHandle } from '../src/db/index.js';
 import { UserRepository } from '../src/modules/auth/users.js';
 import { verifyPassword } from '../src/modules/auth/passwords.js';
 import { PASSWORD, TestClock } from './helpers.js';
+import { FakeNewznab, fixture } from './fake-newznab.js';
 
 function harness(password = PASSWORD) {
   const handle = openDatabase(':memory:');
@@ -129,6 +130,91 @@ describe('purrshelf CLI', () => {
     const h = harness();
     expect(await runCli(argv, h.io)).toBe(2);
     expect(h.err.join('\n')).toMatch(/Usage/);
+  });
+
+  it('reads caps through the budget', async () => {
+    const h = harness();
+    const fake = new FakeNewznab().on('caps', { body: fixture('caps.xml') });
+    const io = {
+      ...h.io,
+      env: { ...h.io.env, INDEXER_PRIMARY_API_KEY: 'fake' },
+      fetch: fake.fetch,
+    };
+    const add = [
+      'indexer',
+      'add',
+      'primary',
+      '--name',
+      'P',
+      '--url',
+      'https://indexer.example.invalid',
+    ];
+    await runCli([...add, '--search-limit', '1', '--grab-limit', '1'], io);
+    expect(await runCli(['indexer', 'caps', 'primary'], io)).toBe(0);
+    expect(h.out.at(-1)).toBe('primary: book search with q, title, author');
+    // The one search of this hour is spent: a second read is refused without calling out.
+    expect(await runCli(['indexer', 'caps', 'primary'], io)).toBe(1);
+    expect(h.err.at(-1)).toMatch(/No search budget left/);
+    expect(fake.calls).toHaveLength(1);
+  });
+
+  it.each([
+    [
+      '<caps><searching><book-search available="no"/></searching></caps>',
+      'no book search; free-text search only',
+    ],
+    [
+      '<caps><searching><book-search available="yes"/></searching></caps>',
+      'book search with no parameters',
+    ],
+  ])('describes caps %#', async (body, line) => {
+    const h = harness();
+    const fake = new FakeNewznab().on('caps', { body });
+    const io = {
+      ...h.io,
+      env: { ...h.io.env, INDEXER_PRIMARY_API_KEY: 'fake' },
+      fetch: fake.fetch,
+    };
+    const add = [
+      'indexer',
+      'add',
+      'primary',
+      '--name',
+      'P',
+      '--url',
+      'https://indexer.example.invalid',
+    ];
+    await runCli([...add, '--search-limit', '5', '--grab-limit', '1'], io);
+    await runCli(['indexer', 'caps', 'primary'], io);
+    expect(h.out.at(-1)).toBe(`primary: ${line}`);
+  });
+
+  it('reports caps problems with exit code 1', async () => {
+    const h = harness();
+    const add = [
+      'indexer',
+      'add',
+      'primary',
+      '--name',
+      'P',
+      '--url',
+      'https://indexer.example.invalid',
+    ];
+    await runCli([...add, '--search-limit', '5', '--grab-limit', '1'], h.io);
+    expect(await runCli(['indexer', 'caps', 'nope'], h.io)).toBe(1);
+    expect(h.err.at(-1)).toBe('No indexer "nope"');
+    expect(await runCli(['indexer', 'caps', 'primary'], h.io)).toBe(1);
+    expect(h.err.at(-1)).toBe('Set INDEXER_PRIMARY_API_KEY in the broker environment');
+    const withKey = { ...h.io, env: { INDEXER_PRIMARY_API_KEY: 'k' } };
+    for (const body of [fixture('error-key.xml'), fixture('error-limit.xml')]) {
+      const fake = new FakeNewznab().on('caps', { body });
+      expect(await runCli(['indexer', 'caps', 'primary'], { ...withKey, fetch: fake.fetch })).toBe(
+        1,
+      );
+    }
+    expect(h.err.at(-2)).toMatch(/Incorrect user credentials/);
+    expect(h.err.at(-1)).toBe('Request limit reached');
+    expect(await runCli(['indexer', 'caps'], h.io)).toBe(2);
   });
 
   it('rethrows unexpected indexer errors', async () => {
