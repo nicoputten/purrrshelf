@@ -1,8 +1,12 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 import { loadConfig, type Config } from '../src/config.js';
 import { openDatabase, type DatabaseHandle } from '../src/db/index.js';
 import type { FetchLike } from '../src/modules/discover/http.js';
+import type { LibraryCovers } from '../src/modules/covers/library-covers.js';
 import type { LibraryLookup } from '../src/modules/discover/library-lookup.js';
 import type { HealthCheck } from '../src/modules/health/routes.js';
 import { UserRepository } from '../src/modules/auth/users.js';
@@ -12,7 +16,12 @@ export const TEST_SECRET = 'fake'.repeat(10);
 export const PASSWORD = 'correct horse battery';
 
 export function testConfig(overrides: Record<string, string> = {}): Config {
-  return loadConfig({ LOG_LEVEL: 'silent', JWT_SECRET: TEST_SECRET, ...overrides });
+  return loadConfig({
+    LOG_LEVEL: 'silent',
+    JWT_SECRET: TEST_SECRET,
+    COVERS_PATH: mkdtempSync(join(tmpdir(), 'purrshelf-covers-')),
+    ...overrides,
+  });
 }
 
 export class TestClock {
@@ -38,6 +47,7 @@ export async function makeTestApp(
     withUser?: boolean;
     fetch?: FetchLike;
     libraryLookup?: LibraryLookup;
+    libraryCovers?: LibraryCovers;
   } = {},
 ): Promise<TestContext> {
   const database = openDatabase(':memory:');
@@ -63,6 +73,7 @@ export async function makeTestApp(
         throw new Error(`unexpected request to ${input}`);
       }),
     ...(opts.libraryLookup ? { libraryLookup: opts.libraryLookup } : {}),
+    ...(opts.libraryCovers ? { libraryCovers: opts.libraryCovers } : {}),
   });
   return {
     app,

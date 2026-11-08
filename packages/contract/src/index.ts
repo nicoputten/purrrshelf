@@ -2,6 +2,8 @@ export * from './errors.js';
 export * from './schemas.js';
 export {
   API_PREFIX,
+  coverPath,
+  coverUrl,
   endpoints,
   type Endpoint,
   type EndpointName,

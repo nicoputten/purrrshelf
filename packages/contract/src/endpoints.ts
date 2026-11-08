@@ -111,3 +111,15 @@ export type Endpoints = typeof endpoints;
 export type EndpointName = keyof Endpoints;
 
 export { ErrorResponse };
+
+/**
+ * Cover images are WebP, not JSON, so they are not in {@link endpoints}.
+ * `GET /covers/:id?size=s|m|l` needs the bearer token like other endpoints and
+ * answers with an ETag; a generated placeholder card when no cover exists.
+ */
+export const coverPath = '/covers/:id';
+
+/** Full URL of a work's cover, for an image component. */
+export function coverUrl(baseUrl: string, workId: string, size: 's' | 'm' | 'l'): string {
+  return `${baseUrl.replace(/\/+$/, '')}${API_PREFIX}/covers/${encodeURIComponent(workId)}?size=${size}`;
+}

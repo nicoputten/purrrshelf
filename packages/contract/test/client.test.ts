@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   ApiError,
   NetworkError,
+  coverUrl,
   createClient,
   normaliseBaseUrl,
   type FetchLike,
@@ -152,5 +153,13 @@ describe('path and query parameters', () => {
     const client = createClient({ baseUrl: 'https://x.example.invalid', fetch });
     await expect(client.call('work', { id: '../admin' })).rejects.toThrow();
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('coverUrl', () => {
+  it('builds an encoded cover URL', () => {
+    expect(coverUrl('https://x.example.invalid/', 'hardcover:1', 's')).toBe(
+      'https://x.example.invalid/api/v1/covers/hardcover%3A1?size=s',
+    );
   });
 });

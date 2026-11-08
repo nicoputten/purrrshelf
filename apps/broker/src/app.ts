@@ -15,6 +15,10 @@ import { authRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { AccessTokens } from './modules/auth/tokens.js';
 import { UserRepository } from './modules/auth/users.js';
+import { noLibraryCovers, type LibraryCovers } from './modules/covers/library-covers.js';
+import { coverRoutes } from './modules/covers/routes.js';
+import { CoverService } from './modules/covers/service.js';
+import { CoverStore } from './modules/covers/store.js';
 import { createDiscover, defaultProviders } from './modules/discover/index.js';
 import { hardcoverTokenCheck } from './modules/discover/hardcover-token.js';
 import type { FetchLike } from './modules/discover/http.js';
@@ -36,6 +40,8 @@ export interface AppDeps {
   metadataProviders?: MetadataProvider[];
   /** Library state for search hits; empty until the library stream provides one. */
   libraryLookup?: LibraryLookup;
+  /** Calibre covers of library books; none until the library stream provides them. */
+  libraryCovers?: LibraryCovers;
 }
 
 export async function buildApp({
@@ -46,6 +52,7 @@ export async function buildApp({
   fetch = (input, init) => globalThis.fetch(input, init),
   metadataProviders,
   libraryLookup = emptyLibrary,
+  libraryCovers = noLibraryCovers,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: {
@@ -85,6 +92,16 @@ export async function buildApp({
     log: app.log,
   });
 
+  // Also hands the best metadata cover to imports (CoverService.forImport).
+  const covers = new CoverService({
+    store: new CoverStore(config.COVERS_PATH),
+    discover,
+    library: libraryCovers,
+    http: { fetch, timeoutMs: config.METADATA_TIMEOUT_MS },
+    clock,
+    log: app.log,
+  });
+
   const checks: HealthCheck[] = [{ name: 'database', check: database.ping }, ...healthChecks];
   if (config.HARDCOVER_API_TOKEN) {
     const tokenCheck = hardcoverTokenCheck(
@@ -111,6 +128,7 @@ export async function buildApp({
       });
       await api.register(meRoutes, { users, requireAuth: authenticated });
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
+      await api.register(coverRoutes, { covers, requireAuth: authenticated });
     },
     { prefix: API_PREFIX },
   );

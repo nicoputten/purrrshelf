@@ -196,6 +196,12 @@ export class DiscoverService {
     }
   }
 
+  /** Title and authors for a placeholder cover. */
+  async workSummary(id: string): Promise<{ title: string; authors: string[] }> {
+    const { title, authors } = flatten(await this.workGroup(id));
+    return { title, authors };
+  }
+
   /** Cover URLs for a work, best first (used by the cover service). */
   async coverUrls(id: string): Promise<string[]> {
     return coverUrls(await this.workGroup(id));

@@ -183,3 +183,11 @@ export const WorkSeries = z
   })
   .meta({ id: 'WorkSeries' });
 export type WorkSeries = z.infer<typeof WorkSeries>;
+
+// --- Covers (BRK-07) --------------------------------------------------------
+
+/** `s` for lists, `m` for grids, `l` for the detail page. */
+export const CoverSize = z.enum(['s', 'm', 'l']);
+export type CoverSize = z.infer<typeof CoverSize>;
+
+export const CoverQuery = z.object({ size: CoverSize.default('m') });

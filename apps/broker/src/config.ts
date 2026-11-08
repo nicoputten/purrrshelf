@@ -40,6 +40,9 @@ const envSchema = z.object({
   METADATA_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
   /** /health turns "degraded" this many days before the Hardcover token expires. */
   HARDCOVER_TOKEN_WARN_DAYS: z.coerce.number().int().positive().default(30),
+
+  /** Downloaded covers in three sizes (BRK-07). */
+  COVERS_PATH: z.string().min(1).default('/data/covers'),
 });
 
 export type Config = z.infer<typeof envSchema>;
