@@ -157,8 +157,31 @@ export function bookRequest(over: Record<string, unknown> = {}) {
     progress: null,
     error: null,
     pushTo: ['u1'],
+    searches: 1,
+    searchedOn: ['Primary'],
+    release: null,
     createdAt: '2026-01-01T12:00:00.000Z',
     updatedAt: '2026-01-01T12:00:00.000Z',
+    ...over,
+  };
+}
+
+/** An invented release option for the picker; override any field. */
+export function releaseOption(over: Record<string, unknown> = {}) {
+  return {
+    id: 'rel-1',
+    title: 'Ilse Varenkamp - The Salt Road (2019) EPUB',
+    format: 'epub',
+    size: 1_400_000,
+    language: 'en',
+    indexerName: 'Primary',
+    publishedAt: '2025-12-29T12:00:00.000Z',
+    grabs: 12,
+    score: 92,
+    rejected: [],
+    picked: false,
+    titleMatch: true,
+    authorMatch: true,
     ...over,
   };
 }

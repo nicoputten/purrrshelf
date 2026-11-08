@@ -14,11 +14,19 @@ Canvas board: 4 · Requests & progress. Stories: APP-05.
   <indexer>", **Try again · up to 4** and Dismiss.
 - Finished card: small cover, title, "On your Kobo" with a happy cat.
 
-Built so far (APP-03):
+Built (APP-03, APP-05):
 
-- Title "Requests" with the budget pill; one card per request (cover, title,
-  author · language) with a one-line status and a progress bar while
-  downloading. "On your Kobo after its next sync" in success; failures in
-  danger. Empty state: "Nothing on its way" with "Find a book".
-- The list refreshes every 3 s while a request is on its way. The step list,
-  Pick another, Try again and live SSE updates come with APP-05.
+- Title "Requests" with the budget pill. Cards are live over server-sent
+  events; while the stream is down the list refreshes every 3 s.
+- A request on its way shows the five steps with a dot each (done, now, still
+  to come, failed). The pick step shows "EPUB · 1.4 MB · English" and a
+  **Pick another** pill while picking still makes sense (choosing,
+  downloading, download or import failed). Downloading shows the percentage
+  and a bar.
+- Meta line: "For your Kobo · English", "For another Kobo" or "For the
+  library".
+- Not found: "Couldn't sniff this one out", "4 searches on Primary",
+  **Try again · up to 4** (4 per indexer with a budget) and Dismiss. Failed
+  downloads and imports get the same two buttons.
+- Finished: "On your Kobo" in success, no steps. Dismissed requests leave the
+  list.
