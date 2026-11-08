@@ -30,6 +30,7 @@ Built (APP-02):
 Daily budget (ADR 0025): the pill counts searches left in the last 24 hours,
 so the label now ends in "left today" (nl "vandaag").
 
-Motion (DES-02): while a search runs, three paw prints step in turn over
-"Sniffing around…". No results shows the napping cat over "Couldn't sniff
+Motion (DES-02): three paw prints step in turn over "Sniffing around…"
+from the first keystroke until the new results arrive (also when they
+replace earlier results). No results shows the napping cat over "Couldn't sniff
 anything out".

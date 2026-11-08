@@ -67,6 +67,32 @@ describe('Search (home)', () => {
     expect(screen.getByText('21 / 25 left')).toBeOnTheScreen();
   });
 
+  it('sniffs with the paw loader while typing and while new results replace the old ones', async () => {
+    let release: (() => void) | undefined;
+    const b = fakeBroker({
+      'GET /budget': () => budget(),
+      'GET /discover/search': () => searchResult([havelaar]),
+    });
+    setFetch(async (url, init) => {
+      if (String(url).includes('q=salt')) await new Promise<void>((r) => (release = r));
+      return b.fetch(url, init);
+    });
+    await renderWithProviders(<SearchScreen />);
+    const field = screen.getByLabelText('Search by title or author');
+    await fireEvent.changeText(field, 'havelaar');
+    // The typing pause: paws at once, before any search runs.
+    expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeOnTheScreen();
+    expect(await screen.findByText('Max Havelaar')).toBeOnTheScreen();
+    expect(screen.queryByRole('progressbar', { name: 'Loading' })).toBeNull();
+    // A new search keeps sniffing until its own results arrive.
+    await fireEvent.changeText(field, 'salt');
+    await settle();
+    expect(screen.getByRole('progressbar', { name: 'Loading' })).toBeOnTheScreen();
+    expect(screen.queryByText('Max Havelaar')).toBeNull();
+    await act(async () => release?.());
+    expect(await screen.findByText('Max Havelaar')).toBeOnTheScreen();
+  });
+
   it('hides the budget pill when the server has no indexers or no budget yet', async () => {
     broker({ 'GET /budget': () => budget(0, 0) });
     await renderWithProviders(<SearchScreen />);

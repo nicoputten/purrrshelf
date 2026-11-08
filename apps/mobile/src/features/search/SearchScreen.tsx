@@ -42,6 +42,10 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
   const budget = useSearchBudget();
   const hits = search.data?.hits ?? [];
   const active = query.trim().length >= MIN_QUERY_LENGTH;
+  // Sniffing while the first results load, while new results replace the old
+  // ones, and while the typing pause before a search runs.
+  const waiting = text.trim() !== query.trim() && text.trim().length >= MIN_QUERY_LENGTH;
+  const sniffing = search.isPending || search.isPlaceholderData || waiting;
   const bold = <AppText style={styles.bold} />;
 
   return (
@@ -71,7 +75,7 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
         ]}
       />
 
-      {!active ? (
+      {!active && !waiting ? (
         <AppText variant="muted">
           <Trans i18nKey="search.freeHint" components={{ b: bold }} />
         </AppText>
@@ -84,7 +88,7 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
             onPress={() => void search.refetch()}
           />
         </View>
-      ) : search.isPending ? (
+      ) : sniffing ? (
         <View style={styles.state}>
           <PawLoader />
           <AppText variant="muted">{t('search.searching')}</AppText>
