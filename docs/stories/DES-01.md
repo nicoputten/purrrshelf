@@ -26,7 +26,7 @@ so that I can find it on my home screen and tell it apart from other apps.
 ## Design
 
 Canvas board: App icon final · Peekaboo — docs/design/design-choices.md
-(App icon), ADR 0027
+(App icon), ADR 0029
 
 ## Notes / decisions
 

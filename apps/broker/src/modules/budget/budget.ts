@@ -54,6 +54,22 @@ export class BudgetExhaustedError extends Error {
  * reached (Newznab error 500/501). The budget then stops spending on that
  * counter until `retryAt`, or for a full window when the indexer gives no time.
  */
+/** Any failure talking to the indexer that is not a limit. */
+export class IndexerRequestError extends Error {
+  override name = 'IndexerRequestError';
+  /**
+   * The Newznab error code when the indexer answered with an error document:
+   * it understood the call and refused it, so asking again the same way fails
+   * again. Unset for network trouble and odd replies.
+   */
+  readonly code: string | undefined;
+
+  constructor(message: string, options?: ErrorOptions & { code?: string }) {
+    super(message, options);
+    this.code = options?.code;
+  }
+}
+
 export class IndexerLimitReachedError extends Error {
   override name = 'IndexerLimitReachedError';
   constructor(

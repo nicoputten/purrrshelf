@@ -1,6 +1,8 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { z } from 'zod';
-import { IndexerLimitReachedError } from './budget.js';
+import { IndexerLimitReachedError, IndexerRequestError } from './budget.js';
+
+export { IndexerRequestError };
 
 /**
  * Raw Newznab HTTP client. Only {@link IndexerGateway} may use it, so that
@@ -33,11 +35,6 @@ export interface NewznabCaps {
   bookSearch: boolean;
   /** Parameters `t=book` accepts, e.g. title, author. */
   bookParams: string[];
-}
-
-/** Any failure talking to the indexer that is not a limit. */
-export class IndexerRequestError extends Error {
-  override name = 'IndexerRequestError';
 }
 
 const TIMEOUT_MS = 20_000;
@@ -96,11 +93,30 @@ function int(value: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * The id that t=get accepts. Many indexers send the guid as a permalink
+ * (`https://host/details/<id>` or `...?id=<id>`); t=get needs the bare id.
+ */
+function idFromUrl(value: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return null;
+  }
+  const id = url.searchParams.get('id');
+  if (id) return id;
+  const segments = url.pathname.split('/').filter(Boolean);
+  return segments.length > 1 ? (segments.pop() as string) : null;
+}
+
 function guidOf(item: z.infer<typeof Item>): string | null {
-  if (typeof item.guid === 'string') return item.guid;
-  if (item.guid) return item.guid['#text'];
+  const guid = typeof item.guid === 'string' ? item.guid : item.guid?.['#text'];
+  if (guid && !/^https?:\/\//i.test(guid)) return guid;
+  const fromGuid = guid ? idFromUrl(guid) : null;
+  if (fromGuid) return fromGuid;
   // Some indexers only give the NZB link; its id parameter is the guid.
-  return item.link ? (new URL(item.link).searchParams.get('id') ?? item.link) : null;
+  return item.link ? (new URL(item.link).searchParams.get('id') ?? item.link) : (guid ?? null);
 }
 
 function toItem(raw: unknown): NewznabItem | null {
@@ -130,7 +146,7 @@ function checkError(doc: unknown): void {
   if (!err.success) return;
   const { code, description = 'Indexer error' } = err.data.error;
   if (LIMIT_CODES.has(code)) throw new IndexerLimitReachedError(description);
-  throw new IndexerRequestError(`Indexer error ${code}: ${description}`);
+  throw new IndexerRequestError(`Indexer error ${code}: ${description}`, { code });
 }
 
 function retryAfter(res: Response, now: Date): Date | undefined {

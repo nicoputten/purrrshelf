@@ -12,7 +12,7 @@ import {
   type RequestRow,
   type RequestStatus,
 } from '../../db/schema.js';
-import { BudgetExhaustedError } from '../budget/budget.js';
+import { BudgetExhaustedError, IndexerRequestError } from '../budget/budget.js';
 import type { IndexerGateway } from '../budget/gateway.js';
 import { tagEpub, IDENTIFIER_SCHEME } from '../importer/epub.js';
 import type { IndexerRepository } from '../indexers/repository.js';
@@ -23,6 +23,15 @@ import { ACCEPT_THRESHOLD, detectFormat, detectLanguage, rankReleases } from './
 import type { ReleaseList } from '@purrshelf/contract';
 
 export const POLL_DOWNLOAD_JOB = 'poll_download';
+
+/** Newznab 1xx codes: the key or account is refused; every grab would fail. */
+const ACCOUNT_CODES = /^1\d\d$/;
+
+/** The last indexer refusal in a run of grab fallbacks. */
+interface IndexerRefusal {
+  indexerId: string;
+  code: string;
+}
 export const WAIT_IMPORT_JOB = 'wait_import';
 
 /** The part of the library adapter (BRK-03) the importer needs. */
@@ -222,9 +231,15 @@ export class ReleasePipeline {
    * Grabs one release: downloads its NZB (one grab from the budget) and adds
    * it to SABnzbd. Used for the auto-pick, "Pick another" and the fallback
    * after a failed download. When the NZB cannot be fetched, the next-best
-   * release is tried; nothing is searched again.
+   * release is tried; nothing is searched again. An indexer that refuses with
+   * the same error code twice in a row (or refuses the account) gets no more
+   * grabs for this request: that error is not going away (ADR 0027).
    */
-  async grab(request: RequestRow, releaseId: string): Promise<RequestRow> {
+  async grab(
+    request: RequestRow,
+    releaseId: string,
+    refused?: IndexerRefusal,
+  ): Promise<RequestRow> {
     const services = this.services();
     if (!services) throw new DownloadsNotSetUpError(NOT_SET_UP);
     const release = this.release(request, releaseId);
@@ -243,7 +258,18 @@ export class ReleasePipeline {
         });
       }
       this.markFailed(release);
-      return this.next(request, `Could not fetch the NZB: ${message(err)}`);
+      const reason = `Could not fetch the NZB: ${message(err)}`;
+      const code = err instanceof IndexerRequestError ? err.code : undefined;
+      if (code === undefined || !indexer) return this.next(request, reason);
+      const again = refused?.indexerId === indexer.id && refused.code === code;
+      if (again || ACCOUNT_CODES.test(code)) {
+        return this.next(
+          request,
+          `${reason}. Stopped asking ${indexer.name} so no more downloads are spent`,
+          indexer.id,
+        );
+      }
+      return this.next(request, reason, undefined, { indexerId: indexer.id, code });
     }
     let downloadId: string;
     try {
@@ -393,16 +419,26 @@ export class ReleasePipeline {
     this.later(WAIT_IMPORT_JOB, { requestId: request.id, deadline });
   }
 
-  /** Tries the next-best release from the same list; no new search. */
-  private async next(request: RequestRow, reason: string): Promise<RequestRow> {
+  /**
+   * Tries the next-best release from the same list; no new search. Releases
+   * from a `blocked` indexer are skipped.
+   */
+  private async next(
+    request: RequestRow,
+    reason: string,
+    blocked?: string,
+    refused?: IndexerRefusal,
+  ): Promise<RequestRow> {
     const ranked = this.rank(request).ranked.filter((r) => r.rejected.length === 0);
-    const candidate = ranked.find((r) => r.release.status === 'candidate');
+    const candidate = ranked.find(
+      (r) => r.release.status === 'candidate' && r.release.indexerId !== blocked,
+    );
     if (!candidate) {
       return this.setStatus(request, 'download_failed', {
         error: `${reason}. No other release left; try another one or search again.`,
       });
     }
-    return this.grab(request, candidate.release.id);
+    return this.grab(request, candidate.release.id, refused);
   }
 
   private markFailed(release: ReleaseRow): void {

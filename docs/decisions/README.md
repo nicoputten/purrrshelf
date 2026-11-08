@@ -24,13 +24,16 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0017](0017-cwa-setup-contract.md)                          | The CWA setup the broker relies on                                      | accepted, amended by 0021  |
 | [0018](0018-trust-only-the-proxy.md)                        | Trust X-Forwarded-For only from the proxy                               | accepted                   |
 | [0019](0019-work-ids-and-metadata-merge.md)                 | Work ids and how metadata hits are merged                               | accepted                   |
-| [0020](0020-covers-served-by-the-broker.md)                 | Covers are served by the broker, never hot-linked                       | accepted                   |
+| [0020](0020-covers-served-by-the-broker.md)                 | Covers are served by the broker, never hot-linked                       | accepted, amended by 0026  |
 | [0021](0021-shelf-edits-via-kobo-api.md)                    | Shelf changes go through each reader's Kobo sync API                    | accepted                   |
 | [0022](0022-read-cwa-databases-through-read-only-mounts.md) | CWA's databases are read through read-only mounts                       | accepted                   |
 | [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | accepted                   |
 | [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                   |
 | [0025](0025-daily-indexer-budget.md)                        | The indexer budget counts per day, not per hour                         | accepted                   |
-| [0027](0027-app-icon.md)                                    | App icon "Peekaboo"                                                     | accepted                   |
+| [0026](0026-cover-redirects.md)                             | Cover downloads follow checked redirects                                | accepted                   |
+| [0027](0027-stop-on-repeated-indexer-refusals.md)           | Stop grabbing when an indexer refuses the same way twice                | accepted                   |
+| [0028](0028-fast-android-test-builds.md)                    | Fast Android test builds, APK on every mobile release                   | accepted                   |
+| [0029](0029-app-icon.md)                                    | App icon "Peekaboo"                                                     | accepted                   |
 
 ## Template
 

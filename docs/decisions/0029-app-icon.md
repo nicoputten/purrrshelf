@@ -1,4 +1,4 @@
-# 0027. App icon "Peekaboo"
+# 0029. App icon "Peekaboo"
 
 Status: accepted
 Date: 2026-11-08

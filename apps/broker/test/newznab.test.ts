@@ -26,7 +26,7 @@ describe('NewznabClient.search', () => {
     });
     expect(items).toEqual([
       {
-        guid: 'https://indexer.example.invalid/details/aaa111',
+        guid: 'aaa111',
         title: 'Ada Quill - The Lighthouse Cartographer (2021) EPUB',
         size: 2400000,
         category: '7020',
@@ -52,6 +52,28 @@ describe('NewznabClient.search', () => {
         language: null,
         publishedAt: null,
       },
+    ]);
+  });
+
+  it('takes the id out of a permalink guid, which t=get cannot use', async () => {
+    const body = `<rss><channel>
+      <item><title>A</title><guid isPermaLink="true">https://indexer.example.invalid/details/abc123</guid></item>
+      <item><title>B</title><guid>https://indexer.example.invalid/details/def456/</guid></item>
+      <item><title>C</title><guid isPermaLink="true">https://indexer.example.invalid/api?t=details&amp;id=ghi789</guid></item>
+      <item><title>D</title><guid isPermaLink="true">https://indexer.example.invalid/</guid><link>https://indexer.example.invalid/api?t=get&amp;id=jkl012</link></item>
+      <item><title>E</title><guid>https://indexer.example.invalid/x</guid></item>
+      <item><title>F</title><guid>http://</guid></item>
+    </channel></rss>`;
+    const fake = new FakeNewznab().on('search', { body });
+    const items = await client(fake).search(endpoint, { t: 'search', q: 'x' });
+    expect(items.map((i) => i.guid)).toEqual([
+      'abc123',
+      'def456',
+      'ghi789',
+      'jkl012',
+      // Nothing better to go on: keep the guid as it came.
+      'https://indexer.example.invalid/x',
+      'http://',
     ]);
   });
 

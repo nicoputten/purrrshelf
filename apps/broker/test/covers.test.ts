@@ -256,6 +256,61 @@ describe('fetchImage', () => {
   });
 });
 
+describe('fetchImage redirects', () => {
+  const http = (fetch: FetchLike) => ({ fetch, timeoutMs: 1000 });
+  const image = () =>
+    new Response(new Uint8Array(jpeg), { headers: { 'content-type': 'image/jpeg' } });
+  const moved = (location?: string) =>
+    new Response(null, { status: 302, headers: location ? { location } : {} });
+
+  it('follows a redirect to another public host (Open Library to archive.org)', async () => {
+    const fetch = vi
+      .fn<FetchLike>()
+      .mockResolvedValueOnce(moved('https://archive.example.invalid/covers/1-L.jpg'))
+      .mockResolvedValueOnce(image());
+    const body = await fetchImage(http(fetch), 'https://covers.example.invalid/b/id/1-L.jpg');
+    expect(body.length).toBe(jpeg.length);
+    expect(fetch.mock.calls.map((c) => c[0])).toEqual([
+      'https://covers.example.invalid/b/id/1-L.jpg',
+      'https://archive.example.invalid/covers/1-L.jpg',
+    ]);
+    expect(fetch.mock.calls[0]![1]).toMatchObject({ redirect: 'manual' });
+  });
+
+  it('resolves a relative location against the current URL', async () => {
+    const fetch = vi
+      .fn<FetchLike>()
+      .mockResolvedValueOnce(moved('/other/1.jpg'))
+      .mockResolvedValueOnce(image());
+    await fetchImage(http(fetch), 'https://covers.example.invalid/b/1.jpg');
+    expect(fetch.mock.calls[1]![0]).toBe('https://covers.example.invalid/other/1.jpg');
+  });
+
+  it.each([
+    'http://archive.example.invalid/1.jpg',
+    'https://192.168.1.10/1.jpg',
+    'https://localhost/1.jpg',
+  ])('refuses a redirect to %s', async (location) => {
+    const fetch = vi.fn<FetchLike>().mockResolvedValueOnce(moved(location));
+    await expect(fetchImage(http(fetch), 'https://c.example.invalid/a.jpg')).rejects.toThrow(
+      'refusing',
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives up after three redirects or a redirect without a location', async () => {
+    const loop = vi.fn<FetchLike>(async () => moved('https://c.example.invalid/again.jpg'));
+    await expect(fetchImage(http(loop), 'https://c.example.invalid/a.jpg')).rejects.toThrow(
+      'too many redirects',
+    );
+    expect(loop).toHaveBeenCalledTimes(4);
+    const bare = vi.fn<FetchLike>(async () => moved());
+    await expect(fetchImage(http(bare), 'https://c.example.invalid/a.jpg')).rejects.toThrow(
+      'without a location',
+    );
+  });
+});
+
 describe('placeholder card', () => {
   it('picks a stable colour from the design palette per book', () => {
     expect(colourFor('hardcover:1')).toBe(colourFor('hardcover:1'));
