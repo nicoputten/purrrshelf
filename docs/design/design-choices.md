@@ -125,7 +125,7 @@ Canvas board: 8 · App icon final: Peekaboo (DES-01, ADR 0029).
 
 Canvas boards: 9 · Motion: little cat moments (items 1, 3, 4, 5, 6),
 9b · Pounce v2: Swat (replaces item 2 "Pounce"), 9c · Swat in the Requests
-screen (DES-02, ADR 0030). Components: `apps/mobile/src/components/motion/`.
+screen (DES-02, ADR 0032). Components: `apps/mobile/src/components/motion/`.
 
 Colours: ginger `#F6A65A`, pink `#F7B6C2`, mint `#8FD8C8`, cream `#F4EFEA`
 (token `motion` in `theme/tokens.ts`, the same in light and dark).

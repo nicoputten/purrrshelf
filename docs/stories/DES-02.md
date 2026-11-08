@@ -53,7 +53,7 @@ so that the app feels alive and I can tell at a glance what just happened.
 Canvas boards: 8 · App icon final: Peekaboo, 9 · Motion: little cat moments
 (items 1, 3, 4, 5, 6), 9b · Pounce v2: Swat, 9c · Swat in the Requests
 screen — `docs/design/design-choices.md` (Icon, Motion),
-`docs/design/requests.md`. ADR 0030.
+`docs/design/requests.md`. ADR 0032.
 
 ## Notes / decisions
 

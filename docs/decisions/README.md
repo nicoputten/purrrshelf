@@ -32,9 +32,10 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0025](0025-daily-indexer-budget.md)                        | The indexer budget counts per day, not per hour                         | accepted                   |
 | [0026](0026-cover-redirects.md)                             | Cover downloads follow checked redirects                                | accepted                   |
 | [0027](0027-stop-on-repeated-indexer-refusals.md)           | Stop grabbing when an indexer refuses the same way twice                | accepted                   |
-| [0028](0028-fast-android-test-builds.md)                    | Fast Android test builds, APK on every mobile release                   | accepted                   |
+| [0028](0028-fast-android-test-builds.md)                    | Fast Android test builds, APK on every mobile release                   | accepted, amended by 0030  |
 | [0029](0029-app-icon.md)                                    | App icon "Peekaboo"                                                     | accepted                   |
-| [0030](0030-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
+| [0030](0030-arm64-only-release-apk.md)                      | Release APKs are arm64-only too                                         | accepted                   |
+| [0032](0032-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
 
 ## Template
 

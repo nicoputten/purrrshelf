@@ -1,4 +1,4 @@
-# 0030. Cat animations with Reanimated and SVG
+# 0032. Cat animations with Reanimated and SVG
 
 Status: accepted
 Date: 2026-11-08
