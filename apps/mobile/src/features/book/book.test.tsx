@@ -1,9 +1,10 @@
 import { act, screen, userEvent } from '@testing-library/react-native';
-import type { WorkSeries } from '@purrshelf/contract';
+import type { MyReading, WorkSeries } from '@purrshelf/contract';
 import { setFetch, useSession } from '@/session/session';
 import { apiError, fakeBroker, hit, ok, work } from '@/test/fakeBroker';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { BookDetailScreen } from './BookDetailScreen';
+import { progressOf } from './ReadingProgress';
 import { positionLabel, seriesStates } from './series';
 
 // The first render of this screen is a cold start (module loading under
@@ -24,10 +25,11 @@ const owners = [
   { id: 'u2', displayName: 'Reader Two', me: false },
   { id: 'u1', displayName: 'Reader One', me: true },
 ];
-const inLibrary = (onMyKobo = false) => ({
+const inLibrary = (onMyKobo = false, reading: MyReading | null = null) => ({
   itemId: '00000000-0000-4000-8000-000000000001',
   owners,
   onMyKobo,
+  reading,
 });
 
 const lanternKeepers = {
@@ -116,6 +118,25 @@ describe('Book detail', () => {
     expect(await screen.findByText('Your Kobo')).toBeOnTheScreen();
     expect(screen.getByText('On the device')).toBeOnTheScreen();
     expect(screen.getByText('Reader Two’s Kobo')).toBeOnTheScreen();
+  });
+
+  it('shows how far I am from my Kobo', async () => {
+    const reading = { status: 'reading', progressPercent: 42.4 } as const;
+    const { view } = render(work({ library: inLibrary(true, reading) }));
+    await view;
+    expect(await screen.findByText('You’ve read 42%')).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Reading progress' })).toHaveAccessibilityValue({
+      now: 42,
+    });
+  });
+
+  it('shows a finished book with a full bar, and nothing for an unread one', async () => {
+    const { view } = render(
+      work({ library: inLibrary(true, { status: 'finished', progressPercent: null }) }),
+    );
+    await view;
+    expect(await screen.findByText('You’ve finished this one')).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({ now: 100 });
   });
 
   it('shows no owners, device or format for a book that is not in the library', async () => {
@@ -213,6 +234,28 @@ describe('Book detail', () => {
     await userEvent.setup().press(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByText('The Salt Road')).toBeOnTheScreen();
     await act(async () => undefined);
+  });
+});
+
+describe('reading progress', () => {
+  it('says read, reading or finished, and nothing otherwise', () => {
+    expect(progressOf(null)).toBeNull();
+    expect(progressOf({ status: 'unread', progressPercent: null })).toBeNull();
+    expect(progressOf({ status: 'unread', progressPercent: 0 })).toBeNull();
+    expect(progressOf({ status: 'reading', progressPercent: null })).toEqual({
+      key: 'book.progress.reading',
+    });
+    expect(progressOf({ status: 'reading', progressPercent: 0.2 })).toEqual({
+      key: 'book.progress.read',
+      percent: 1,
+    });
+    expect(progressOf({ status: 'unread', progressPercent: 140 })).toEqual({
+      key: 'book.progress.read',
+      percent: 100,
+    });
+    expect(progressOf({ status: 'finished', progressPercent: 30 })).toEqual({
+      key: 'book.progress.finished',
+    });
   });
 });
 

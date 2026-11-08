@@ -57,6 +57,12 @@ export const en = {
     devices: 'Kobo',
     yourKobo: 'Your Kobo',
     ownerKobo: '{{name}}’s Kobo',
+    progress: {
+      read: 'You’ve read {{percent}}%',
+      reading: 'You’re reading this one',
+      finished: 'You’ve finished this one',
+      label: 'Reading progress',
+    },
     kobo: {
       on_device: 'On the device',
       sending: 'Waiting for next sync',

@@ -96,7 +96,7 @@ describe('Add sheet', () => {
   it('only records ownership for a book already in the library', async () => {
     broker({
       'GET /works/hardcover:301': () =>
-        ok(work({ library: { itemId: 'item-1', owners: [], onMyKobo: false } })),
+        ok(work({ library: { itemId: 'item-1', owners: [], onMyKobo: false, reading: null } })),
     });
     await renderWithProviders(<AddSheetHost onAdded={jest.fn()} />);
     await act(async () => useAddSheet.getState().open('hardcover:301'));

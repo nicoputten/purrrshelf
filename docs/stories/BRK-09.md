@@ -1,6 +1,6 @@
 # BRK-09 Import the existing Calibre library
 
-Status: in review
+Status: done
 Milestone: 6
 Depends on: BRK-03
 

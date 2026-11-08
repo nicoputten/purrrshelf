@@ -15,6 +15,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes } from '@/theme/tokens';
 import { positionLabel, seriesStates, type SeriesEntryState } from './series';
 import { KoboCard } from './KoboCard';
+import { ReadingProgress } from './ReadingProgress';
 import { SimilarBooks } from './SimilarBooks';
 import { useSimilarWorks, useWork, useWorkSeries } from './useWork';
 
@@ -150,6 +151,8 @@ function BookDetail({
       {!work.library && onAdd ? (
         <Button label={t('add.addToLibrary')} onPress={() => onAdd(work.id)} />
       ) : null}
+
+      {work.library ? <ReadingProgress reading={work.library.reading} /> : null}
 
       {work.library ? <KoboCard itemId={work.library.itemId} /> : null}
 

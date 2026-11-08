@@ -60,6 +60,12 @@ export const nl: Translations = {
     devices: 'Kobo',
     yourKobo: 'Jouw Kobo',
     ownerKobo: 'Kobo van {{name}}',
+    progress: {
+      read: 'Je hebt {{percent}}% gelezen',
+      reading: 'Je bent dit boek aan het lezen',
+      finished: 'Je hebt dit boek uit',
+      label: 'Leesvoortgang',
+    },
     kobo: {
       on_device: 'Op het apparaat',
       sending: 'Wacht op volgende sync',

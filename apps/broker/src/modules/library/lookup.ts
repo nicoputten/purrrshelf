@@ -1,4 +1,4 @@
-import type { LibraryState } from '@purrshelf/contract';
+import type { LibraryState, MyReading } from '@purrshelf/contract';
 import type { LibraryItemRow, User } from '../../db/schema.js';
 import type { LibraryCandidate, LibraryLookup } from '../discover/library-lookup.js';
 import type { LibraryItems } from './items.js';
@@ -42,6 +42,7 @@ export class ItemLibraryLookup implements LibraryLookup {
           me: o.userId === userId,
         })),
         onMyKobo: await this.onKobo(cwaUserId, item.calibreBookId),
+        reading: await this.reading(cwaUserId, item.calibreBookId),
       });
     }
     return result;
@@ -65,6 +66,23 @@ export class ItemLibraryLookup implements LibraryLookup {
         candidate.key,
         this.items.ensure({ workId: candidate.key, calibreBookId: book.id, title: book.title }),
       );
+    }
+  }
+
+  /** My progress from CWA's Kobo sync data (APP-08); none without a linked Kobo or when CWA is down. */
+  private async reading(
+    cwaUserId: number | null,
+    calibreBookId: number,
+  ): Promise<MyReading | null> {
+    if (cwaUserId === null) return null;
+    try {
+      const { status, progressPercent } = await this.library.getReadingState(
+        { cwaUserId },
+        calibreBookId,
+      );
+      return { status, progressPercent };
+    } catch {
+      return null;
     }
   }
 
