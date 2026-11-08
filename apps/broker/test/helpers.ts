@@ -12,6 +12,7 @@ import type { HealthCheck } from '../src/modules/health/routes.js';
 import type { LibraryAdapter } from '../src/modules/library/types.js';
 import type { LibraryItems } from '../src/modules/requests/delivery.js';
 import { UserRepository } from '../src/modules/auth/users.js';
+import type { MetadataProvider } from '../src/modules/discover/types.js';
 
 /** Fake secret for tests only. */
 export const TEST_SECRET = 'fake'.repeat(10);
@@ -52,6 +53,7 @@ export async function makeTestApp(
     libraryCovers?: LibraryCovers;
     library?: LibraryAdapter;
     libraryItems?: LibraryItems;
+    metadataProviders?: MetadataProvider[];
   } = {},
 ): Promise<TestContext> {
   const database = openDatabase(':memory:');
@@ -80,6 +82,7 @@ export async function makeTestApp(
     ...(opts.libraryCovers ? { libraryCovers: opts.libraryCovers } : {}),
     library: opts.library,
     ...(opts.libraryItems ? { libraryItems: opts.libraryItems } : {}),
+    ...(opts.metadataProviders ? { metadataProviders: opts.metadataProviders } : {}),
   });
   return {
     app,

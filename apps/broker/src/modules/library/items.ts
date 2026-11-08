@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, desc, eq, inArray, isNotNull, lte, notExists } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, lte, notExists, notInArray } from 'drizzle-orm';
 import type { Clock } from '../../clock.js';
 import type { Db } from '../../db/index.js';
 import { libraryItems, ownerships, users, type LibraryItemRow } from '../../db/schema.js';
@@ -80,6 +80,11 @@ export class LibraryItems {
     return this.db.select().from(libraryItems).where(inArray(libraryItems.workId, workIds)).all();
   }
 
+  byIds(ids: string[]): LibraryItemRow[] {
+    if (ids.length === 0) return [];
+    return this.db.select().from(libraryItems).where(inArray(libraryItems.id, ids)).all();
+  }
+
   byCalibreIds(calibreBookIds: number[]): LibraryItemRow[] {
     if (calibreBookIds.length === 0) return [];
     return this.db
@@ -101,6 +106,29 @@ export class LibraryItems {
       .set({ deleteAfter: null })
       .where(eq(libraryItems.id, itemId))
       .run();
+  }
+
+  /**
+   * Makes exactly these users the owners of each item (import review) and
+   * cancels pending deletions. Kobo shelves are not touched.
+   */
+  setOwners(itemIds: string[], userIds: string[]): void {
+    const addedAt = this.clock();
+    this.db.transaction((tx) => {
+      for (const itemId of itemIds) {
+        tx.delete(ownerships)
+          .where(and(eq(ownerships.itemId, itemId), notInArray(ownerships.userId, userIds)))
+          .run();
+        tx.insert(ownerships)
+          .values(userIds.map((userId) => ({ itemId, userId, addedAt })))
+          .onConflictDoNothing()
+          .run();
+      }
+      tx.update(libraryItems)
+        .set({ deleteAfter: null })
+        .where(inArray(libraryItems.id, itemIds))
+        .run();
+    });
   }
 
   /**
