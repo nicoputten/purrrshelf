@@ -29,8 +29,7 @@ Built in APP-09:
   why it is suggested (Same series, Same author, Similar subject). A tap opens
   that book. The row is hidden when there is nothing similar.
 - "Add next in series: <title>" is an outline button under the series list.
-  Adding is always this explicit tap; it shows once APP-03 provides the Add
-  action.
+  Adding is always this explicit tap; it opens the Add sheet (APP-03).
 
 Built in APP-06:
 

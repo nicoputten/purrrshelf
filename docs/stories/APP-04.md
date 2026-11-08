@@ -1,6 +1,6 @@
 # APP-04 See book details, series and owners
 
-Status: in progress
+Status: done
 Milestone: 2
 Depends on: BRK-02
 
@@ -13,11 +13,11 @@ so that I can decide what to do with it in one place.
 
 - [x] Cover, title, author, series position, language and format
 - [x] Owner badges (Yours, Partner's)
-- [ ] My reading progress (needs reading state from the library, APP-08)
+- [x] My reading progress (APP-08)
 - [x] Kobo row with my device state
-- [ ] Partner's Kobo row and Send / Remove actions (APP-06)
+- [x] Partner's Kobo row and Send / Remove actions (APP-06)
 - [x] Series list with This book / In library / Add / Add next labels
-- [ ] Add / Add next as actions (APP-03, the Add sheet)
+- [x] Add / Add next as actions (APP-03, the Add sheet)
 - [x] Similar books row (filled by APP-09)
 
 ## Design
