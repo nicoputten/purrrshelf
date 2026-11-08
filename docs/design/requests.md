@@ -39,8 +39,9 @@ Motion (DES-02, board 9c; see design-choices.md, Motion):
   Pick another grabs a new release). The scene is 318 × 166 on a 390 wide
   phone (the 576 × 300 board scene scaled to the card width) on its own dark
   stage with rounded corners. After about 1.6 s it collapses and the step
-  list, already under it, moves up. A download that was already running when
-  the screen opened doesn't swat.
+  list, already under it, moves up. A grab that happened while Requests was
+  in the background plays when you come back to it; a download that had
+  been running for a while before the app saw it doesn't swat.
 - **Trot** replaces the plain bar on the Downloading step: the cat runs at the
   real percentage from the live events and bobs while it downloads.
 - **Delivered** plays once in the finished card when the request reaches "On

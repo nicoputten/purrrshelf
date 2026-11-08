@@ -15,7 +15,14 @@ import { errorMessage } from '@/lib/errors';
 import { useSession } from '@/session/session';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, space } from '@/theme/tokens';
-import { deliveredEvent, deliveredScope, swatEvent, swatScope } from './motion';
+import {
+  deliveredEvent,
+  deliveredFresh,
+  deliveredScope,
+  swatEvent,
+  swatFresh,
+  swatScope,
+} from './motion';
 import { requestSteps, type Step } from './steps';
 import { useRequestEvents } from './useRequestEvents';
 import { useCancelRequest, useReaders, useRequests, useRetryRequest } from './useRequests';
@@ -134,8 +141,12 @@ function RequestCard({
     request.status,
   );
   const error = retry.error ?? cancel.error;
-  const swat = useOneShot(swatScope(request), swatEvent(request));
-  const delivered = useOneShot(deliveredScope(request), deliveredEvent(request));
+  const swat = useOneShot(swatScope(request), swatEvent(request), swatFresh(request));
+  const delivered = useOneShot(
+    deliveredScope(request),
+    deliveredEvent(request),
+    deliveredFresh(request),
+  );
   const napping = notFound || request.status === 'waiting_budget';
 
   return (

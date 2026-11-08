@@ -149,7 +149,9 @@ Rules:
 - **Once per event:** Swat plays once per grab (a new release counts as a new
   grab) and Delivered once per confirmed push, never on re-render or when
   coming back to a screen. A state the app first sees on opening a screen
-  only counts as the starting point.
+  only counts as the starting point, unless it changed in the last two
+  minutes. One-shots wait until their screen is focused, so they never play
+  unseen in a background tab.
 - **Haptics:** light on each Swat tap, medium on the landing, success on
   Delivered.
 - Animations are decorative: the text next to them carries the meaning;

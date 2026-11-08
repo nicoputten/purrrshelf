@@ -53,6 +53,12 @@ describe('one-shot memory', () => {
     expect(takeOneShot('swat:r2', 'rel-1')).toBe(true);
   });
 
+  it('plays a fresh event the first time it is seen', () => {
+    expect(takeOneShot('swat:f', 'rel-1', true)).toBe(true);
+    expect(takeOneShot('swat:f', 'rel-1', true)).toBe(false);
+    expect(takeOneShot('swat:g', null, true)).toBe(false);
+  });
+
   it('keeps scopes apart', () => {
     takeOneShot('swat:a', null);
     takeOneShot('swat:b', null);
@@ -233,5 +239,42 @@ describe('EarsButton', () => {
     expect(spring).not.toHaveBeenCalled();
     expect(flat(style('ears')).transform).toEqual([{ translateY: 16 }]);
     spring.mockRestore();
+  });
+});
+
+describe('one-shots off screen', () => {
+  it('waits until the screen is focused before it plays', async () => {
+    const { NavigationContext } = jest.requireActual('expo-router/react-navigation');
+    const listeners = new Map<string, () => void>();
+    let focused = true;
+    const navigation = {
+      isFocused: () => focused,
+      addListener: (name: string, fn: () => void) => {
+        listeners.set(name, fn);
+        return () => listeners.delete(name);
+      },
+    };
+    const { useOneShot } = jest.requireActual('./useMotion');
+    function Probe({ event }: { event: string | null }) {
+      const shot = useOneShot('swat:focus', event);
+      return shot.playing ? <Nap /> : null;
+    }
+    const tree = (event: string | null) => (
+      <NavigationContext.Provider value={navigation}>
+        <Probe event={event} />
+      </NavigationContext.Provider>
+    );
+    resetOneShots();
+    // Seen while searching, then the user switches tabs.
+    const view = await render(tree(null));
+    focused = false;
+    await act(async () => listeners.get('blur')?.());
+    // The grab lands while the tab is in the background: nothing plays off screen.
+    await view.rerender(tree('rel-1'));
+    expect(screen.queryByTestId('nap', { includeHiddenElements: true })).toBeNull();
+    // Coming back to the tab plays it once.
+    focused = true;
+    await act(async () => listeners.get('focus')?.());
+    expect(screen.getByTestId('nap', { includeHiddenElements: true })).toBeOnTheScreen();
   });
 });

@@ -4,7 +4,14 @@ import { setFetch, useSession } from '@/session/session';
 import { bookRequest, budgetWithIndexer, fakeBroker, ok, readers } from '@/test/fakeBroker';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { takeOneShot } from '@/components/motion/useMotion';
-import { deliveredEvent, rememberRequest, swatEvent, swatScope } from './motion';
+import {
+  deliveredEvent,
+  deliveredFresh,
+  rememberRequest,
+  swatEvent,
+  swatFresh,
+  swatScope,
+} from './motion';
 import { RequestsScreen } from './RequestsScreen';
 import { setEventStream, useLiveRequests, type EventStream } from './useRequestEvents';
 
@@ -97,6 +104,20 @@ describe('request card motion', () => {
     expect(swats()).toHaveLength(0);
   });
 
+  it('swats for a grab it first sees just after it happened', async () => {
+    live(
+      bookRequest({
+        status: 'downloading',
+        progress: 0,
+        release: epub,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+    await render();
+    expect(await screen.findByLabelText('Downloading, 0%, now')).toBeOnTheScreen();
+    await waitFor(() => expect(swats()).toHaveLength(1));
+  });
+
   it('never replays a swat when coming back to the screen', async () => {
     const stream = live(bookRequest({ status: 'searching' }));
     const first = await render();
@@ -153,6 +174,20 @@ describe('request motion events', () => {
     expect(swatEvent(r({ status: 'downloading', release: null }))).toBe('grabbed');
     expect(deliveredEvent(r({ status: 'in_library' }))).toBeNull();
     expect(deliveredEvent(r({ status: 'pushed' }))).toBe('pushed');
+  });
+
+  it('counts a change as fresh only right after it happened', () => {
+    const now = Date.parse('2026-01-01T12:01:00.000Z');
+    const at = (over: Partial<BookRequest>) =>
+      r({ updatedAt: '2026-01-01T12:00:00.000Z', ...over } as Partial<BookRequest>);
+    expect(swatFresh(at({ status: 'downloading', progress: 0 }), now)).toBe(true);
+    expect(swatFresh(at({ status: 'downloading', progress: null }), now)).toBe(true);
+    expect(swatFresh(at({ status: 'downloading', progress: 40 }), now)).toBe(false);
+    expect(swatFresh(at({ status: 'searching' }), now)).toBe(false);
+    expect(swatFresh(at({ status: 'downloading', progress: 0 }), now + 5 * 60_000)).toBe(false);
+    expect(deliveredFresh(at({ status: 'pushed' }), now)).toBe(true);
+    expect(deliveredFresh(at({ status: 'pushed' }), now + 5 * 60_000)).toBe(false);
+    expect(deliveredFresh(at({ status: 'importing' }), now)).toBe(false);
   });
 
   it('remembers a request the app just added, so its first grab plays', () => {
