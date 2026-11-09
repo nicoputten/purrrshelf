@@ -42,6 +42,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-11](BRK-11.md) | Work out book suggestions for each reader                      | 10        | done      |
 | [APP-12](APP-12.md) | See books picked for me on the Search tab                      | 10        | in review |
 | [APP-13](APP-13.md) | Add a suggested book, instantly when my partner has it         | 10        | in review |
+| [OPS-04](OPS-04.md) | Sync my Kobo away from home                                    | 10        | done      |
 
 ## Template
 
