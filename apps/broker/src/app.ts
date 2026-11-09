@@ -40,7 +40,6 @@ import { LibraryBrowser } from './modules/library/browse.js';
 import { CleanupJobs, LibraryCleanup } from './modules/library/cleanup.js';
 import { Ownership } from './modules/library/ownership.js';
 import { LibraryItems } from './modules/library/items.js';
-import { LibraryImport } from './modules/library/import.js';
 import { Kobos } from './modules/library/kobos.js';
 import { ItemLibraryLookup } from './modules/library/lookup.js';
 import { libraryRoutes } from './modules/library/routes.js';
@@ -202,9 +201,6 @@ export async function buildApp({
     log: app.log,
   });
 
-  const libraryImport = new LibraryImport(libraryItems, users, library, discover, clock, app.log);
-  app.addHook('onClose', () => libraryImport.stop());
-
   // Also hands the best metadata cover to imports (CoverService.forImport).
   const covers = new CoverService({
     store: new CoverStore(config.COVERS_PATH),
@@ -282,7 +278,6 @@ export async function buildApp({
         kobos,
         ownership,
         browser: libraryBrowser,
-        importer: libraryImport,
         requireAuth: authenticated,
       });
       await api.register(coverRoutes, { covers, requireAuth: authenticated });

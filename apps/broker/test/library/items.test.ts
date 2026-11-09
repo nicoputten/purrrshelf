@@ -26,9 +26,7 @@ describe('LibraryItems', () => {
     expect(second).toEqual({ ...first, workId: 'hardcover:1' });
     expect(items.ensure({ workId: 'hardcover:2', calibreBookId: 7, title: 'x' })).toEqual(second);
     expect(items.get(first.id)).toEqual(second);
-    expect(items.byCalibreIds([7, 8]).map((i) => i.id)).toEqual([first.id]);
     expect(items.byWorkIds(['hardcover:1']).map((i) => i.id)).toEqual([first.id]);
-    expect(items.byCalibreIds([])).toEqual([]);
     expect(items.byWorkIds([])).toEqual([]);
   });
 

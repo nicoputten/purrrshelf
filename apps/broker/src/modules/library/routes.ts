@@ -2,7 +2,6 @@ import { endpoints } from '@purrshelf/contract';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { PreHandler } from '../auth/authenticate.js';
 import type { LibraryBrowser } from './browse.js';
-import type { LibraryImport } from './import.js';
 import type { Kobos } from './kobos.js';
 import type { Ownership } from './ownership.js';
 
@@ -10,40 +9,16 @@ export interface LibraryRoutesOptions {
   kobos: Kobos;
   ownership: Ownership;
   browser: LibraryBrowser;
-  importer: LibraryImport;
   requireAuth: PreHandler;
 }
 
 /** Every route here runs behind requireAuth, which sets the user id or answers 401. */
 const userIdOf = (request: { userId?: string }): string => request.userId as string;
 
-/** The shared library (APP-07), its books on the readers' Kobos (APP-06) and the import (BRK-09). */
+/** The shared library (APP-07) and its books on the readers' Kobos (APP-06). */
 export const libraryRoutes: FastifyPluginAsyncZod<LibraryRoutesOptions> = async (app, opts) => {
   const { libraryBooks, keepBook, removeBook, itemKobos, sendToKobo, removeFromKobo } = endpoints;
-  const { startImport, importStatus, assignOwners } = endpoints;
-  const { kobos, ownership, browser, importer, requireAuth } = opts;
-
-  // Any signed-in reader may run the import: the household has no admin role (BRK-09).
-  app.post(
-    startImport.path,
-    { preHandler: requireAuth, schema: { response: { 200: startImport.response } } },
-    (request) => importer.start(userIdOf(request)),
-  );
-
-  app.get(
-    importStatus.path,
-    { preHandler: requireAuth, schema: { response: { 200: importStatus.response } } },
-    async (request) => importer.status(userIdOf(request)),
-  );
-
-  app.put(
-    assignOwners.path,
-    {
-      preHandler: requireAuth,
-      schema: { body: assignOwners.body, response: { 200: assignOwners.response } },
-    },
-    async (request) => importer.assign(request.body),
-  );
+  const { kobos, ownership, browser, requireAuth } = opts;
 
   app.put(
     keepBook.path,

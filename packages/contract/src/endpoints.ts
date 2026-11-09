@@ -12,13 +12,10 @@ import {
   RequestReleaseParams,
 } from './requests.js';
 import {
-  AssignOwnersRequest,
-  AssignOwnersResult,
   DiscoverSearchQuery,
   DiscoverSearchResult,
   Empty,
   Health,
-  ImportStatus,
   ItemKoboParams,
   ItemKobos,
   ItemOwnership,
@@ -273,33 +270,6 @@ export const endpoints = {
     auth: true,
     params: ItemKoboParams,
     response: ItemKobos,
-    status: 200,
-  },
-  startImport: {
-    method: 'POST',
-    path: '/admin/import',
-    summary:
-      'Scan the Calibre library for books the broker has no record of, then match books to works in the background. Safe to re-run.',
-    auth: true,
-    response: ImportStatus,
-    status: 200,
-  },
-  importStatus: {
-    method: 'GET',
-    path: '/admin/import',
-    summary: 'Progress of the last library import and the readers books can be assigned to',
-    auth: true,
-    response: ImportStatus,
-    status: 200,
-  },
-  assignOwners: {
-    method: 'PUT',
-    path: '/admin/import/owners',
-    summary:
-      'Set who owns each of these books (import review). Replaces the owners; Kobo shelves are left alone.',
-    auth: true,
-    body: AssignOwnersRequest,
-    response: AssignOwnersResult,
     status: 200,
   },
 } as const satisfies Record<string, Endpoint>;

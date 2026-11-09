@@ -12,7 +12,7 @@ import type {
 import type { FastifyBaseLogger } from 'fastify';
 import { AppError } from '../../errors.js';
 import type { MetadataCache } from './cache.js';
-import { normaliseIsbns, workKey } from './normalise.js';
+import { workKey } from './normalise.js';
 import type { LibraryLookup } from './library-lookup.js';
 import {
   coverUrls,
@@ -270,38 +270,6 @@ export class DiscoverService {
   async workSummary(id: string): Promise<{ title: string; authors: string[] }> {
     const { title, authors } = flatten(await this.workGroup(id));
     return { title, authors };
-  }
-
-  /**
-   * The work a library book is (BRK-09): a search hit sharing one of its
-   * ISBNs, or else one with the same title and first author. Null when no
-   * hit is clearly the same book. Throws when no provider answered.
-   */
-  async matchWork(book: {
-    title: string;
-    authors: string[];
-    isbns: string[];
-  }): Promise<string | null> {
-    const [author] = book.authors;
-    const { lists, statuses } = await this.fanOut({
-      title: book.title,
-      language: 'any',
-      ...(author ? { author } : {}),
-    });
-    if (!statuses.some((s) => s.status === 'ok')) throw unavailable();
-
-    const groups = mergeResults(lists);
-    const isbns = new Set(normaliseIsbns(book.isbns));
-    const key = workKey(book.title, book.authors);
-    const match =
-      groups.find((g) => flatten(g).isbns.some((i) => isbns.has(i))) ??
-      groups.find((g) => {
-        const w = flatten(g);
-        return workKey(w.title, w.authors) === key;
-      });
-    if (!match) return null;
-    this.deps.cache.set(`hit:${mergedId(match)}`, match);
-    return mergedId(match);
   }
 
   /** Cover URLs for a work, best first (used by the cover service). */
