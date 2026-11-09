@@ -6,13 +6,15 @@ import { AppText } from '@/components/AppText';
 import { Badge } from '@/components/Badge';
 import { BookCover } from '@/components/BookCover';
 import { Button } from '@/components/Button';
-import { Chips } from '@/components/Chips';
+import { Dropdown } from '@/components/Dropdown';
 import { Screen } from '@/components/Screen';
+import { Segmented } from '@/components/Segmented';
 import { Nap, PawLoader } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, space } from '@/theme/tokens';
 import {
+  barPercent,
   isShared,
   readLabel,
   tabCounts,
@@ -32,7 +34,10 @@ const GAP = 12;
 /** Screen's horizontal padding on each side. */
 const PADDING = space.xl;
 
-/** Library (APP-07, canvas board 6): Mine / Partner's / All, filters and a cover grid. */
+/**
+ * Library (APP-07, canvas board 6). Two rows of filters: whose books
+ * (Mine / Partner's / All) and a dropdown to sort or filter, then a cover grid.
+ */
 export function LibraryScreen({ onOpen }: LibraryScreenProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -48,7 +53,7 @@ export function LibraryScreen({ onOpen }: LibraryScreenProps) {
       <AppText variant="display" accessibilityRole="header">
         {t('library.title')}
       </AppText>
-      <Chips<LibraryTab>
+      <Segmented<LibraryTab>
         label={t('library.tabsLabel')}
         value={tab}
         onChange={setTab}
@@ -58,8 +63,9 @@ export function LibraryScreen({ onOpen }: LibraryScreenProps) {
           { value: 'all', label: t('library.all', { n: counts.all }) },
         ]}
       />
-      <Chips<LibraryView>
+      <Dropdown<LibraryView>
         label={t('library.viewLabel')}
+        closeLabel={t('library.closeMenu')}
         value={view}
         onChange={setView}
         options={[
@@ -149,6 +155,7 @@ function Cell({
       : t(label.key)
     : null;
   const shared = isShared(book);
+  const bar = barPercent(book.reading);
   const { workId } = book;
   const a11y = [
     book.title,
@@ -185,14 +192,14 @@ function Cell({
           </View>
         ) : null}
       </View>
-      {book.reading?.progressPercent ? (
+      {bar !== null ? (
         <View style={[styles.bar, { backgroundColor: colors.surfaceRaised }]}>
           <View
             style={[
               styles.barFill,
               {
                 backgroundColor: colors.accent,
-                width: `${Math.min(100, Math.max(0, book.reading.progressPercent))}%`,
+                width: `${bar}%`,
               },
             ]}
           />

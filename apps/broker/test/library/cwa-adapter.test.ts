@@ -203,6 +203,24 @@ describe('CwaAdapter: device and reading state', () => {
     });
   });
 
+  it('reads every book’s reading state for one reader at once, newest row winning', async () => {
+    cwa.app.exec(`
+      insert into book_read_link (book_id, user_id, read_status, last_modified) values (10, 3, 2, '2026-03-01 10:00:00');
+      insert into book_read_link (book_id, user_id, read_status, last_modified) values (10, 3, 1, '2026-03-05 10:00:00');
+      insert into book_read_link (book_id, user_id, read_status) values (10, 4, 1);
+      insert into kobo_reading_state (id, user_id, book_id, last_modified) values (1, 3, 11, '2026-03-02 21:30:00');
+      insert into kobo_bookmark (kobo_reading_state_id, progress_percent) values (1, 12);
+    `);
+    const states = await adapter.getReadingStates(READER_A);
+    expect([...states.keys()].sort()).toEqual([10, 11]);
+    expect(states.get(10)).toMatchObject({
+      status: 'finished',
+      lastModified: new Date('2026-03-05T10:00:00Z'),
+    });
+    expect(states.get(11)).toMatchObject({ status: 'unread', progressPercent: 12 });
+    expect(await adapter.getReadingStates({ cwaUserId: 99 })).toEqual(new Map());
+  });
+
   it('treats an unknown read status as unread', async () => {
     cwa.app.exec(`insert into book_read_link (book_id, user_id, read_status) values (10, 3, 9)`);
     expect((await adapter.getReadingState(READER_A, 10)).status).toBe('unread');

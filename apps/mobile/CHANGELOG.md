@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.3.0...mobile-v1.4.0) (2026-11-09)
+
+
+### New tricks
+
+* The Library filters fit in two tidy rows: whose books, and a menu for recent, unread, on my Kobo and series
+
+
+### Fixed scratches
+
+* Every book you are reading gets its own progress bar, not just a lucky few
+
 ## [1.3.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.2...mobile-v1.3.0) (2026-11-09)
 
 

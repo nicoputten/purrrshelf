@@ -122,6 +122,10 @@ export class CwaAdapter implements LibraryAdapter {
     return this.appDb.readingState(owner.cwaUserId, bookId);
   }
 
+  async getReadingStates(owner: LibraryOwner): Promise<Map<number, ReadingState>> {
+    return this.appDb.readingStates(owner.cwaUserId);
+  }
+
   async deleteBook(bookId: number): Promise<void> {
     if (!this.calibre.getBook(bookId)) throw bookNotFound(bookId);
     const res = await this.web.post(`/ajax/delete/${bookId}`);

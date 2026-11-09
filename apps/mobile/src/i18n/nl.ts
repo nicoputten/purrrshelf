@@ -177,6 +177,7 @@ export const nl: Translations = {
     unread: 'Ongelezen',
     onKobo: 'Op mijn Kobo',
     series: 'Series',
+    closeMenu: 'Menu sluiten',
     both: 'Allebei',
     koboBadge: 'Kobo',
     percentRead: '{{percent}}% gelezen',

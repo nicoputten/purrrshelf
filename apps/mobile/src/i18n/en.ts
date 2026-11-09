@@ -174,6 +174,7 @@ export const en = {
     unread: 'Unread',
     onKobo: 'On my Kobo',
     series: 'Series',
+    closeMenu: 'Close the menu',
     both: 'Both',
     koboBadge: 'Kobo',
     percentRead: '{{percent}}% read',

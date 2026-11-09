@@ -12,6 +12,31 @@ export interface CwaShelf {
 /** CWA's `book_read_link.read_status` values. */
 const READ_STATUS: Record<number, ReadStatus> = { 0: 'unread', 1: 'finished', 2: 'reading' };
 
+interface ReadRow {
+  read_status: number;
+  last_modified: string | null;
+}
+
+interface KoboRow {
+  last_modified: string | null;
+  progress_percent: number | null;
+  spent_reading_minutes: number | null;
+  remaining_time_minutes: number | null;
+}
+
+function toReadingState(read?: ReadRow, kobo?: KoboRow): ReadingState {
+  const times = [parseSqliteTime(read?.last_modified), parseSqliteTime(kobo?.last_modified)]
+    .filter((d): d is Date => d !== null)
+    .map((d) => d.getTime());
+  return {
+    status: READ_STATUS[read?.read_status ?? 0] ?? 'unread',
+    progressPercent: kobo?.progress_percent ?? null,
+    spentReadingMinutes: kobo?.spent_reading_minutes ?? null,
+    remainingMinutes: kobo?.remaining_time_minutes ?? null,
+    lastModified: times.length ? new Date(Math.max(...times)) : null,
+  };
+}
+
 /**
  * Read-only queries on CWA's settings database, `app.db`. The broker reads
  * users, shelves, Kobo sync tokens and reading state here and never writes:
@@ -97,41 +122,45 @@ export class CwaAppDb {
   }
 
   readingState(cwaUserId: number, bookId: number): ReadingState {
+    return this.readingStatesWhere(cwaUserId, bookId).get(bookId) ?? toReadingState();
+  }
+
+  /** Every book this user has a read status or Kobo position for, in one go. */
+  readingStates(cwaUserId: number): Map<number, ReadingState> {
+    return this.readingStatesWhere(cwaUserId, null);
+  }
+
+  private readingStatesWhere(cwaUserId: number, bookId: number | null): Map<number, ReadingState> {
+    const oneBook = bookId === null ? '' : 'and book_id = ?';
+    const args = bookId === null ? [cwaUserId] : [cwaUserId, bookId];
     return this.sqlite.run((db) => {
-      const read = db
+      // The newest row per book wins, as CWA itself reads them.
+      const reads = new Map<number, ReadRow>();
+      for (const row of db
         .prepare(
-          `select read_status, last_modified from book_read_link
-           where user_id = ? and book_id = ? order by id desc limit 1`,
+          `select book_id, read_status, last_modified from book_read_link
+           where user_id = ? ${oneBook} order by id`,
         )
-        .get(cwaUserId, bookId) as
-        { read_status: number; last_modified: string | null } | undefined;
-      const kobo = db
+        .all(...args) as (ReadRow & { book_id: number })[]) {
+        reads.set(row.book_id, row);
+      }
+      const kobos = new Map<number, KoboRow>();
+      for (const row of db
         .prepare(
-          `select rs.last_modified, bm.progress_percent, st.spent_reading_minutes, st.remaining_time_minutes
+          `select rs.book_id, rs.last_modified, bm.progress_percent, st.spent_reading_minutes, st.remaining_time_minutes
            from kobo_reading_state rs
            left join kobo_bookmark bm on bm.kobo_reading_state_id = rs.id
            left join kobo_statistics st on st.kobo_reading_state_id = rs.id
-           where rs.user_id = ? and rs.book_id = ? order by rs.id desc limit 1`,
+           where rs.user_id = ? ${oneBook.replace('book_id', 'rs.book_id')} order by rs.id`,
         )
-        .get(cwaUserId, bookId) as
-        | {
-            last_modified: string | null;
-            progress_percent: number | null;
-            spent_reading_minutes: number | null;
-            remaining_time_minutes: number | null;
-          }
-        | undefined;
-
-      const times = [parseSqliteTime(read?.last_modified), parseSqliteTime(kobo?.last_modified)]
-        .filter((d): d is Date => d !== null)
-        .map((d) => d.getTime());
-      return {
-        status: READ_STATUS[read?.read_status ?? 0] ?? 'unread',
-        progressPercent: kobo?.progress_percent ?? null,
-        spentReadingMinutes: kobo?.spent_reading_minutes ?? null,
-        remainingMinutes: kobo?.remaining_time_minutes ?? null,
-        lastModified: times.length ? new Date(Math.max(...times)) : null,
-      };
+        .all(...args) as (KoboRow & { book_id: number })[]) {
+        kobos.set(row.book_id, row);
+      }
+      const states = new Map<number, ReadingState>();
+      for (const id of new Set([...reads.keys(), ...kobos.keys()])) {
+        states.set(id, toReadingState(reads.get(id), kobos.get(id)));
+      }
+      return states;
     });
   }
 

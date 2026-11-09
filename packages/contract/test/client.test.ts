@@ -78,6 +78,20 @@ describe('createClient', () => {
     expect(fetch.mock.calls[0]![1].body).toBeUndefined();
   });
 
+  it('fills path params and sends only the body fields when an endpoint has both', async () => {
+    const dismissal = { workId: 'hardcover:1', kind: 'book', author: null, expiresAt: null };
+    const fetch = vi.fn<FetchLike>(async () => jsonResponse(200, dismissal));
+    const client = createClient({ baseUrl: 'https://x.example.invalid', fetch });
+
+    expect(
+      await client.call('dismissRecommendation', { workId: 'hardcover:1', kind: 'book' }),
+    ).toEqual(dismissal);
+    const [url, init] = fetch.mock.calls[0]!;
+    expect(url).toBe('https://x.example.invalid/api/v1/recommendations/hardcover%3A1/dismiss');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ kind: 'book' });
+  });
+
   it('turns an error body into an ApiError with its code', async () => {
     const fetch = vi.fn<FetchLike>(async () =>
       jsonResponse(401, { code: 'INVALID_CREDENTIALS', message: 'Wrong username or password' }),

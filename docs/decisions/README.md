@@ -27,7 +27,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0020](0020-covers-served-by-the-broker.md)                 | Covers are served by the broker, never hot-linked                       | accepted, amended by 0026  |
 | [0021](0021-shelf-edits-via-kobo-api.md)                    | Shelf changes go through each reader's Kobo sync API                    | accepted                   |
 | [0022](0022-read-cwa-databases-through-read-only-mounts.md) | CWA's databases are read through read-only mounts                       | accepted                   |
-| [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | superseded by 0034         |
+| [0023](0023-library-import.md)                              | Importing the existing Calibre library                                  | superseded by 0036         |
 | [0024](0024-live-request-events.md)                         | Live request updates over a server-sent event stream                    | accepted                   |
 | [0025](0025-daily-indexer-budget.md)                        | The indexer budget counts per day, not per hour                         | accepted                   |
 | [0026](0026-cover-redirects.md)                             | Cover downloads follow checked redirects                                | accepted                   |
@@ -38,7 +38,9 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0031](0031-in-app-updates.md)                              | In-app updates: APK self-update through the broker                      | accepted                   |
 | [0032](0032-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
 | [0033](0033-readable-cat-styled-release-notes.md)           | Release notes are short, plain and cat-styled                           | accepted                   |
-| [0034](0034-remove-library-import.md)                       | The one-time library import is removed                                  | accepted                   |
+| [0034](0034-library-filters-two-rows.md)                    | Library filters are two rows: whose books, then one dropdown            | accepted                   |
+| [0035](0035-recommendations-for-you.md)                     | For you: how recommendations are computed, filtered and refreshed       | accepted                   |
+| [0036](0036-remove-library-import.md)                       | The one-time library import is removed                                  | accepted                   |
 
 ## Template
 

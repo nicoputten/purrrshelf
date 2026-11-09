@@ -1,6 +1,6 @@
 # BRK-09 Import the existing Calibre library
 
-Status: retired (done, then removed once the import had run; ADR 0034)
+Status: retired (done, then removed once the import had run; ADR 0036)
 Milestone: 6
 Depends on: BRK-03
 
@@ -18,12 +18,12 @@ so that the app starts with everything we already have.
 ## Design
 
 Not on the canvas. The import screen and its design file were removed with
-the feature (ADR 0034).
+the feature (ADR 0036).
 
 ## Notes / decisions
 
 See [ADR 0023](../decisions/0023-library-import.md), superseded by
-[ADR 0034](../decisions/0034-remove-library-import.md).
+[ADR 0036](../decisions/0036-remove-library-import.md).
 
 - `POST /admin/import` reads `metadata.db` page by page and gives every
   Calibre book a library item, then matches books without a work to one in

@@ -4,11 +4,11 @@ import { API_PREFIX, endpoints, type Endpoint, type Endpoints } from './endpoint
 
 type InputPart<E, K extends string> = E extends { [P in K]: z.ZodType } ? z.input<E[K]> : object;
 /**
- * What `call` takes besides the endpoint name: the JSON body, or one object
- * holding the path and query parameters.
+ * What `call` takes besides the endpoint name: one object holding the JSON
+ * body fields and the path and query parameters (each part keeps its own keys).
  */
 type InputOf<E> = E extends { body: z.ZodType }
-  ? z.input<E['body']>
+  ? z.input<E['body']> & InputPart<E, 'params'>
   : E extends { params: z.ZodType } | { query: z.ZodType }
     ? InputPart<E, 'params'> & InputPart<E, 'query'>
     : undefined;

@@ -2,7 +2,7 @@
 
 Tab: Settings (sliders icon). Sections from top to bottom: Language, Theme,
 App, Account. (The Library section with the one-time Calibre import is gone,
-ADR 0034.)
+ADR 0036.)
 
 ## App (APP-10)
 

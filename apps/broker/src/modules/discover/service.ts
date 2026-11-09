@@ -8,11 +8,12 @@ import type {
   SimilarWorks,
   WorkDetail,
   WorkSeries,
+  WorkSummary,
 } from '@purrshelf/contract';
 import type { FastifyBaseLogger } from 'fastify';
 import { AppError } from '../../errors.js';
 import type { MetadataCache } from './cache.js';
-import { workKey } from './normalise.js';
+import { normaliseIsbns, workKey } from './normalise.js';
 import type { LibraryLookup } from './library-lookup.js';
 import {
   coverUrls,
@@ -245,17 +246,10 @@ export class DiscoverService {
       );
     }
 
-    const sameLanguage = (g: MergedWork) => {
-      const lang = flatten(g).language;
-      return !flat.language || !lang || lang === flat.language;
-    };
-    const related = async (q: MetadataQuery) => {
-      const { lists } = await this.fanOut(q);
-      const groups = mergeResults(lists).filter(sameLanguage);
-      for (const g of groups) this.deps.cache.set(`hit:${mergedId(g)}`, g);
-      const library = await this.matchLibrary(userId, groups);
-      return groups.map((g) => toSummary(g, library.get(mergedId(g)) ?? null));
-    };
+    const sameLanguage = (w: WorkSummary) =>
+      !flat.language || !w.language || w.language === flat.language;
+    const related = async (q: MetadataQuery) =>
+      (await this.related(userId, q)).works.filter(sameLanguage);
 
     const author = flat.authors[0];
     if (author) add('author', await related({ author, language: 'any' }));
@@ -266,10 +260,68 @@ export class DiscoverService {
     return { works };
   }
 
+  /**
+   * Books by an author in any language, with library state (For you,
+   * BRK-11). Metadata only. Throws METADATA_UNAVAILABLE when no provider
+   * answered, so a caller can tell "nothing found" from "could not look".
+   */
+  async byAuthor(userId: string, author: string): Promise<WorkSummary[]> {
+    const { works, answered } = await this.related(userId, { author, language: 'any' });
+    if (!answered) throw unavailable();
+    return works;
+  }
+
+  /** Merged hits for a related-books query, remembered like search hits so their pages open. */
+  private async related(
+    userId: string,
+    q: MetadataQuery,
+  ): Promise<{ works: WorkSummary[]; answered: boolean }> {
+    const { lists, statuses } = await this.fanOut(q);
+    const groups = mergeResults(lists);
+    for (const g of groups) this.deps.cache.set(`hit:${mergedId(g)}`, g);
+    const library = await this.matchLibrary(userId, groups);
+    return {
+      works: groups.map((g) => toSummary(g, library.get(mergedId(g)) ?? null)),
+      answered: statuses.some((s) => s.status === 'ok'),
+    };
+  }
+
   /** Title and authors for a placeholder cover. */
   async workSummary(id: string): Promise<{ title: string; authors: string[] }> {
     const { title, authors } = flatten(await this.workGroup(id));
     return { title, authors };
+  }
+
+  /**
+   * The work a library book is (recommendation seeds, BRK-11): a search hit sharing one of its
+   * ISBNs, or else one with the same title and first author. Null when no
+   * hit is clearly the same book. Throws when no provider answered.
+   */
+  async matchWork(book: {
+    title: string;
+    authors: string[];
+    isbns: string[];
+  }): Promise<string | null> {
+    const [author] = book.authors;
+    const { lists, statuses } = await this.fanOut({
+      title: book.title,
+      language: 'any',
+      ...(author ? { author } : {}),
+    });
+    if (!statuses.some((s) => s.status === 'ok')) throw unavailable();
+
+    const groups = mergeResults(lists);
+    const isbns = new Set(normaliseIsbns(book.isbns));
+    const key = workKey(book.title, book.authors);
+    const match =
+      groups.find((g) => flatten(g).isbns.some((i) => isbns.has(i))) ??
+      groups.find((g) => {
+        const w = flatten(g);
+        return workKey(w.title, w.authors) === key;
+      });
+    if (!match) return null;
+    this.deps.cache.set(`hit:${mergedId(match)}`, match);
+    return mergedId(match);
   }
 
   /** Cover URLs for a work, best first (used by the cover service). */

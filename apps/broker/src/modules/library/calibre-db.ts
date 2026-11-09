@@ -1,3 +1,4 @@
+import { languageCode } from '../discover/normalise.js';
 import { parseSqliteTime, ReadOnlySqlite } from './sqlite-readonly.js';
 import type { FindBooksQuery, LibraryBook } from './types.js';
 
@@ -108,6 +109,23 @@ export class CalibreDb {
           )
           .all(...ids, ...ISBN_TYPES) as { book: number; name: string }[],
       );
+      const tags = groupBy(
+        db
+          .prepare(
+            `select btl.book, t.name from books_tags_link btl join tags t on t.id = btl.tag
+             where btl.book in (${marks}) order by t.name`,
+          )
+          .all(...ids) as { book: number; name: string }[],
+      );
+      const languages = groupBy(
+        db
+          .prepare(
+            `select bll.book, l.lang_code as name from books_languages_link bll
+             join languages l on l.id = bll.lang_code
+             where bll.book in (${marks}) order by bll.item_order, bll.id`,
+          )
+          .all(...ids) as { book: number; name: string }[],
+      );
       const formats = groupBy(
         db
           .prepare(
@@ -125,6 +143,14 @@ export class CalibreDb {
         series: r.series ? { name: r.series, index: r.series_index } : null,
         isbns: [...new Set((isbns.get(r.id) ?? []).map(normaliseIsbn))],
         formats: formats.get(r.id) ?? [],
+        tags: tags.get(r.id) ?? [],
+        languages: [
+          ...new Set(
+            (languages.get(r.id) ?? [])
+              .map((code) => languageCode(code))
+              .filter((code): code is string => code !== null),
+          ),
+        ],
         path: r.path,
         addedAt: parseSqliteTime(r.timestamp) ?? new Date(0),
       }));

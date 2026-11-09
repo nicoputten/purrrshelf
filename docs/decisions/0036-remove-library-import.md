@@ -1,4 +1,4 @@
-# 0034. The one-time library import is removed
+# 0036. The one-time library import is removed
 
 Status: accepted
 Date: 2026-11-09
@@ -20,8 +20,9 @@ routes, a background matcher and their tests and translations.
 
 - Remove the import: `POST /admin/import`, `GET /admin/import` and
   `PUT /admin/import/owners` with their contract schemas, the broker's
-  `LibraryImport`, the matcher it used (`DiscoverService.matchWork`) and the
-  bulk owner update (`LibraryItems.setOwners`, `byIds`, `byCalibreIds`).
+  `LibraryImport` and the bulk owner update (`LibraryItems.setOwners`,
+  `byIds`, `byCalibreIds`). `DiscoverService.matchWork` stays: the
+  recommendations (BRK-11) use it to find the work of a library book.
 - Remove the app's import screen and route, the Library section in Settings
   and their `en` and `nl` strings.
 - **Keep what the import produced.** No migration: library items, matched

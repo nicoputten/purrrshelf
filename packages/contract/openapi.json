@@ -784,6 +784,135 @@
         ]
       }
     },
+    "/api/v1/recommendations": {
+      "get": {
+        "operationId": "recommendations",
+        "summary": "For you: next in my series, more from authors I read, books on my partner's shelf. Metadata only, never spends an indexer search.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recommendations"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recommendations/{workId}/dismiss": {
+      "post": {
+        "operationId": "dismissRecommendation",
+        "summary": "Not for me (hide this book for good) or Fewer by this author. Idempotent.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dismissal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DismissRequest"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "undoDismissRecommendation",
+        "summary": "Undo: forget my dismissals made from this book. Idempotent.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DismissalsRemoved"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/library/books": {
       "get": {
         "operationId": "libraryBooks",
@@ -1352,6 +1481,59 @@
         "required": ["hits", "providers"],
         "additionalProperties": false
       },
+      "DismissRequest": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["book", "author"]
+          }
+        },
+        "required": ["kind"],
+        "additionalProperties": false
+      },
+      "Dismissal": {
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string",
+            "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["book", "author"]
+          },
+          "author": {
+            "type": ["string", "null"]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["workId", "kind", "author", "expiresAt"],
+        "additionalProperties": false
+      },
+      "DismissalsRemoved": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["removed"],
+        "additionalProperties": false
+      },
       "Empty": {
         "type": "object",
         "properties": {},
@@ -1699,6 +1881,205 @@
           }
         },
         "required": ["readers"],
+        "additionalProperties": false
+      },
+      "Recommendations": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": ["next_in_series", "author", "partner_shelf"]
+                },
+                "partner": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "displayName"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "work": {
+                        "$ref": "#/components/schemas/WorkSummary"
+                      },
+                      "reason": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "next_in_series"
+                              },
+                              "series": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "position": {
+                                    "type": ["number", "null"]
+                                  }
+                                },
+                                "required": ["name", "position"],
+                                "additionalProperties": false
+                              },
+                              "after": {
+                                "type": "object",
+                                "properties": {
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "position": {
+                                    "type": ["number", "null"]
+                                  },
+                                  "basis": {
+                                    "type": "string",
+                                    "enum": ["finished", "reading", "owned"]
+                                  }
+                                },
+                                "required": ["title", "position", "basis"],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": ["kind", "series", "after"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "author"
+                              },
+                              "author": {
+                                "type": "string"
+                              },
+                              "basis": {
+                                "type": "string",
+                                "enum": ["finished", "reading", "owned"]
+                              },
+                              "count": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "title": {
+                                "type": ["string", "null"]
+                              }
+                            },
+                            "required": ["kind", "author", "basis", "count", "title"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "const": "partner_shelf"
+                              },
+                              "partner": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["id", "displayName"],
+                                "additionalProperties": false
+                              },
+                              "partnerFinished": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["kind", "partner", "partnerFinished"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "isNew": {
+                        "type": "boolean"
+                      },
+                      "request": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "searching",
+                                  "waiting_budget",
+                                  "not_found",
+                                  "choose_release",
+                                  "downloading",
+                                  "download_failed",
+                                  "importing",
+                                  "import_failed",
+                                  "in_library",
+                                  "pushed",
+                                  "cancelled"
+                                ]
+                              }
+                            },
+                            "required": ["id", "status"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["work", "reason", "isNew", "request"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["kind", "partner", "items"],
+              "additionalProperties": false
+            }
+          },
+          "readingData": {
+            "type": "boolean"
+          },
+          "computedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        },
+        "required": ["rows", "readingData", "computedAt", "stale"],
         "additionalProperties": false
       },
       "RefreshRequest": {
