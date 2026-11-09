@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.0...broker-v1.3.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **broker:** ask Apple's chart feed like a browser so Bestsellers load ([2098b8c](https://github.com/nicoputten/purrrshelf/commit/2098b8c94e1e83e0cf92f1cf8c5a78dc1fd4c7cc))
+
 ## [1.3.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.2.1...broker-v1.3.0) (2026-11-09)
 
 
