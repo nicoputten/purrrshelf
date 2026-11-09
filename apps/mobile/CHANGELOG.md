@@ -5,12 +5,12 @@
 
 ### New tricks
 
-* **mobile:** show the Library filters as two clear rows ([4ff0547](https://github.com/nicoputten/purrrshelf/commit/4ff054748722e19548ac07e3dff6b34192a43393))
+* The Library filters now sit in two tidy rows: whose books, and which kind
 
 
 ### Fixed scratches
 
-* **mobile:** show a progress bar for every book I am reading ([9381dbd](https://github.com/nicoputten/purrrshelf/commit/9381dbddb95b2fcbd78d0df931a3c2cd588fc9f0))
+* Every book you are reading gets its own progress bar, not just a lucky few
 
 ## [1.3.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.2...mobile-v1.3.0) (2026-11-09)
 
