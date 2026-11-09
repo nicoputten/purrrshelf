@@ -1,23 +1,18 @@
-import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
-import { AppText } from '@/components/AppText';
-import { Screen } from '@/components/Screen';
-import { Nap } from '@/components/motion';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useActivity } from '@/features/activity/useActivity';
+import { Top10Screen } from '@/features/top10/Top10Screen';
+import { isChipGenre } from '@/features/top10/useCharts';
 
-/** The Top 10 tab (APP-14 adds the tab; APP-15 fills it). */
+/** The Top 10 tab (APP-15); the budget pill opens the Requests sheet (APP-14). */
 export default function Top10Route() {
-  const { t } = useTranslation();
+  const openRequests = useActivity((s) => s.openSheet);
+  const { genre } = useLocalSearchParams<{ genre?: string }>();
   return (
-    <Screen>
-      <AppText variant="display" accessibilityRole="header">
-        {t('top10.title')}
-      </AppText>
-      <View style={styles.state}>
-        <Nap size={96} />
-        <AppText variant="muted">{t('top10.soon')}</AppText>
-      </View>
-    </Screen>
+    <Top10Screen
+      {...(isChipGenre(genre) ? { genre } : {})}
+      onOpen={(id) => router.push({ pathname: '/book/[id]', params: { id } })}
+      onSearch={(q) => router.navigate({ pathname: '/', params: { q } })}
+      onOpenRequests={openRequests}
+    />
   );
 }
-
-const styles = StyleSheet.create({ state: { alignItems: 'center', gap: 12, paddingVertical: 40 } });

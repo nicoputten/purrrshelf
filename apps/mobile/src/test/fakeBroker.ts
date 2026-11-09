@@ -212,3 +212,36 @@ export const recommendations = (rows: unknown[] = [], over: Record<string, unkno
     stale: false,
     ...over,
   });
+
+/** An invented Top 10 entry (BRK-12); override any field. `work: null` is a book nobody knows. */
+export function chartEntry(over: Record<string, unknown> = {}) {
+  return {
+    rank: 1,
+    title: 'The Salt Road',
+    authors: ['Ilse Varenkamp'],
+    work: hit(),
+    request: null,
+    ...over,
+  };
+}
+
+/** One genre list; `items` default to ranks 1 to `count` of invented books. */
+export function chart(over: Record<string, unknown> = {}, count = 10) {
+  return {
+    source: 'apple',
+    region: 'us',
+    genre: 'thriller',
+    items: Array.from({ length: count }, (_, i) =>
+      chartEntry({
+        rank: i + 1,
+        title: `Lantern Book ${i + 1}`,
+        work: hit({ id: `hardcover:${900 + i}`, title: `Lantern Book ${i + 1}` }),
+      }),
+    ),
+    ...over,
+  };
+}
+
+/** A /charts answer. */
+export const charts = (list: unknown[], over: Record<string, unknown> = {}) =>
+  ok({ charts: list, updatedAt: '2026-11-09T06:00:00.000Z', stale: false, ...over });
