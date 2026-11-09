@@ -18,7 +18,7 @@ import { PawPrint } from './PawPrint';
 import { useMotionMode } from './useMotion';
 
 /** Delivered timeline in ms (board 9, item 4). */
-export const DELIVERED = { burst: 420, confetti: 900, end: 1800, collapse: 260 } as const;
+export const DELIVERED = { burst: 420, confetti: 900, end: 2600, collapse: 260 } as const;
 /** Reduced motion: how long the end frame stays before it collapses. */
 export const DELIVERED_STILL_MS = 1200;
 const HEIGHT = 170;

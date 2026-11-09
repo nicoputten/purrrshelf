@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.2](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.1...mobile-v1.2.2) (2026-11-09)
+
+
+### Fixed scratches
+
+* Check for updates spots a new version within minutes and shows when it last looked
+* Update notes are short and readable, without the developer clutter
+* Swat and Delivered now play where you can actually see them
+* Bigger ears, a floating heart and a longer "Got it!", so the little celebrations are easier to catch
+
 ## [1.2.1](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.0...mobile-v1.2.1) (2026-11-08)
 
 

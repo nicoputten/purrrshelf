@@ -57,13 +57,14 @@ export function resetOneShots(): void {
 /**
  * Decides whether a one-shot plays for `event` in `scope`, and remembers it.
  * The first event seen in a scope is only remembered (it happened before we
- * looked); a later, different, non-null event plays exactly once.
+ * looked), unless it is `fresh`: it just happened, so it still plays. A later,
+ * different, non-null event plays. Each event plays at most once.
  */
-export function takeOneShot(scope: string, event: string | null): boolean {
+export function takeOneShot(scope: string, event: string | null, fresh = false): boolean {
   const known = lastSeen.has(scope);
   const previous = lastSeen.get(scope);
   lastSeen.set(scope, event);
-  if (!known || event === null || event === previous) return false;
+  if (event === null || (known && event === previous) || (!known && !fresh)) return false;
   const id = `${scope}\u0000${event}`;
   if (played.has(id)) return false;
   played.add(id);
@@ -72,17 +73,22 @@ export function takeOneShot(scope: string, event: string | null): boolean {
 
 /**
  * Plays a one-shot once per event: `playing` turns true when `event` changes
- * to a new value, until `done()` is called.
+ * to a new value, until `done()` is called. Events are only looked at while
+ * the screen is focused, so a change that happens on a screen in the
+ * background (a tab kept alive) plays when the user comes back to it.
  */
 export function useOneShot(
   scope: string,
   event: string | null,
+  fresh = false,
 ): { playing: boolean; done: () => void } {
+  const focused = useScreenFocused();
   const [playing, setPlaying] = useState(false);
   useEffect(() => {
+    if (!focused) return;
     // Syncs with the module-level event memory above, which lives outside React.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (takeOneShot(scope, event)) setPlaying(true);
-  }, [scope, event]);
+    if (takeOneShot(scope, event, fresh)) setPlaying(true);
+  }, [scope, event, fresh, focused]);
   return { playing, done: () => setPlaying(false) };
 }

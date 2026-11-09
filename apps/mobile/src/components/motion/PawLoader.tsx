@@ -34,7 +34,7 @@ interface PawLoaderProps {
 }
 
 /** "Sniffing": three paw prints stepping in turn. Replaces every spinner. */
-export function PawLoader({ color, size = 18, label }: PawLoaderProps) {
+export function PawLoader({ color, size = 22, label }: PawLoaderProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { reduced, loop } = useMotionMode();
