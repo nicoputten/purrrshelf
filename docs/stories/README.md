@@ -42,6 +42,8 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-11](BRK-11.md) | Work out book suggestions for each reader                      | 10        | done      |
 | [APP-12](APP-12.md) | See books picked for me on the Search tab                      | 10        | in review |
 | [APP-13](APP-13.md) | Add a suggested book, instantly when my partner has it         | 10        | in review |
+| [BRK-13](BRK-13.md) | Tell the app when a book will be hard to find                  | 11        | in review |
+| [APP-16](APP-16.md) | See a warning before I spend searches on a hard book           | 11        | todo      |
 
 ## Template
 

@@ -353,6 +353,59 @@
         ]
       }
     },
+    "/api/v1/requests/preview": {
+      "get": {
+        "operationId": "requestPreview",
+        "summary": "Before Add: the strongest reason a search is unlikely to find this book, as a code. Free: never searches an indexer.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestPreview"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["en", "nl"]
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/requests/{id}": {
       "get": {
         "operationId": "request",
@@ -2231,6 +2284,31 @@
           }
         },
         "required": ["requests"],
+        "additionalProperties": false
+      },
+      "RequestPreview": {
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string",
+            "pattern": "^(hardcover|openlibrary|googlebooks):[A-Za-z0-9_-]{1,64}$"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "nl"]
+          },
+          "lowOdds": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LowOdds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["workId", "language", "lowOdds"],
         "additionalProperties": false
       },
       "SimilarWorks": {
