@@ -19,6 +19,13 @@ Library, App, Account.
   (local time), so a repeated tap visibly checked again.
 - Errors (check failed, download failed, damaged download, installer failed)
   appear in danger colour above the check button, as an alert.
+- **Install updates automatically** (APP-11): label, an On / Off segmented
+  control (On by default) and a muted hint: "After the first update, Purrshelf
+  downloads new versions and installs them when you leave the app. Reopen it to
+  use the new version."
+- With automatic updates on and Android willing to install without asking, the
+  card reads "Downloaded. It installs by itself when you leave the app." and
+  the button says **Update now**.
 - An outline **Check for updates** button ends the section.
 - The Settings tab shows a badge while an update is ready, and screen readers
   hear "Settings, app update ready".

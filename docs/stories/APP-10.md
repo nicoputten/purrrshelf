@@ -1,6 +1,6 @@
 # APP-10 Update the app from inside the app
 
-Status: in review
+Status: done
 Milestone: 9
 Depends on: BRK-10
 

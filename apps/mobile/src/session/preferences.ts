@@ -15,28 +15,38 @@ const Stored = z.object({
   theme: ThemePreference.catch('system'),
   language: LanguagePreference.catch('system'),
   bookLanguage: BookLanguagePreference.catch(null).default(null),
+  /** Install app updates without a tap when Android allows it (APP-11). */
+  autoUpdate: z.boolean().catch(true).default(true),
 });
 
 interface PreferencesState {
   theme: ThemePreference;
   language: LanguagePreference;
   bookLanguage: BookLanguagePreference;
+  autoUpdate: boolean;
   load: () => Promise<void>;
   setTheme: (theme: ThemePreference) => Promise<void>;
   setLanguage: (language: LanguagePreference) => Promise<void>;
   setBookLanguage: (language: 'en' | 'nl') => Promise<void>;
+  setAutoUpdate: (on: boolean) => Promise<void>;
 }
 
-const persist = (s: Pick<PreferencesState, 'theme' | 'language' | 'bookLanguage'>) =>
+const persist = (s: Pick<PreferencesState, 'theme' | 'language' | 'bookLanguage' | 'autoUpdate'>) =>
   storage.set(
     StorageKeys.preferences,
-    JSON.stringify({ theme: s.theme, language: s.language, bookLanguage: s.bookLanguage }),
+    JSON.stringify({
+      theme: s.theme,
+      language: s.language,
+      bookLanguage: s.bookLanguage,
+      autoUpdate: s.autoUpdate,
+    }),
   );
 
 export const usePreferences = create<PreferencesState>((set, get) => ({
   theme: 'system',
   language: 'system',
   bookLanguage: null,
+  autoUpdate: true,
   load: async () => {
     const raw = await storage.get(StorageKeys.preferences);
     if (!raw) return;
@@ -56,6 +66,10 @@ export const usePreferences = create<PreferencesState>((set, get) => ({
   },
   setBookLanguage: async (bookLanguage) => {
     set({ bookLanguage });
+    await persist(get());
+  },
+  setAutoUpdate: async (autoUpdate) => {
+    set({ autoUpdate });
     await persist(get());
   },
 }));

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
+import { Segmented } from '@/components/Segmented';
+import { usePreferences } from '@/session/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radius } from '@/theme/tokens';
 import { updaterNative } from './native';
@@ -10,12 +12,13 @@ import { useAppUpdate } from './updates';
 
 const MAX_NOTES = 600;
 
-/** The "App" section of Settings: installed version, update check and install (APP-10). */
+/** The "App" section of Settings: installed version, update check, install and the automatic-update switch (APP-10, APP-11). */
 export function UpdateSection() {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const { status, release, progress, failure, errorCode, checkedAt, check, install } =
     useAppUpdate();
+  const { autoUpdate, setAutoUpdate } = usePreferences();
   const installed = updaterNative.installedVersion();
   const busy = status === 'downloading' || status === 'installing';
   // Older brokers pass release-please Markdown through; tidy it here too (ADR 0033).
@@ -36,6 +39,7 @@ export function UpdateSection() {
           <AppText style={styles.heading}>
             {t('updates.available', { version: release.version })}
           </AppText>
+          {status === 'ready' ? <AppText variant="muted">{t('updates.readyHint')}</AppText> : null}
           {notes ? (
             <AppText variant="muted" numberOfLines={8}>
               {notes.slice(0, MAX_NOTES)}
@@ -47,13 +51,17 @@ export function UpdateSection() {
                 ? t('updates.downloading', { percent: Math.round(progress * 100) })
                 : status === 'installing'
                   ? t('updates.installing')
-                  : t('updates.update')
+                  : status === 'ready'
+                    ? t('updates.updateNow')
+                    : t('updates.update')
             }
             // Disabled rather than busy, so the progress stays readable.
             disabled={busy}
             onPress={() => void install()}
           />
-          <AppText variant="muted">{t('updates.permissionHint')}</AppText>
+          {status === 'ready' ? null : (
+            <AppText variant="muted">{t('updates.permissionHint')}</AppText>
+          )}
         </View>
       ) : null}
 
@@ -76,6 +84,18 @@ export function UpdateSection() {
             : t(`updates.failed.${failure}`)}
         </AppText>
       ) : null}
+
+      <AppText variant="label">{t('updates.auto')}</AppText>
+      <Segmented<'on' | 'off'>
+        label={t('updates.auto')}
+        value={autoUpdate ? 'on' : 'off'}
+        onChange={(v) => void setAutoUpdate(v === 'on')}
+        options={[
+          { value: 'on', label: t('updates.autoOn') },
+          { value: 'off', label: t('updates.autoOff') },
+        ]}
+      />
+      <AppText variant="muted">{t('updates.autoHint')}</AppText>
 
       <Button
         variant="outline"

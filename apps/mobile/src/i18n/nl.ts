@@ -276,6 +276,13 @@ export const nl: Translations = {
     checkedAt: 'Gecontroleerd om {{time}}',
     available: 'Versie {{version}} staat klaar',
     update: 'Bijwerken',
+    updateNow: 'Nu bijwerken',
+    readyHint: 'Gedownload. Wordt vanzelf geïnstalleerd als je de app verlaat.',
+    auto: 'Updates automatisch installeren',
+    autoOn: 'Aan',
+    autoOff: 'Uit',
+    autoHint:
+      'Na de eerste update downloadt Purrshelf nieuwe versies en installeert ze als je de app verlaat. Open de app opnieuw voor de nieuwe versie.',
     downloading: 'Downloaden… {{percent}}%',
     installing: 'Installatie openen…',
     permissionHint:

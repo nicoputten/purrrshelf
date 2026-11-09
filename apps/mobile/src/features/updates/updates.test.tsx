@@ -2,10 +2,16 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { AppRelease } from '@purrshelf/contract';
 import { setFetch, useSession } from '@/session/session';
 import { fakeBroker } from '@/test/fakeBroker';
+import { usePreferences } from '@/session/preferences';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { updaterNative, type DownloadedApk } from './native';
 import { UpdateSection } from './UpdateSection';
-import { installedVersionCode, QUIET_CHECK_INTERVAL_MS, useAppUpdate } from './updates';
+import {
+  installedVersionCode,
+  QUIET_CHECK_INTERVAL_MS,
+  resetPreparedUpdate,
+  useAppUpdate,
+} from './updates';
 
 const SERVER = 'https://books.example.invalid';
 const release = (version = '1.2.0', code = 1_002_000): AppRelease => ({
@@ -37,8 +43,10 @@ beforeEach(async () => {
     errorCode: null,
     checkedAt: null,
   });
+  resetPreparedUpdate();
   downloads = [];
   apk = {
+    uri: 'file:///data/cache/purrshelf-update.apk',
     contentUri: 'content://app.purrshelf.FileSystemFileProvider/cache/purrshelf-update.apk',
     sha256: jest.fn(async () => 'a'.repeat(64)),
     remove: jest.fn(() => {
@@ -52,12 +60,18 @@ beforeEach(async () => {
     onProgress(0.5);
     return apk;
   });
-  jest.spyOn(updaterNative, 'install').mockResolvedValue(undefined);
+  jest.spyOn(updaterNative, 'install').mockResolvedValue('prompted');
+  jest.spyOn(updaterNative, 'canInstallWithoutPrompt').mockReturnValue(true);
 });
 
 // Only undo our own spies: restoreAllMocks would also wipe the mocks from jest.setup.ts.
 afterEach(() => {
-  for (const name of ['installedVersion', 'download', 'install'] as const) {
+  for (const name of [
+    'installedVersion',
+    'download',
+    'install',
+    'canInstallWithoutPrompt',
+  ] as const) {
     (updaterNative[name] as jest.Mock).mockRestore?.();
   }
 });
@@ -80,7 +94,7 @@ describe('useAppUpdate', () => {
     expect(downloads).toEqual([
       { url: `${SERVER}/api/v1/app/latest.apk`, headers: { authorization: 'Bearer access-1' } },
     ]);
-    expect(updaterNative.install).toHaveBeenCalledWith(apk.contentUri);
+    expect(updaterNative.install).toHaveBeenCalledWith(apk, { allowPrompt: true });
     expect(useAppUpdate.getState().failure).toBeNull();
   });
 
@@ -148,7 +162,85 @@ describe('useAppUpdate', () => {
   });
 });
 
+describe('automatic updates (APP-11)', () => {
+  async function available() {
+    broker(() => ({ status: 200, body: release() }));
+    await useAppUpdate.getState().check({ quiet: true });
+  }
+
+  it('downloads ahead and installs quietly when the app is left', async () => {
+    await available();
+    await useAppUpdate.getState().prepare();
+    expect(useAppUpdate.getState().status).toBe('ready');
+    expect(downloads).toHaveLength(1);
+
+    (updaterNative.install as jest.Mock).mockResolvedValueOnce('installed');
+    await useAppUpdate.getState().installQuietly();
+    expect(updaterNative.install).toHaveBeenCalledWith(apk, { allowPrompt: false });
+    expect(useAppUpdate.getState().status).toBe('installing');
+  });
+
+  it('falls back to the Update button when Android wants a tap, reusing the download', async () => {
+    await available();
+    await useAppUpdate.getState().prepare();
+    (updaterNative.install as jest.Mock).mockResolvedValueOnce('needsUser');
+    await useAppUpdate.getState().installQuietly();
+    expect(useAppUpdate.getState().status).toBe('available');
+
+    await useAppUpdate.getState().install();
+    expect(downloads).toHaveLength(1);
+    expect(updaterNative.install).toHaveBeenLastCalledWith(apk, { allowPrompt: true });
+  });
+
+  it('drops the prepared file when the quiet install fails', async () => {
+    await available();
+    await useAppUpdate.getState().prepare();
+    (updaterNative.install as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+    await useAppUpdate.getState().installQuietly();
+    expect(useAppUpdate.getState()).toMatchObject({ status: 'available', failure: null });
+    await useAppUpdate.getState().install();
+    expect(downloads).toHaveLength(2);
+  });
+
+  it.each([
+    ['automatic updates are off', () => usePreferences.setState({ autoUpdate: false })],
+    [
+      'Android would ask first',
+      () => jest.spyOn(updaterNative, 'canInstallWithoutPrompt').mockReturnValue(false),
+    ],
+  ])('does not download ahead when %s', async (_label, arrange) => {
+    await available();
+    arrange();
+    await useAppUpdate.getState().prepare();
+    expect(useAppUpdate.getState().status).toBe('available');
+    expect(downloads).toEqual([]);
+    usePreferences.setState({ autoUpdate: true });
+  });
+
+  it('shows nothing when a background download fails', async () => {
+    await available();
+    jest.spyOn(updaterNative, 'download').mockRejectedValueOnce(new Error('offline'));
+    await useAppUpdate.getState().prepare();
+    expect(useAppUpdate.getState()).toMatchObject({ status: 'available', failure: null });
+  });
+
+  it('does nothing quietly without a prepared update', async () => {
+    await useAppUpdate.getState().installQuietly();
+    await useAppUpdate.getState().prepare();
+    expect(updaterNative.install).not.toHaveBeenCalled();
+  });
+});
+
 describe('UpdateSection', () => {
+  it('says a prepared update installs when the app is left, and turns automatic updates off', async () => {
+    await renderWithProviders(<UpdateSection />);
+    await act(async () => useAppUpdate.setState({ status: 'ready', release: release() }));
+    expect(await screen.findByText(/installs by itself when you leave the app/)).toBeTruthy();
+    expect(screen.getByText('Update now')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Off'));
+    expect(usePreferences.getState().autoUpdate).toBe(false);
+  });
+
   it('shows download progress', async () => {
     await renderWithProviders(<UpdateSection />);
     await act(async () =>

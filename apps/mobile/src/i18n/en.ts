@@ -273,6 +273,13 @@ export const en = {
     checkedAt: 'Checked at {{time}}',
     available: 'Version {{version}} is ready',
     update: 'Update',
+    updateNow: 'Update now',
+    readyHint: 'Downloaded. It installs by itself when you leave the app.',
+    auto: 'Install updates automatically',
+    autoOn: 'On',
+    autoOff: 'Off',
+    autoHint:
+      'After the first update, Purrshelf downloads new versions and installs them when you leave the app. Reopen it to use the new version.',
     downloading: 'Downloading… {{percent}}%',
     installing: 'Opening the installer…',
     permissionHint:

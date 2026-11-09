@@ -2,9 +2,14 @@ import Constants from 'expo-constants';
 import { CryptoDigestAlgorithm, digest } from 'expo-crypto';
 import { File, Paths } from 'expo-file-system';
 import { startActivityAsync } from 'expo-intent-launcher';
+import { PurrshelfInstaller, type InstallResult } from '../../../modules/purrshelf-installer';
+
+export type { InstallResult };
 
 /** A downloaded APK in the app's cache. */
 export interface DownloadedApk {
+  /** file:// URI in the app's cache, for the PackageInstaller session. */
+  uri: string;
   /** content:// URI the Android installer can read. */
   contentUri: string;
   sha256: () => Promise<string>;
@@ -44,6 +49,7 @@ export const updaterNative = {
     const file = await task.downloadAsync();
     if (!file) throw new Error('download paused');
     return {
+      uri: file.uri,
       contentUri: file.contentUri,
       sha256: async () => toHex(await digest(CryptoDigestAlgorithm.SHA256, await file.bytes())),
       remove: () => {
@@ -52,12 +58,29 @@ export const updaterNative = {
     };
   },
 
-  /** Opens Android's installer. Android asks once to allow installs from Purrshelf. */
-  async install(contentUri: string): Promise<void> {
+  /** True when Android will install the update without asking (APP-11). */
+  canInstallWithoutPrompt(): boolean {
+    return PurrshelfInstaller?.canInstallWithoutPrompt() ?? false;
+  },
+
+  /**
+   * Installs the update. Through our PackageInstaller module when it is built
+   * in, so Purrshelf becomes its own installer and later updates need no
+   * confirmation; otherwise through Android's installer screen. With
+   * `allowPrompt: false` nothing is shown and "needsUser" comes back when
+   * Android wants a confirmation.
+   */
+  async install(
+    apk: DownloadedApk,
+    { allowPrompt }: { allowPrompt: boolean },
+  ): Promise<InstallResult> {
+    if (PurrshelfInstaller) return PurrshelfInstaller.install(apk.uri, allowPrompt);
+    if (!allowPrompt) return 'needsUser';
     await startActivityAsync('android.intent.action.VIEW', {
-      data: contentUri,
+      data: apk.contentUri,
       type: 'application/vnd.android.package-archive',
       flags: GRANT_READ_URI_PERMISSION,
     });
+    return 'prompted';
   },
 };
