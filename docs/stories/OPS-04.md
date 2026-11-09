@@ -26,7 +26,7 @@ No canvas board (no UI).
 
 ## Notes / decisions
 
-- [ADR 0042](../decisions/0042-kobo-sync-away-from-home.md): why only `/kobo/`
+- [ADR 0043](../decisions/0043-kobo-sync-away-from-home.md): why only `/kobo/`
   and why not a VPN (a Kobo cannot run one).
 - OPS-02's note that Kobo sync stays on the home Wi-Fi is replaced by this
   story.
