@@ -29,7 +29,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-06](APP-06.md) | Send a book to my or my partner's Kobo                         | 5         | done      |
 | [APP-07](APP-07.md) | Browse my, my partner's and all books                          | 5         | done      |
 | [BRK-08](BRK-08.md) | Delete books nobody owns after 7 days                          | 5         | done      |
-| [BRK-09](BRK-09.md) | Import the existing Calibre library                            | 6         | done      |
+| [BRK-09](BRK-09.md) | Import the existing Calibre library                            | 6         | retired   |
 | [APP-08](APP-08.md) | See reading progress from the Kobo                             | 7         | in review |
 | [APP-09](APP-09.md) | See similar books on a book's page                             | 7         | done      |
 | [OPS-02](OPS-02.md) | Expose the broker through Nginx Proxy Manager                  | 8         | done      |

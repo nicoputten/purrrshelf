@@ -18,12 +18,7 @@ export function useMe() {
   return useQuery({ queryKey: ['me'], queryFn: () => call('me') });
 }
 
-export interface SettingsScreenProps {
-  /** Opens the library import (BRK-09). */
-  onImport: () => void;
-}
-
-export function SettingsScreen({ onImport }: SettingsScreenProps) {
+export function SettingsScreen() {
   const { t } = useTranslation();
   const { theme, language, setTheme, setLanguage } = usePreferences();
   const serverUrl = useSession((s) => s.serverUrl);
@@ -62,11 +57,6 @@ export function SettingsScreen({ onImport }: SettingsScreenProps) {
             { value: 'light', label: t('settings.light') },
           ]}
         />
-      </View>
-
-      <View style={styles.section}>
-        <AppText variant="label">{t('settings.library')}</AppText>
-        <Button variant="outline" label={t('settings.importLibrary')} onPress={onImport} />
       </View>
 
       <UpdateSection />

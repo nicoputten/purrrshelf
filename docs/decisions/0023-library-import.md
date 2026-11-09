@@ -1,6 +1,6 @@
 # 0023. Importing the existing Calibre library
 
-Status: accepted
+Status: superseded by [0034](0034-remove-library-import.md)
 Date: 2026-11-08
 
 ## Context
