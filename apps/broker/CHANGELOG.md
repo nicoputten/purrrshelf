@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.0.0...broker-v1.1.0) (2026-11-09)
+
+
+### Features
+
+* **broker:** serve the latest app release for in-app updates ([4628180](https://github.com/nicoputten/purrrshelf/commit/462818023b150568b7957341b0dba26af7973f67))
+
+
+### Bug Fixes
+
+* **broker:** find a single-file download that SABnzbd reports by its file path ([217a3c6](https://github.com/nicoputten/purrrshelf/commit/217a3c63e3c81da7964f73a66a5b2c16e67cc770))
+* **broker:** follow checked redirects for cover downloads ([35c68d6](https://github.com/nicoputten/purrrshelf/commit/35c68d6a2627a86214049c59f7ae4ecbbddf6961))
+* **broker:** grab by the bare release id when the indexer sends a permalink guid ([c92fe2a](https://github.com/nicoputten/purrrshelf/commit/c92fe2a32eefb4d2dbef47a88e4cdc45d3c46ac0))
+* **broker:** stop grabbing when an indexer refuses the same way twice ([13fb3d5](https://github.com/nicoputten/purrrshelf/commit/13fb3d51214447cd30f36a702a801cdcb7841f49))
+* let a check for updates see a new release within minutes ([9f9b788](https://github.com/nicoputten/purrrshelf/commit/9f9b7886fd68f57dceb5d45cb88fbf5ccad595ec))
+* show release notes as short cat-styled text in the updater ([f4b2c4c](https://github.com/nicoputten/purrrshelf/commit/f4b2c4c869009d56eb00d393a05a66da2d78e199))
+
 ## 1.0.0 (2026-11-08)
 
 
