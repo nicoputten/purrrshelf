@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.4.0...mobile-v1.5.0) (2026-11-09)
+
+
+### New tricks
+
+* **broker:** remove the one-time Calibre library import ([5e93712](https://github.com/nicoputten/purrrshelf/commit/5e937127c9119e5ebbe3283d57ba43548d800032))
+* **mobile:** remove the library import from Settings ([07e6ed3](https://github.com/nicoputten/purrrshelf/commit/07e6ed3a5d2a80a2bb6dead7e9ebe3eaf80b4e7d))
+
 ## [1.4.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.3.0...mobile-v1.4.0) (2026-11-09)
 
 
