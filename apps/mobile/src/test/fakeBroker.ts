@@ -185,3 +185,30 @@ export function releaseOption(over: Record<string, unknown> = {}) {
     ...over,
   };
 }
+
+/** An invented For you suggestion (BRK-11); override any field. */
+export function recommendation(over: Record<string, unknown> = {}) {
+  return {
+    work: hit({ id: 'hardcover:401', title: 'The Lamp Road', series: null }),
+    reason: {
+      kind: 'author',
+      author: 'Ilse Varenkamp',
+      basis: 'finished',
+      count: 1,
+      title: 'The Salt Road',
+    },
+    isNew: false,
+    request: null,
+    ...over,
+  };
+}
+
+/** A For you answer; rows default to none (the getting-started state). */
+export const recommendations = (rows: unknown[] = [], over: Record<string, unknown> = {}) =>
+  ok({
+    rows,
+    readingData: true,
+    computedAt: '2026-01-01T12:00:00.000Z',
+    stale: false,
+    ...over,
+  });

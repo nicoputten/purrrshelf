@@ -1,6 +1,6 @@
 # BRK-11 Work out book suggestions for each reader
 
-Status: in review
+Status: done
 Milestone: 10
 Depends on: BRK-02, BRK-03, BRK-08, APP-09
 

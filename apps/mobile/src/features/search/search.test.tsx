@@ -2,7 +2,15 @@ import { act, fireEvent, screen, userEvent, waitFor } from '@testing-library/rea
 import { i18n } from '@/i18n';
 import { usePreferences } from '@/session/preferences';
 import { setFetch, useSession } from '@/session/session';
-import { apiError, budget, fakeBroker, hit, searchResult } from '@/test/fakeBroker';
+import {
+  apiError,
+  budget,
+  fakeBroker,
+  hit,
+  me,
+  recommendations,
+  searchResult,
+} from '@/test/fakeBroker';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { libraryBadges } from './badges';
 import { SearchScreen } from './SearchScreen';
@@ -43,6 +51,8 @@ function broker(routes: Parameters<typeof fakeBroker>[0] = {}) {
   const b = fakeBroker({
     'GET /budget': () => budget(),
     'GET /discover/search': () => searchResult([havelaar, hit()]),
+    'GET /me': me,
+    'GET /recommendations': () => recommendations(),
     ...routes,
   });
   setFetch(b.fetch);
@@ -53,14 +63,14 @@ const searches = (b: ReturnType<typeof broker>) =>
   b.calls.filter((c) => c.route === 'GET /discover/search');
 
 describe('Search (home)', () => {
-  it('starts with the heading, the field, language chips, the budget and the cost hint', async () => {
+  it('starts with the heading, the field, language chips, the budget and For you', async () => {
     broker();
     await renderWithProviders(<SearchScreen />);
     expect(screen.getByText('What are we reading next?')).toBeOnTheScreen();
     expect(screen.getByLabelText('Search by title or author')).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Any language' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Nederlands' })).not.toBeChecked();
-    expect(screen.getByText(/Looking costs nothing, only/)).toBeOnTheScreen();
+    expect(screen.getByText(/Looking is free; only Add uses a search/)).toBeOnTheScreen();
     expect(
       await screen.findByRole('link', { name: '21 of 25 indexer searches left today' }),
     ).toBeOnTheScreen();

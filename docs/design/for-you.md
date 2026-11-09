@@ -35,6 +35,24 @@ How the picks are made: [ADR 0035](../decisions/0035-recommendations-for-you.md)
 - Never shown: an "available" or downloadable badge, ratings, prices, page
   counts, an "add all" button. Nothing downloads by itself.
 
+Built (APP-12):
+
+- For you shows whenever no search is going, in place of the old "looking
+  costs nothing" hint; it comes back when the field is cleared.
+- The "⋯" is a 36 px round button on the cover's top-right corner with an
+  8 px hit slop (44+ target). The menu is a bottom sheet-style list; "Not
+  for me" in rose.
+- "New" uses an accent badge, "Instant" the teal success badge, both on the
+  cover's bottom-left. A card never shows both: Instant wins.
+- Fewer by this author also gets the snackbar with Undo ("You'll see fewer
+  books by <author> for a while."); the rows are fetched again afterwards.
+- The card animates out with a 200 ms fade (none with reduced motion); its
+  row goes too when it was the last card.
+- A card opens the book page with `from=for-you`, so the book page can show
+  the reason banner (APP-13).
+- "How to link it" on the Kobo hint expands in place: "Ask whoever runs your
+  Purrshelf server to link your Kobo to the library."
+
 ## Book page from For you (board 11)
 
 - A ginger banner at the top with the reason ("For you · From <partner>'s

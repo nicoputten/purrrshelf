@@ -19,8 +19,9 @@ Built (APP-02):
 
 - Partner badges name the other reader: "Reader Two has it" ("… heeft het").
   A book of mine that is not on my Kobo shows "Yours".
-- Before typing, the hint line reads "Looking costs nothing, only **Add** uses
-  a search". States: "Sniffing around…" while loading, "Couldn't sniff
+- Before typing, For you fills the space under the chips (APP-12,
+  [for-you.md](for-you.md)); its sub line carries the "looking is free"
+  message, so the old hint line is gone. States: "Sniffing around…" while loading, "Couldn't sniff
   anything out" with a tip when empty, and the translated error with "Try
   again" when search is down.
 - The budget pill only shows once the server has an indexer.

@@ -1,6 +1,6 @@
 import type { SearchLanguage } from '@purrshelf/contract';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -9,8 +9,10 @@ import { Button } from '@/components/Button';
 import { Chips } from '@/components/Chips';
 import { Logo } from '@/components/Logo';
 import { Screen } from '@/components/Screen';
-import { SearchField } from '@/components/SearchField';
+import { SearchField, type SearchInput } from '@/components/SearchField';
+import { Snackbar } from '@/components/Snackbar';
 import { Nap, PawLoader } from '@/components/motion';
+import { ForYou, type Notice } from '@/features/forYou/ForYou';
 import { errorMessage } from '@/lib/errors';
 import { fonts } from '@/theme/tokens';
 import { SearchResult } from './SearchResult';
@@ -27,10 +29,17 @@ export interface SearchScreenProps {
   onOpen?: (workId: string) => void;
   /** Opens the Add sheet (APP-03). */
   onAdd?: (workId: string) => void;
+  /** Opens a For you card's book page (APP-12), which then shows the reason. */
+  onOpenForYou?: (workId: string) => void;
 }
 
-/** Search (home): one field, language chips, results with covers and badges (APP-02). */
-export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
+const noop = () => undefined;
+
+/**
+ * Search (home): one field, language chips, results with covers and badges
+ * (APP-02). With no search going, For you fills the space (APP-12).
+ */
+export function SearchScreen({ onOpen, onAdd, onOpenForYou }: SearchScreenProps) {
   const { t } = useTranslation();
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState('');
@@ -47,9 +56,23 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
   const waiting = text.trim() !== query.trim() && text.trim().length >= MIN_QUERY_LENGTH;
   const sniffing = search.isPending || search.isPlaceholderData || waiting;
   const bold = <AppText style={styles.bold} />;
+  const field = useRef<SearchInput>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const clearNotice = useCallback(() => setNotice(null), []);
 
   return (
-    <Screen>
+    <Screen
+      overlay={
+        notice ? (
+          <Snackbar
+            message={notice.message}
+            actionLabel={t('forYou.undo')}
+            onAction={notice.onUndo}
+            onDone={clearNotice}
+          />
+        ) : null
+      }
+    >
       <View style={styles.header}>
         <Logo />
         <BudgetPill budget={budget} onPress={() => router.navigate('/requests')} />
@@ -63,6 +86,7 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
         value={text}
         onChangeText={setText}
         onSubmit={() => setSubmitted(text)}
+        inputRef={field}
       />
       <Chips<SearchLanguage>
         label={t('search.languageLabel')}
@@ -76,9 +100,11 @@ export function SearchScreen({ onOpen, onAdd }: SearchScreenProps) {
       />
 
       {!active && !waiting ? (
-        <AppText variant="muted">
-          <Trans i18nKey="search.freeHint" components={{ b: bold }} />
-        </AppText>
+        <ForYou
+          onOpen={onOpenForYou ?? onOpen ?? noop}
+          onSearch={() => field.current?.focus()}
+          onNotice={setNotice}
+        />
       ) : search.isError && !search.data ? (
         <View style={styles.state} accessibilityRole="alert">
           <AppText>{errorMessage(search.error, t)}</AppText>

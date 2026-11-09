@@ -1,8 +1,11 @@
+import type { ComponentRef, Ref } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radius, sizes } from '@/theme/tokens';
 import { CatEars } from './CatEars';
+
+export type SearchInput = ComponentRef<typeof TextInput>;
 
 interface SearchFieldProps {
   label: string;
@@ -10,6 +13,8 @@ interface SearchFieldProps {
   value: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
+  /** Lets a screen focus the field, e.g. For you's "Search for a book". */
+  inputRef?: Ref<SearchInput>;
 }
 
 /** The one search field on Search: 56 high, accent border, cat ears. */
@@ -19,6 +24,7 @@ export function SearchField({
   value,
   onChangeText,
   onSubmit,
+  inputRef,
 }: SearchFieldProps) {
   const { colors } = useTheme();
   return (
@@ -34,6 +40,7 @@ export function SearchField({
         />
       </Svg>
       <TextInput
+        ref={inputRef}
         accessibilityLabel={label}
         placeholder={placeholder}
         placeholderTextColor={colors.textMuted}

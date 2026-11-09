@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 import { space } from '@/theme/tokens';
 
-export function Screen({ children }: { children: ReactNode }) {
+/** `overlay` sits on top of the scrolling content, e.g. a snackbar. */
+export function Screen({ children, overlay }: { children: ReactNode; overlay?: ReactNode }) {
   const { colors } = useTheme();
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: colors.background }]}>
@@ -12,6 +13,7 @@ export function Screen({ children }: { children: ReactNode }) {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
+        {overlay}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

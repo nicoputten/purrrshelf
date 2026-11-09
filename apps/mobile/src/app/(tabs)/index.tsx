@@ -8,6 +8,9 @@ export default function SearchRoute() {
     <SearchScreen
       onOpen={(id) => router.push({ pathname: '/book/[id]', params: { id } })}
       onAdd={openAdd}
+      onOpenForYou={(id) =>
+        router.push({ pathname: '/book/[id]', params: { id, from: 'for-you' } })
+      }
     />
   );
 }

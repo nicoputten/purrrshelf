@@ -3,7 +3,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius } from '@/theme/tokens';
 import { AppText } from './AppText';
 
-export type BadgeTone = 'success' | 'partner' | 'mine' | 'neutral';
+export type BadgeTone = 'success' | 'partner' | 'mine' | 'accent' | 'neutral';
 
 /** Small pill: "On your Kobo", "Partner has it", "Yours". */
 export function Badge({ label, tone }: { label: string; tone: BadgeTone }) {
@@ -12,6 +12,7 @@ export function Badge({ label, tone }: { label: string; tone: BadgeTone }) {
     success: [colors.successBg, colors.success],
     partner: [colors.partnerBg, colors.partner],
     mine: [colors.mineBg, colors.mine],
+    accent: [colors.mineBg, colors.accent],
     neutral: [colors.surfaceRaised, colors.textMuted],
   } as const;
   const [bg, fg] = palette[tone];
