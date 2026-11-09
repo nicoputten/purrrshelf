@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.2...mobile-v1.3.0) (2026-11-09)
+
+
+### New tricks
+
+* **mobile:** install app updates without the Install screen ([43cf509](https://github.com/nicoputten/purrrshelf/commit/43cf509a4c32791dec248dc098bfaebf2bb1900b))
+
 ## [1.2.2](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.1...mobile-v1.2.2) (2026-11-09)
 
 
