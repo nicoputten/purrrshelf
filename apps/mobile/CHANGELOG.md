@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.2](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.1...mobile-v1.2.2) (2026-11-09)
+
+
+### Fixed scratches
+
+* let a check for updates see a new release within minutes ([9f9b788](https://github.com/nicoputten/purrrshelf/commit/9f9b7886fd68f57dceb5d45cb88fbf5ccad595ec))
+* **mobile:** make the cat animations easier to notice ([d182a48](https://github.com/nicoputten/purrrshelf/commit/d182a4848b25cd744b428bb76d165a3d9f505d13))
+* **mobile:** play Swat and Delivered where you can see them ([1c66d58](https://github.com/nicoputten/purrrshelf/commit/1c66d583d78d8bdfa2f7954423817d388d7dcdc1))
+* show release notes as short cat-styled text in the updater ([f4b2c4c](https://github.com/nicoputten/purrrshelf/commit/f4b2c4c869009d56eb00d393a05a66da2d78e199))
+
 ## [1.2.1](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.0...mobile-v1.2.1) (2026-11-08)
 
 
