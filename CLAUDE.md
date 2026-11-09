@@ -33,6 +33,9 @@ docs/decisions/     numbered ADRs
 3. A new design or architecture choice gets an ADR in `docs/decisions/`.
    ADRs are superseded, never deleted or rewritten.
 4. Screen changes update the matching file in `docs/design/`.
+5. Branch from `develop` and open the PR against `develop` (the default
+   branch). Land it by fast-forward, never a GitHub merge commit. `main` only
+   moves when a release is cut (`docs/releases.md`, ADR 0042).
 
 ## Hard rules
 
