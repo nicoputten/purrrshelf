@@ -1,7 +1,8 @@
 import type { LibraryBookEntry, MyReading } from '@purrshelf/contract';
 
 export type LibraryTab = 'mine' | 'partner' | 'all';
-export type LibraryView = 'recent' | 'unread' | 'onKobo' | 'series';
+export type LibraryFilter = 'any' | 'unread' | 'reading' | 'finished' | 'onKobo';
+export type LibrarySort = 'recent' | 'title' | 'author' | 'series';
 
 const ownedByMe = (b: LibraryBookEntry) => b.owners.some((o) => o.me);
 const ownedByOther = (b: LibraryBookEntry) => b.owners.some((o) => !o.me);
@@ -23,30 +24,66 @@ export function tabCounts(books: LibraryBookEntry[]): Record<LibraryTab, number>
 /** Owned by me and by someone else: the "Both" badge. */
 export const isShared = (b: LibraryBookEntry) => ownedByMe(b) && ownedByOther(b);
 
-/** The books of a tab, filtered and sorted for the chosen view. */
+/** Does the book pass the filter? A book without progress counts as unread. */
+export function passes(book: LibraryBookEntry, filter: LibraryFilter): boolean {
+  const status = book.reading?.status ?? 'unread';
+  switch (filter) {
+    case 'unread':
+    case 'reading':
+    case 'finished':
+      return status === filter;
+    case 'onKobo':
+      return book.onMyKobo;
+    default:
+      return true;
+  }
+}
+
+/** "The", "A", "De", "Het", "Een" and friends don't count when sorting by title. */
+const ARTICLE = /^(the|a|an|de|het|een)\s+/i;
+export const titleKey = (title: string) => title.replace(ARTICLE, '').trim();
+
+/** Sort authors by last name: "Ilse Varenkamp" sorts under V. */
+export function authorKey(book: { authors: string[] }): string {
+  const first = book.authors[0]?.trim() ?? '';
+  const parts = first.split(/\s+/);
+  return parts.length > 1 ? `${parts[parts.length - 1]} ${parts.slice(0, -1).join(' ')}` : first;
+}
+
+const compare = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' });
+
+/** The books of a tab, filtered and then sorted. */
 export function visibleBooks(
   books: LibraryBookEntry[],
   tab: LibraryTab,
-  view: LibraryView,
+  filter: LibraryFilter,
+  sort: LibrarySort,
 ): LibraryBookEntry[] {
-  const list = books.filter((b) => inTab(b, tab));
+  const list = books.filter((b) => inTab(b, tab) && passes(b, filter));
   const byAdded = (a: LibraryBookEntry, b: LibraryBookEntry) => b.addedAt.localeCompare(a.addedAt);
-  switch (view) {
-    case 'unread':
-      return list.filter((b) => (b.reading?.status ?? 'unread') === 'unread').sort(byAdded);
-    case 'onKobo':
-      return list.filter((b) => b.onMyKobo).sort(byAdded);
+  const byTitle = (a: LibraryBookEntry, b: LibraryBookEntry) =>
+    compare(titleKey(a.title), titleKey(b.title));
+  switch (sort) {
+    case 'title':
+      return list.sort((a, b) => byTitle(a, b) || byAdded(a, b));
+    case 'author':
+      return list.sort((a, b) => compare(authorKey(a), authorKey(b)) || byTitle(a, b));
     case 'series':
-      return list
-        .flatMap((b) => (b.series ? [{ b, s: b.series }] : []))
-        .sort(
-          (x, y) =>
-            x.s.name.localeCompare(y.s.name) ||
-            (x.s.position ?? Number.MAX_VALUE) - (y.s.position ?? Number.MAX_VALUE),
-        )
-        .map((x) => x.b);
+      // Books in a series first, by series name and position; the rest by title.
+      return list.sort((a, b) => {
+        if (a.series && b.series) {
+          return (
+            compare(a.series.name, b.series.name) ||
+            (a.series.position ?? Number.MAX_VALUE) - (b.series.position ?? Number.MAX_VALUE) ||
+            byTitle(a, b)
+          );
+        }
+        if (a.series) return -1;
+        if (b.series) return 1;
+        return byTitle(a, b);
+      });
     default:
-      return [...list].sort(byAdded);
+      return list.sort(byAdded);
   }
 }
 

@@ -4,7 +4,7 @@ import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { setFetch, useSession } from '@/session/session';
 import { apiError, fakeBroker, ok } from '@/test/fakeBroker';
 import { renderWithProviders, resetApp } from '@/test/utils';
-import { barPercent, readLabel, tabCounts, visibleBooks } from './library';
+import { authorKey, barPercent, readLabel, tabCounts, titleKey, visibleBooks } from './library';
 import { LibraryScreen } from './LibraryScreen';
 
 jest.setTimeout(15_000);
@@ -108,38 +108,76 @@ describe('Library', () => {
     expect(onOpen).toHaveBeenCalledWith(salt.workId);
   });
 
-  it('filters unread and on my Kobo, and sorts by series', async () => {
+  it('shows the title under each cover, and only a status that says something', async () => {
     const { view } = render();
     await view;
     await userEvent.press(await screen.findByRole('radio', { name: 'All · 4' }));
-    const pick = async (from: string, to: string) => {
-      await userEvent.press(screen.getByRole('button', { name: `Sort and filter: ${from}` }));
-      await userEvent.press(screen.getByRole('radio', { name: to }));
-    };
-    await pick('Recently added', 'On my Kobo');
+    for (const title of ['The Salt Road', 'The Glass Harbour', 'A Map of Quiet Rivers']) {
+      expect(screen.getByText(title)).toBeOnTheScreen();
+    }
+    expect(screen.getByText('42% read')).toBeOnTheScreen();
+    // "Unread" is the default, so the card doesn't say it.
+    expect(screen.queryByText('Unread')).toBeNull();
+  });
+
+  const pick = async (menu: string, from: string, to: string) => {
+    await userEvent.press(screen.getByRole('button', { name: `${menu}: ${from}` }));
+    await userEvent.press(screen.getByRole('radio', { name: to }));
+  };
+
+  it('filters by reading status and on my Kobo', async () => {
+    const { view } = render();
+    await view;
+    await userEvent.press(await screen.findByRole('radio', { name: 'All · 4' }));
+    await pick('Show', 'All books', 'On my Kobo');
     expect(titles()).toEqual(['The Salt Road']);
-    await pick('On my Kobo', 'Series');
-    expect(titles()).toEqual(['The Salt Road', 'The Glass Harbour']);
-    await pick('Series', 'Unread');
+    await pick('Show', 'On my Kobo', 'Finished');
+    expect(titles()).toEqual(['The Glass Harbour']);
+    await pick('Show', 'Finished', 'Reading');
+    expect(titles()).toEqual(['The Salt Road']);
+    await pick('Show', 'Reading', 'Unread');
     expect(titles()).toEqual(['Lamps of Kerrow', 'A Map of Quiet Rivers']);
   });
 
-  it('shows the filters as two rows: whose books, then one dropdown', async () => {
+  it('sorts by title, author and series', async () => {
+    const { view } = render();
+    await view;
+    await userEvent.press(await screen.findByRole('radio', { name: 'All · 4' }));
+    await pick('Sort by', 'Recently added', 'Title');
+    // "The" and "A" don't count.
+    expect(titles()).toEqual([
+      'The Glass Harbour',
+      'Lamps of Kerrow',
+      'A Map of Quiet Rivers',
+      'The Salt Road',
+    ]);
+    await pick('Sort by', 'Title', 'Series');
+    expect(titles()).toEqual([
+      'The Salt Road',
+      'The Glass Harbour',
+      'Lamps of Kerrow',
+      'A Map of Quiet Rivers',
+    ]);
+    // Filter and sort combine.
+    await pick('Show', 'All books', 'Unread');
+    expect(titles()).toEqual(['Lamps of Kerrow', 'A Map of Quiet Rivers']);
+    await pick('Sort by', 'Series', 'Author');
+    expect(titles()).toEqual(['Lamps of Kerrow', 'A Map of Quiet Rivers']);
+  });
+
+  it('keeps the filters to two rows: whose books, then two dropdowns', async () => {
     const { view } = render();
     await view;
     await screen.findByRole('radio', { name: 'Mine · 2' });
-    // Only the three "whose books" options are on screen; the views sit in the menu.
+    // Only the three "whose books" options are on screen; the rest sit in the menus.
     expect(screen.getAllByRole('radio')).toHaveLength(3);
-    expect(screen.queryByRole('radio', { name: 'Unread' })).toBeNull();
-    const menu = screen.getByRole('button', { name: 'Sort and filter: Recently added' });
-    await userEvent.press(menu);
-    expect(screen.getByRole('radio', { name: 'Recently added' })).toBeChecked();
-    // Tapping outside closes the menu without changing the view.
+    expect(screen.getByRole('button', { name: 'Sort by: Recently added' })).toBeOnTheScreen();
+    await userEvent.press(screen.getByRole('button', { name: 'Show: All books' }));
+    expect(screen.getByRole('radio', { name: 'All books' })).toBeChecked();
+    // Tapping outside closes the menu without changing anything.
     await userEvent.press(screen.getByLabelText('Close the menu'));
     expect(screen.queryByRole('radio', { name: 'Unread' })).toBeNull();
-    expect(
-      screen.getByRole('button', { name: 'Sort and filter: Recently added' }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Show: All books' })).toBeOnTheScreen();
   });
 
   it('says when a tab is empty', async () => {
@@ -203,7 +241,19 @@ describe('library helpers', () => {
   it('puts series books without a position last', () => {
     const a = book({ series: { name: 'S', position: null } });
     const b = book({ series: { name: 'S', position: 3 } });
-    expect(visibleBooks([a, b], 'all', 'series')).toEqual([b, a]);
+    expect(visibleBooks([a, b], 'all', 'any', 'series')).toEqual([b, a]);
+  });
+
+  it('sorts authors by last name and titles without articles', () => {
+    expect(authorKey({ authors: ['Ilse Varenkamp'] })).toBe('Varenkamp Ilse');
+    expect(authorKey({ authors: ['Anonymous'] })).toBe('Anonymous');
+    expect(authorKey({ authors: [] })).toBe('');
+    expect(titleKey('Het Zoutpad')).toBe('Zoutpad');
+    expect(titleKey('An Atlas')).toBe('Atlas');
+    expect(titleKey('Theodora')).toBe('Theodora');
+    const x = book({ title: 'Zebra', authors: ['Bo Adams'] });
+    const y = book({ title: 'Apple', authors: ['Cy Zed'] });
+    expect(visibleBooks([y, x], 'all', 'any', 'author')).toEqual([x, y]);
   });
 
   it.each([

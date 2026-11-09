@@ -38,9 +38,10 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0031](0031-in-app-updates.md)                              | In-app updates: APK self-update through the broker                      | accepted                   |
 | [0032](0032-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
 | [0033](0033-readable-cat-styled-release-notes.md)           | Release notes are short, plain and cat-styled                           | accepted                   |
-| [0034](0034-library-filters-two-rows.md)                    | Library filters are two rows: whose books, then one dropdown            | accepted                   |
+| [0034](0034-library-filters-two-rows.md)                    | Library filters are two rows: whose books, then one dropdown            | superseded by 0037 (row 2) |
 | [0035](0035-recommendations-for-you.md)                     | For you: how recommendations are computed, filtered and refreshed       | accepted                   |
 | [0036](0036-remove-library-import.md)                       | The one-time library import is removed                                  | accepted                   |
+| [0037](0037-library-filter-and-sort.md)                     | Library: a filter and a sort dropdown, and titles under covers          | accepted                   |
 
 ## Template
 
