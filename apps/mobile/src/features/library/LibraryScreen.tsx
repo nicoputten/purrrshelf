@@ -28,6 +28,8 @@ import { useLibraryBooks } from './useLibrary';
 export interface LibraryScreenProps {
   /** Opens a book that has a work id; the book page is keyed by work. */
   onOpen: (workId: string) => void;
+  /** Opens the full list of my requests (APP-14: Requests is no longer a tab). */
+  onRequests?: () => void;
 }
 
 const COLUMNS = 3;
@@ -40,7 +42,7 @@ const PADDING = space.xl;
  * (Mine / Partner's / All), then a filter and a sort dropdown; then a cover
  * grid with the title under each cover.
  */
-export function LibraryScreen({ onOpen }: LibraryScreenProps) {
+export function LibraryScreen({ onOpen, onRequests }: LibraryScreenProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const [tab, setTab] = useState<LibraryTab>('mine');
@@ -53,9 +55,14 @@ export function LibraryScreen({ onOpen }: LibraryScreenProps) {
 
   return (
     <Screen>
-      <AppText variant="display" accessibilityRole="header">
-        {t('library.title')}
-      </AppText>
+      <View style={styles.header}>
+        <AppText variant="display" accessibilityRole="header">
+          {t('library.title')}
+        </AppText>
+        {onRequests ? (
+          <Button label={t('library.requests')} variant="outline" compact onPress={onRequests} />
+        ) : null}
+      </View>
       <Segmented<LibraryTab>
         label={t('library.tabsLabel')}
         value={tab}
@@ -236,6 +243,7 @@ function Cell({
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   state: { alignItems: 'center', gap: 12, paddingVertical: 40 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   cell: { gap: 6 },

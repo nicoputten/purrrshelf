@@ -95,8 +95,33 @@ describe('app navigation', () => {
     const user = userEvent.setup();
     await renderRouter('./src/app', { initialUrl: '/library' });
     await waitFor(() => expect(loads()).toBe(1));
-    await user.press(screen.getByRole('button', { name: /Settings/ }));
+    await user.press(screen.getByRole('button', { name: /^You/ }));
     await user.press(screen.getByRole('button', { name: /Library/ }));
     await waitFor(() => expect(loads()).toBe(2));
+  });
+
+  it('has Search, Top 10, Library and You tabs, and Requests one tap from the Library', async () => {
+    secureStore.set(StorageKeys.serverUrl, 'https://shelf.example.invalid');
+    secureStore.set(StorageKeys.refreshToken, 'refresh-0');
+    setFetch(
+      fakeBroker({
+        'POST /auth/refresh': () => tokens(1),
+        'GET /me': me,
+        'GET /library/books': () => ok({ books: [] }),
+        'GET /requests': () => ok({ requests: [] }),
+      }).fetch,
+    );
+    const user = userEvent.setup();
+    await renderRouter('./src/app', { initialUrl: '/library' });
+    for (const name of [/^Search/, /^Top 10/, /^Library/, /^You/]) {
+      expect(await screen.findByRole('button', { name })).toBeOnTheScreen();
+    }
+    expect(screen.queryByRole('button', { name: /^Requests,/ })).toBeNull();
+    await user.press(await screen.findByRole('button', { name: 'Requests' }));
+    expect(
+      await screen.findByText('Nothing on its way. Find a book and tap Add.'),
+    ).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Requests' })).toBeOnTheScreen());
   });
 });

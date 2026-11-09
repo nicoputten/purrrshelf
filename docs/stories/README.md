@@ -46,6 +46,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-13](BRK-13.md) | Tell the app when a book will be hard to find                  | 11        | done      |
 | [APP-16](APP-16.md) | See a warning before I spend searches on a hard book           | 11        | done      |
 | [OPS-04](OPS-04.md) | Sync my Kobo away from home                                    | 10        | done      |
+| [APP-14](APP-14.md) | Follow my requests from any tab                                | 11        | done      |
 
 ## Template
 

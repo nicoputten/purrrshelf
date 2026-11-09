@@ -1,7 +1,7 @@
 import { Fredoka_500Medium, Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
 import { Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold } from '@expo-google-fonts/nunito';
 import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -32,9 +32,11 @@ function RootStack() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="book/[id]" />
           <Stack.Screen name="request/[id]" />
+          <Stack.Screen name="requests" />
         </Stack.Protected>
       </Stack>
-      {status === 'ready' ? <AddSheetHost onAdded={() => router.navigate('/requests')} /> : null}
+      {/* After Fetch the reader stays put: the activity pill shows the request (APP-14). */}
+      {status === 'ready' ? <AddSheetHost onAdded={() => undefined} /> : null}
     </>
   );
 }

@@ -14,5 +14,10 @@ export default function LibraryRoute() {
       else void client.invalidateQueries({ queryKey: libraryBooksKey });
     }, [client]),
   );
-  return <LibraryScreen onOpen={(id) => router.push({ pathname: '/book/[id]', params: { id } })} />;
+  return (
+    <LibraryScreen
+      onOpen={(id) => router.push({ pathname: '/book/[id]', params: { id } })}
+      onRequests={() => router.push('/requests')}
+    />
+  );
 }
