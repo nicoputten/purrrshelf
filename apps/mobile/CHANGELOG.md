@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.7.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.6.0...mobile-v1.7.0) (2026-11-09)
+
+
+### New tricks
+
+* **mobile:** follow requests from any tab with an activity pill (APP-14) ([e9ca38d](https://github.com/nicoputten/purrrshelf/commit/e9ca38dc1e086d7a20a5fae7ec09fef41dcade3b))
+* **mobile:** Search teaser leads with your top genre (APP-17) ([f5dda16](https://github.com/nicoputten/purrrshelf/commit/f5dda1664051a893591f7151091051ec9eaddd4d))
+* **mobile:** Top 10 tab with genre charts (APP-15) ([37cf697](https://github.com/nicoputten/purrrshelf/commit/37cf697cc30239ccfe7a1d67ba20ab92eb66aa06))
+* **mobile:** warn in the Add sheet when a book will be hard to find (APP-16) ([0c3743d](https://github.com/nicoputten/purrrshelf/commit/0c3743d26063d5b1b091fa55305fe5d199d5bbf7))
+
 ## [1.6.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.5.0...mobile-v1.6.0) (2026-11-09)
 
 
