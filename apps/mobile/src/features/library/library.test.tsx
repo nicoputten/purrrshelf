@@ -112,12 +112,34 @@ describe('Library', () => {
     const { view } = render();
     await view;
     await userEvent.press(await screen.findByRole('radio', { name: 'All · 4' }));
-    await userEvent.press(screen.getByRole('radio', { name: 'On my Kobo' }));
+    const pick = async (from: string, to: string) => {
+      await userEvent.press(screen.getByRole('button', { name: `Sort and filter: ${from}` }));
+      await userEvent.press(screen.getByRole('radio', { name: to }));
+    };
+    await pick('Recently added', 'On my Kobo');
     expect(titles()).toEqual(['The Salt Road']);
-    await userEvent.press(screen.getByRole('radio', { name: 'Series' }));
+    await pick('On my Kobo', 'Series');
     expect(titles()).toEqual(['The Salt Road', 'The Glass Harbour']);
-    await userEvent.press(screen.getByRole('radio', { name: 'Unread' }));
+    await pick('Series', 'Unread');
     expect(titles()).toEqual(['Lamps of Kerrow', 'A Map of Quiet Rivers']);
+  });
+
+  it('shows the filters as two rows: whose books, then one dropdown', async () => {
+    const { view } = render();
+    await view;
+    await screen.findByRole('radio', { name: 'Mine · 2' });
+    // Only the three "whose books" options are on screen; the views sit in the menu.
+    expect(screen.getAllByRole('radio')).toHaveLength(3);
+    expect(screen.queryByRole('radio', { name: 'Unread' })).toBeNull();
+    const menu = screen.getByRole('button', { name: 'Sort and filter: Recently added' });
+    await userEvent.press(menu);
+    expect(screen.getByRole('radio', { name: 'Recently added' })).toBeChecked();
+    // Tapping outside closes the menu without changing the view.
+    await userEvent.press(screen.getByLabelText('Close the menu'));
+    expect(screen.queryByRole('radio', { name: 'Unread' })).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Sort and filter: Recently added' }),
+    ).toBeOnTheScreen();
   });
 
   it('says when a tab is empty', async () => {

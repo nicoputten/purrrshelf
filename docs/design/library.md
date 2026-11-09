@@ -23,3 +23,13 @@ Built in APP-07:
   above the saved grid. Empty tabs show the napping cat (Nap, DES-02) over
   one muted sentence. Loading shows the paw-print loader.
 - The search button and the bottom-bar badge come later.
+
+Filters redone (ADR 0034), always two rows:
+
+- Row 1: a segmented control "Mine · 2" / "Partner's · 2" / "All · 4"
+  (accent when selected), one always selected.
+- Row 2: one outlined pill showing the current view with ▾ ("Recently
+  added ▾"). It opens a small menu with Recently added, Unread, On my Kobo and
+  Series; the current one is accent with a ✓. Picking one closes the menu;
+  tapping outside closes it unchanged. Screen readers hear "Sort and filter:
+  Recently added".
