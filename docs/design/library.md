@@ -23,3 +23,9 @@ Built in APP-07:
   above the saved grid. Empty tabs show the napping cat (Nap, DES-02) over
   one muted sentence. Loading shows the paw-print loader.
 - The search button and the bottom-bar badge come later.
+
+Changed after APP-08:
+
+- A book I am reading always gets a progress bar. It stays empty until my
+  Kobo reports a position, which it only does when it syncs. A finished book
+  gets a full bar.

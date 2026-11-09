@@ -13,6 +13,7 @@ import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, space } from '@/theme/tokens';
 import {
+  barPercent,
   isShared,
   readLabel,
   tabCounts,
@@ -149,6 +150,7 @@ function Cell({
       : t(label.key)
     : null;
   const shared = isShared(book);
+  const bar = barPercent(book.reading);
   const { workId } = book;
   const a11y = [
     book.title,
@@ -185,14 +187,14 @@ function Cell({
           </View>
         ) : null}
       </View>
-      {book.reading?.progressPercent ? (
+      {bar !== null ? (
         <View style={[styles.bar, { backgroundColor: colors.surfaceRaised }]}>
           <View
             style={[
               styles.barFill,
               {
                 backgroundColor: colors.accent,
-                width: `${Math.min(100, Math.max(0, book.reading.progressPercent))}%`,
+                width: `${bar}%`,
               },
             ]}
           />

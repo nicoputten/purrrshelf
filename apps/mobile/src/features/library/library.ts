@@ -64,3 +64,16 @@ export function readLabel(book: { reading: MyReading | null }): ReadLabel | null
   }
   return { key: r.status === 'reading' ? 'library.reading' : 'library.unread' };
 }
+
+/**
+ * How full the progress bar is, 0–100; null for no bar. A book I am reading
+ * always gets a bar, empty until my Kobo reports a position at its next sync.
+ */
+export function barPercent(reading: MyReading | null): number | null {
+  if (!reading) return null;
+  if (reading.status === 'finished') return 100;
+  if (reading.progressPercent !== null && reading.progressPercent > 0) {
+    return Math.min(100, Math.max(1, Math.round(reading.progressPercent)));
+  }
+  return reading.status === 'reading' ? 0 : null;
+}

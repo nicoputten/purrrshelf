@@ -130,6 +130,15 @@ describe('Book detail', () => {
     });
   });
 
+  it('shows an empty bar while my Kobo has not reported a position yet', async () => {
+    const { view } = render(
+      work({ library: inLibrary(true, { status: 'reading', progressPercent: null }) }),
+    );
+    await view;
+    expect(await screen.findByText('You’re reading this one')).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({ now: 0 });
+  });
+
   it('shows a finished book with a full bar, and nothing for an unread one', async () => {
     const { view } = render(
       work({ library: inLibrary(true, { status: 'finished', progressPercent: null }) }),
