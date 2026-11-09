@@ -81,6 +81,17 @@ describe('GET /discover/search', () => {
     ]).toEqual([1, 1, 1]);
   });
 
+  it('searches the one field as free words (title, author or both) unless an author is given', async () => {
+    const { get, fetch } = await setup();
+    await get('/discover/search?q=multatuli%20havelaar');
+    const urls = fetch.mock.calls.map(([input]) => new URL(input));
+    const ol = urls.find((u) => u.pathname === '/search.json')!;
+    expect(ol.searchParams.get('q')).toBe('multatuli havelaar');
+    expect(ol.searchParams.has('title')).toBe(false);
+    const gb = urls.find((u) => u.pathname.endsWith('/volumes'))!;
+    expect(gb.searchParams.get('q')).toBe('multatuli havelaar');
+  });
+
   it('drops hits in another language when a language is picked', async () => {
     const { get } = await setup();
     const body = DiscoverSearchResult.parse(

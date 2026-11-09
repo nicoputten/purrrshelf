@@ -46,7 +46,7 @@ function unavailable(): AppError {
 
 function queryKey(q: MetadataQuery): string {
   const norm = (s = '') => s.trim().toLowerCase().replace(/\s+/g, ' ');
-  return `${norm(q.title)}|${norm(q.author)}|${norm(q.subject)}|${q.language}`;
+  return `${norm(q.text)}|${norm(q.title)}|${norm(q.author)}|${norm(q.subject)}|${q.language}`;
 }
 
 /**
@@ -88,11 +88,11 @@ export class DiscoverService {
   }
 
   async search(userId: string, query: DiscoverSearchQuery): Promise<DiscoverSearchResult> {
-    const q: MetadataQuery = {
-      title: query.q,
-      language: query.language,
-      ...(query.author ? { author: query.author } : {}),
-    };
+    // The app's one field takes a title, an author or both, so without a
+    // separate author the words are searched as free text, not as a title.
+    const q: MetadataQuery = query.author
+      ? { title: query.q, author: query.author, language: query.language }
+      : { text: query.q, language: query.language };
     const { lists, statuses } = await this.fanOut(q);
     if (!statuses.some((s) => s.status === 'ok')) throw unavailable();
 

@@ -149,7 +149,7 @@ export const WorkSummary = z
 export type WorkSummary = z.infer<typeof WorkSummary>;
 
 export const DiscoverSearchQuery = z.object({
-  /** Title, or any words from it. */
+  /** Free words: a title, an author or both. With `author` set, `q` is the title. */
   q: z.string().trim().min(1).max(200),
   author: z.string().trim().max(200).optional(),
   language: SearchLanguage.default('any'),

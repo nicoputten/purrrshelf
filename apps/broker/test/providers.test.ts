@@ -180,6 +180,17 @@ describe('OpenLibraryProvider', () => {
     expect(hits[1]!.coverUrl).toBeNull();
   });
 
+  it('searches free words (title, author or both) as a general query', async () => {
+    const { fetch } = fakeProviders();
+    await new OpenLibraryProvider(http(fetch)).search({
+      text: 'multatuli havelaar',
+      language: 'any',
+    });
+    const url = new URL(fetch.mock.calls[0]![0]);
+    expect(url.searchParams.get('q')).toBe('multatuli havelaar');
+    expect(url.searchParams.has('title')).toBe(false);
+  });
+
   it('uses the first language when no language is asked for', async () => {
     const { fetch } = fakeProviders();
     const hits = await new OpenLibraryProvider(http(fetch)).search(query);
@@ -252,6 +263,15 @@ describe('GoogleBooksProvider', () => {
       subjects: ['Fiction'],
       pageCount: 210,
     });
+  });
+
+  it('searches free words without intitle, so an author name can match', async () => {
+    const { fetch } = fakeProviders();
+    await new GoogleBooksProvider(http(fetch), undefined).search({
+      text: 'multatuli havelaar',
+      language: 'any',
+    });
+    expect(new URL(fetch.mock.calls[0]![0]).searchParams.get('q')).toBe('multatuli havelaar');
   });
 
   it('works without a key and copes with no items', async () => {

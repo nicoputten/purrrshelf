@@ -21,8 +21,10 @@ export interface ProviderWork {
   pageCount?: number | null;
 }
 
-/** At least one of title, author or subject is set. */
+/** At least one of text, title, author or subject is set. */
 export interface MetadataQuery {
+  /** Free words from the search field: a title, an author or both ("lena dunham famesick"). */
+  text?: string;
   title?: string;
   author?: string;
   /** A subject or genre, for similar books (APP-09). */
