@@ -1,6 +1,6 @@
 # APP-11 Install updates without the Install screen
 
-Status: in review
+Status: done
 Milestone: 9
 Depends on: APP-10
 
@@ -12,7 +12,7 @@ so that both phones stay on the newest version without me thinking about it.
 ## Acceptance criteria
 
 - [x] A local Expo native module (`apps/mobile/modules/purrshelf-installer`) installs the APK through a `PackageInstaller` session with `USER_ACTION_NOT_REQUIRED` on Android 12+ and claims update ownership on Android 14+
-- [ ] Once the app installed itself the first time, later updates install without the system Install screen (to try by hand on both phones: one update with the screen, then one without)
+- [x] Once the app installed itself the first time, later updates install without the system Install screen (tried on a Pixel 8: 1.3.0 with the screen, 1.4.0 without, 2026-11-09)
 - [x] If Android still asks for confirmation (first install, ownership lost), the system screen opens after a tap on Update; a quiet install never shows it and falls back to the Update button
 - [x] A setting "Install updates automatically" (on by default): when Android will install without asking, the app downloads and verifies the update on launch and installs it when the app is left
 - [x] Tests cover downloading ahead, the quiet install, the fallback and the setting
