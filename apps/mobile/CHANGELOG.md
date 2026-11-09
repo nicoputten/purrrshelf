@@ -5,7 +5,7 @@
 
 ### New tricks
 
-* For you: suggestions under the search bar, like the next book in your series or more from authors you read
+* For you: the cat now recommends books under the search bar, like the next book in your series or more from authors you read
 * Each suggestion says why it was picked, and a book your partner already has joins your shelf in one tap, no download needed
 * The Library shows book titles and sorts by title, author or series
 
