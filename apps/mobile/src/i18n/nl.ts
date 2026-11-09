@@ -237,6 +237,30 @@ export const nl: Translations = {
     addButton: 'Toevoegen',
     addA11y: '{{title}} toevoegen',
     addToLibrary: 'Aan bibliotheek toevoegen',
+    fetchAnyway: 'Toch ophalen',
+    lowOdds: {
+      notFound: {
+        title: 'Vorige keer niet gevonden',
+        body: 'We zochten op {{date}} en vonden niets. De kans is klein dat het er nu wel is.',
+      },
+      noMatch: {
+        title: 'We kennen dit boek amper',
+        body: 'Er is geen ISBN of editie bekend, dus goed zoeken is lastig. Reken niet op een resultaat.',
+      },
+      new: {
+        title: 'Deze is gloednieuw',
+        body: 'Nieuwe boeken duiken vaak pas na een paar weken op. Nu proberen kan zoekopdrachten kosten voor niets.',
+      },
+      language: {
+        title: 'Nederlandse boeken zijn lastig te vinden',
+        body: 'Er worden weinig Nederlandse e-books gedeeld, dus dit eindigt vaak met “niet kunnen opsnuffelen”. Reken er niet op.',
+      },
+      rare: {
+        title: 'Een zeldzame',
+        body: 'Weinig mensen lezen dit, dus er worden weinig exemplaren gedeeld. Misschien is het nergens te vinden.',
+      },
+      englishEdition: 'Probeer liever de Engelse editie',
+    },
   },
   activity: {
     fetching: '{{title}} wordt opgehaald',

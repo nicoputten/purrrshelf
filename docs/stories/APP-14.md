@@ -1,6 +1,6 @@
 # APP-14 Follow my requests from any tab
 
-Status: in review
+Status: done
 Milestone: 11
 Depends on: APP-03, APP-05, DES-02
 

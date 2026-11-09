@@ -1,6 +1,6 @@
 # APP-16 See a warning before I spend searches on a hard book
 
-Status: todo
+Status: done
 Milestone: 11
 Depends on: BRK-13
 
@@ -12,11 +12,11 @@ so that I can pick the English edition or wait instead of wasting searches.
 
 ## Acceptance criteria
 
-- [ ] The Add sheet asks the broker for the preview and shows one warning card above the button when there is a reason; it follows the chosen language
-- [ ] The card has the sleepy cat, a title and one line per reason (board 3c); "Not found last time" names the date
-- [ ] "Dutch books are hard to find" shows "Try the English edition instead" only when an English edition is known; it switches the sheet to English (or opens that edition)
-- [ ] With a warning the button reads "Fetch it anyway"; nothing is blocked, and a failed preview shows no warning
-- [ ] Every new string in English and Dutch
+- [x] The Add sheet asks the broker for the preview and shows one warning card above the button when there is a reason; it follows the chosen language
+- [x] The card has the sleepy cat, a title and one line per reason (board 3c); "Not found last time" names the date
+- [x] "Dutch books are hard to find" shows "Try the English edition instead" only when an English edition is known; it switches the sheet to English (or opens that edition)
+- [x] With a warning the button reads "Fetch it anyway"; nothing is blocked, and a failed preview shows no warning
+- [x] Every new string in English and Dutch
 
 ## Design
 

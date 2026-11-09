@@ -25,6 +25,7 @@ import { usePreferences } from '@/session/preferences';
 import { useSession } from '@/session/session';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes, space } from '@/theme/tokens';
+import { LowOddsWarning } from './LowOddsWarning';
 import { useAddSheet } from './useAddSheet';
 
 /** The work's own language when it is one we fetch, else the last pick, else the app language. */
@@ -54,6 +55,21 @@ function useCost() {
     limit: budget.data.searches.limit,
     max: Math.max(1, active) * MAX_SEARCHES_PER_INDEXER,
   };
+}
+
+/**
+ * The broker's free guess whether a search will find the book (APP-16).
+ * Only asked for a book the library does not have; a failure means no warning.
+ */
+function useLowOdds(workId: string, language: BookLanguage, enabled: boolean) {
+  const call = useSession((s) => s.call);
+  const preview = useQuery({
+    queryKey: ['requestPreview', workId, language],
+    queryFn: () => call('requestPreview', { workId, language }),
+    enabled,
+    retry: false,
+  });
+  return enabled ? (preview.data?.lowOdds ?? null) : null;
 }
 
 /** Mounted once at the root: shows the Add sheet whenever a screen opens it. */
@@ -110,7 +126,16 @@ export function AddSheet({
   const chosen = targets ?? new Set(kobos.filter((r) => r.me).map((r) => r.id));
   const inLibrary = Boolean(work.data?.library);
   const noIndexer = !inLibrary && cost !== null && cost.limit === 0;
+  const lowOdds = useLowOdds(workId, chosenLanguage, work.isSuccess && !inLibrary);
+  const openSheet = useAddSheet((s) => s.open);
   const bold = <AppText style={styles.bold} />;
+
+  const englishEdition = () => {
+    const other = lowOdds?.englishEditionWorkId;
+    if (!other) return;
+    if (other === workId) setLanguage('en');
+    else openSheet(other);
+  };
 
   const toggle = (id: string) => {
     const next = new Set(chosen);
@@ -212,6 +237,8 @@ export function AddSheet({
             </View>
           ) : null}
 
+          {lowOdds ? <LowOddsWarning lowOdds={lowOdds} onEnglishEdition={englishEdition} /> : null}
+
           {add.isError ? (
             <AppText accessibilityRole="alert" style={{ color: colors.danger }}>
               {errorMessage(add.error, t)}
@@ -219,7 +246,7 @@ export function AddSheet({
           ) : null}
 
           <EarsButton
-            label={inLibrary ? t('add.own') : t('add.fetch')}
+            label={inLibrary ? t('add.own') : lowOdds ? t('add.fetchAnyway') : t('add.fetch')}
             onPress={submit}
             busy={add.isPending}
             disabled={noIndexer || readers.isPending}

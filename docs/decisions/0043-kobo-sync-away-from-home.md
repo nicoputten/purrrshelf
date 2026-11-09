@@ -1,4 +1,4 @@
-# 0042. Kobo sync away from home: only CWA's /kobo/ path, on its own proxy host
+# 0043. Kobo sync away from home: only CWA's /kobo/ path, on its own proxy host
 
 Status: accepted
 Date: 2026-11-09

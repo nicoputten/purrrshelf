@@ -83,7 +83,7 @@ Keep the broker's published port LAN-only (the router does not forward it).
 - No router port forward except 80/443 to NPM.
 - CWA's web UI and login stay internal. Only its Kobo sync path `/kobo/` may
   be public, on its own host (section 6,
-  [ADR 0042](../docs/decisions/0042-kobo-sync-away-from-home.md)).
+  [ADR 0043](../docs/decisions/0043-kobo-sync-away-from-home.md)).
 
 ## 5. Check it
 
@@ -103,7 +103,7 @@ the app, enter `https://<broker-host>` on the onboarding screen and log in.
 
 Without this, a Kobo only syncs on the home Wi-Fi. With it, a Kobo syncs on
 any Wi-Fi (a hotel, a phone hotspot)
-([ADR 0042](../docs/decisions/0042-kobo-sync-away-from-home.md)). A VPN does
+([ADR 0043](../docs/decisions/0043-kobo-sync-away-from-home.md)). A VPN does
 not help here: a Kobo cannot run one, and Android does not send hotspot
 traffic through the phone's VPN.
 

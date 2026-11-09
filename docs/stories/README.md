@@ -43,10 +43,10 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-12](APP-12.md) | See books picked for me on the Search tab                      | 10        | done      |
 | [APP-13](APP-13.md) | Add a suggested book, instantly when my partner has it         | 10        | done      |
 | [BRK-12](BRK-12.md) | Get genre top 10s for each reader                              | 11        | done      |
-| [BRK-13](BRK-13.md) | Tell the app when a book will be hard to find                  | 11        | in review |
-| [APP-16](APP-16.md) | See a warning before I spend searches on a hard book           | 11        | todo      |
+| [BRK-13](BRK-13.md) | Tell the app when a book will be hard to find                  | 11        | done      |
+| [APP-16](APP-16.md) | See a warning before I spend searches on a hard book           | 11        | done      |
 | [OPS-04](OPS-04.md) | Sync my Kobo away from home                                    | 10        | done      |
-| [APP-14](APP-14.md) | Follow my requests from any tab                                | 11        | in review |
+| [APP-14](APP-14.md) | Follow my requests from any tab                                | 11        | done      |
 | [APP-15](APP-15.md) | Browse genre top 10s in their own tab                          | 11        | in review |
 
 ## Template

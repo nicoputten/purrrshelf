@@ -27,6 +27,11 @@ export interface Palette {
   mineBg: string;
   danger: string;
   dangerBg: string;
+  /** The low-odds warning card in the Add sheet (board 3c). */
+  warningSurface: string;
+  warningBorder: string;
+  warningText: string;
+  warningLink: string;
 }
 
 export const dark: Palette = {
@@ -53,6 +58,10 @@ export const dark: Palette = {
   mineBg: '#3A2E1F',
   danger: '#F7B6C2',
   dangerBg: '#3A2530',
+  warningSurface: '#3A2E1F',
+  warningBorder: '#6B4F2C',
+  warningText: '#F6C38F',
+  warningLink: '#F6A65A',
 };
 
 /** Not on the canvas yet: derived so the theme switch works. */
@@ -80,6 +89,10 @@ export const light: Palette = {
   mineBg: '#FCEBD8',
   danger: '#9C3550',
   dangerBg: '#FBE3E9',
+  warningSurface: '#FCE9D6',
+  warningBorder: '#E2B98C',
+  warningText: '#7A4410',
+  warningLink: '#8A4B12',
 };
 
 export const coverColours = [
