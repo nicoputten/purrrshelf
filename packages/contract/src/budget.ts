@@ -29,7 +29,10 @@ export type IndexerBudget = z.infer<typeof IndexerBudget>;
 export const Budget = z
   .object({
     windowMinutes: z.number().int().positive(),
-    /** Totals over all indexers, for the budget pill ("21 / 25 left"). */
+    /**
+     * The budget pill ("21 / 25 left"): limit and left of the indexer with the
+     * fewest searches left (ADR 0038), not a sum over all indexers.
+     */
     searches: z.object({
       limit: z.number().int().nonnegative(),
       left: z.number().int().nonnegative(),

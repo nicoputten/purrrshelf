@@ -29,7 +29,8 @@ Built (APP-02):
   sheet (APP-03).
 
 Daily budget (ADR 0025): the pill counts searches left in the last 24 hours,
-so the label now ends in "left today" (nl "vandaag").
+so the label now ends in "left today" (nl "vandaag"). With more than one
+indexer it shows the one with the fewest searches left, not a sum (ADR 0038).
 
 Motion (DES-02): three paw prints step in turn over "Sniffing around…"
 from the first keystroke until the new results arrive (also when they

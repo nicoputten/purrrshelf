@@ -69,7 +69,8 @@ describe('GET /api/v1/budget', () => {
 
     const body = Budget.parse((await getBudget(await token())).json());
     const freeAt = new Date(start + 24 * 60 * 60_000).toISOString();
-    expect(body.searches).toEqual({ limit: 3, left: 0, nextFreeAt: freeAt });
+    // The scarcest indexer: both have 0 left, so the smaller limit.
+    expect(body.searches).toEqual({ limit: 1, left: 0, nextFreeAt: freeAt });
     expect(body.indexers).toEqual([
       {
         indexerId: 'primary',
@@ -109,6 +110,27 @@ describe('GET /api/v1/budget', () => {
     const budget = new IndexerBudget(ctx.database.db, ctx.clock.fn);
     budget.reportLimitReached('a', 'search', 'limit', new Date(ctx.clock.now.getTime() + 60_000));
     const body = Budget.parse((await getBudget(await token())).json());
-    expect(body.searches).toEqual({ limit: 2, left: 1, nextFreeAt: ctx.clock.now.toISOString() });
+    expect(body.searches).toEqual({ limit: 1, left: 0, nextFreeAt: ctx.clock.now.toISOString() });
+  });
+
+  it('shows the scarcest active indexer in the pill, not a sum', async () => {
+    ctx = await makeTestApp();
+    const repo = new IndexerRepository(ctx.database.db, ctx.clock.fn);
+    const add = (id: string, priority: number, searchLimitPerDay: number) =>
+      repo.upsert({
+        id,
+        name: id,
+        url: 'https://indexer.example.invalid',
+        priority,
+        searchLimitPerDay,
+        grabLimitPerDay: 1,
+      });
+    add('small', 1, 3);
+    add('big', 2, 200);
+    add('off', 3, 0);
+    const budget = new IndexerBudget(ctx.database.db, ctx.clock.fn);
+    await budget.spend('small', 'search', async () => undefined);
+    const body = Budget.parse((await getBudget(await token())).json());
+    expect(body.searches).toMatchObject({ limit: 3, left: 2 });
   });
 });

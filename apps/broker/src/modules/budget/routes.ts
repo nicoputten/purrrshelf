@@ -27,11 +27,17 @@ export const budgetRoutes: FastifyPluginAsyncZod<BudgetRoutesOptions> = async (a
     async (): Promise<Budget> => {
       const overview = opts.budget.overview();
       const nextFree = overview.map((o) => o.search.nextFreeAt.getTime());
+      // The pill shows the scarcest indexer, not a sum: a generous second
+      // indexer must not hide that the first one is running out (ADR 0038).
+      const scarcest = overview
+        .map((o) => o.search)
+        .filter((s) => s.limit > 0)
+        .sort((a, b) => a.left - b.left || a.limit - b.limit)[0];
       return {
         windowMinutes: BUDGET_WINDOW_MS / 60_000,
         searches: {
-          limit: overview.reduce((n, o) => n + o.search.limit, 0),
-          left: overview.reduce((n, o) => n + o.search.left, 0),
+          limit: scarcest?.limit ?? 0,
+          left: scarcest?.left ?? 0,
           nextFreeAt: nextFree.length ? new Date(Math.min(...nextFree)).toISOString() : null,
         },
         indexers: overview.map((o) => ({
