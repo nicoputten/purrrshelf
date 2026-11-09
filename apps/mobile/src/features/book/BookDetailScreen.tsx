@@ -1,4 +1,10 @@
-import type { LibraryState, SimilarWorks, WorkDetail, WorkSeries } from '@purrshelf/contract';
+import type {
+  LibraryState,
+  Recommendation,
+  SimilarWorks,
+  WorkDetail,
+  WorkSeries,
+} from '@purrshelf/contract';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -10,11 +16,15 @@ import { Button } from '@/components/Button';
 import { CatEars } from '@/components/CatEars';
 import { Screen } from '@/components/Screen';
 import { PawLoader } from '@/components/motion';
+import { useRecommendationFor } from '@/features/forYou/useRecommendations';
 import { languageName } from '@/features/search/SearchResult';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, fontSize, radius, sizes } from '@/theme/tokens';
 import { positionLabel, seriesStates, type SeriesEntryState } from './series';
+import { ForYouBanner } from './ForYouBanner';
+import { instantFrom } from './forYou';
+import { InstantAddCard } from './InstantAddCard';
 import { KoboCard } from './KoboCard';
 import { MyLibraryCard } from './MyLibraryCard';
 import { ReadingProgress } from './ReadingProgress';
@@ -31,6 +41,8 @@ export interface BookDetailProps {
    * automatic (APP-09); without a handler the "Add next" button is hidden.
    */
   onAdd?: (workId: string) => void;
+  /** Opened from a For you card: show why it was suggested (APP-13). */
+  fromForYou?: boolean;
 }
 
 /** "Lantern Keepers · 1/3 · English · EPUB". */
@@ -58,12 +70,14 @@ export function ownerBadges(library: LibraryState | null, t: TFunction) {
 }
 
 /** Book detail (APP-04, canvas board 2). */
-export function BookDetailScreen({ id, onBack, onOpen, onAdd }: BookDetailProps) {
+export function BookDetailScreen({ id, onBack, onOpen, onAdd, fromForYou }: BookDetailProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const work = useWork(id);
   const series = useWorkSeries(id, Boolean(work.data?.series));
   const similar = useSimilarWorks(id, work.isSuccess);
+  const cached = useRecommendationFor(id);
+  const rec = fromForYou ? cached : null;
 
   return (
     <Screen>
@@ -100,6 +114,7 @@ export function BookDetailScreen({ id, onBack, onOpen, onAdd }: BookDetailProps)
           work={work.data}
           series={series.data}
           similar={similar.data}
+          rec={rec}
           onOpen={onOpen}
           onAdd={onAdd}
           t={t}
@@ -113,6 +128,7 @@ function BookDetail({
   work,
   series,
   similar,
+  rec,
   onOpen,
   onAdd,
   t,
@@ -120,6 +136,7 @@ function BookDetail({
   work: WorkDetail;
   series: WorkSeries | undefined;
   similar: SimilarWorks | undefined;
+  rec: Recommendation | null;
   onOpen: (id: string) => void;
   onAdd: ((id: string) => void) | undefined;
   t: TFunction;
@@ -127,8 +144,12 @@ function BookDetail({
   const { colors } = useTheme();
   const meta = metaLine(work);
   const owners = ownerBadges(work.library, t);
+  // A partner's book from For you: take their file at once (APP-13).
+  const partner = rec ? instantFrom(rec, work.library) : null;
   return (
     <>
+      {rec ? <ForYouBanner item={rec} /> : null}
+
       <View style={styles.hero}>
         <View>
           <CatEars color={colors.surfaceRaised} />
@@ -156,9 +177,13 @@ function BookDetail({
 
       {work.library ? <ReadingProgress reading={work.library.reading} /> : null}
 
-      {work.library ? <MyLibraryCard library={work.library} /> : null}
+      {work.library && partner ? (
+        <InstantAddCard library={work.library} partner={partner} />
+      ) : work.library ? (
+        <MyLibraryCard library={work.library} />
+      ) : null}
 
-      {work.library ? (
+      {work.library && !partner ? (
         <KoboCard itemId={work.library.itemId} workId={work.id} title={work.title} />
       ) : null}
 

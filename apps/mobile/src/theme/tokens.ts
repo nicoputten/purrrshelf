@@ -15,6 +15,9 @@ export interface Palette {
   accent: string;
   accentPressed: string;
   onAccent: string;
+  /** The ginger For you banner on the book page (board 11). */
+  gingerBg: string;
+  onGingerBg: string;
   success: string;
   successBg: string;
   onSuccessBg: string;
@@ -39,6 +42,8 @@ export const dark: Palette = {
   accent: '#F6A65A',
   accentPressed: '#FFC48A',
   onAccent: '#2A1606',
+  gingerBg: '#3A2E1F',
+  onGingerBg: '#F6C38F',
   success: '#8FD8C8',
   successBg: '#1F3A35',
   onSuccessBg: '#CDEFE7',
@@ -64,6 +69,8 @@ export const light: Palette = {
   accent: '#F6A65A',
   accentPressed: '#E8924A',
   onAccent: '#2A1606',
+  gingerBg: '#FCE9D6',
+  onGingerBg: '#8A4B12',
   success: '#1E6B5C',
   successBg: '#DDF3EE',
   onSuccessBg: '#14473D',

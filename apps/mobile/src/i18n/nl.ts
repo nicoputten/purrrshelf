@@ -114,6 +114,15 @@ export const nl: Translations = {
   },
   book: {
     back: 'Terug',
+    forYou: {
+      banner: 'Voor jou · {{reason}}',
+      bannerPartner: 'Voor jou · Uit de kast van {{name}}',
+      bannerPartnerFinished: 'Voor jou · Uit de kast van {{name}}, {{name}} heeft het uit',
+      instant: 'Direct.',
+      instantFile: '{{name}} heeft het bestand al.',
+      noBudget: 'Kost geen zoekopdrachten en geen downloads.',
+      alsoSend: 'Ook naar je Kobo sturen',
+    },
     removeFromLibrary: 'Uit mijn bibliotheek halen',
     addToMyLibrary: 'Aan mijn bibliotheek toevoegen',
     removed: 'Uit je bibliotheek en van je Kobo gehaald.',

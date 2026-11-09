@@ -108,6 +108,15 @@ export const en = {
   },
   book: {
     back: 'Back',
+    forYou: {
+      banner: 'For you · {{reason}}',
+      bannerPartner: 'For you · From {{name}}’s shelf',
+      bannerPartnerFinished: 'For you · From {{name}}’s shelf, {{name}} finished it',
+      instant: 'Instant.',
+      instantFile: '{{name}} already has the file.',
+      noBudget: 'Uses no searches and no downloads.',
+      alsoSend: 'Also send to your Kobo',
+    },
     removeFromLibrary: 'Remove from my library',
     addToMyLibrary: 'Add to my library',
     removed: 'Removed from your library and your Kobo.',

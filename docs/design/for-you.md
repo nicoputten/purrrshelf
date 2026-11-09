@@ -61,6 +61,14 @@ Built (APP-12):
   file." and "Uses no searches and no downloads", with "Also send to your
   Kobo" (on by default) and "Add to my library" (EarsButton).
 - Any other book: the normal Add sheet and budget pill, unchanged.
+- Built (APP-13): the card opens `/book/<id>?from=for-you`; the page reads
+  the reason from the cached For you list, so with nothing cached there is
+  no banner. Banner colours are the `gingerBg` / `onGingerBg` tokens; other
+  rows read "For you · <reason line>". While the instant card shows, the
+  Kobo device card is hidden (board 11 has none); the "Also send to your
+  Kobo" tick is hidden when my Kobo isn't set up. After the add the page
+  shows the normal library and Kobo cards. The board's "Not for me" link is
+  left for later: it lives in the For you ⋯ menu (APP-12).
 
 ## States (board 12)
 
