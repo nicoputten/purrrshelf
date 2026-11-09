@@ -19,8 +19,9 @@ import {
   readLabel,
   tabCounts,
   visibleBooks,
+  type LibraryFilter,
+  type LibrarySort,
   type LibraryTab,
-  type LibraryView,
 } from './library';
 import { useLibraryBooks } from './useLibrary';
 
@@ -36,13 +37,15 @@ const PADDING = space.xl;
 
 /**
  * Library (APP-07, canvas board 6). Two rows of filters: whose books
- * (Mine / Partner's / All) and a dropdown to sort or filter, then a cover grid.
+ * (Mine / Partner's / All), then a filter and a sort dropdown; then a cover
+ * grid with the title under each cover.
  */
 export function LibraryScreen({ onOpen }: LibraryScreenProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const [tab, setTab] = useState<LibraryTab>('mine');
-  const [view, setView] = useState<LibraryView>('recent');
+  const [filter, setFilter] = useState<LibraryFilter>('any');
+  const [sort, setSort] = useState<LibrarySort>('recent');
   const library = useLibraryBooks();
   const books = library.data?.books;
   const counts = tabCounts(books ?? []);
@@ -63,18 +66,33 @@ export function LibraryScreen({ onOpen }: LibraryScreenProps) {
           { value: 'all', label: t('library.all', { n: counts.all }) },
         ]}
       />
-      <Dropdown<LibraryView>
-        label={t('library.viewLabel')}
-        closeLabel={t('library.closeMenu')}
-        value={view}
-        onChange={setView}
-        options={[
-          { value: 'recent', label: t('library.recent') },
-          { value: 'unread', label: t('library.unread') },
-          { value: 'onKobo', label: t('library.onKobo') },
-          { value: 'series', label: t('library.series') },
-        ]}
-      />
+      <View style={styles.menus}>
+        <Dropdown<LibraryFilter>
+          label={t('library.filterLabel')}
+          closeLabel={t('library.closeMenu')}
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'any', label: t('library.anyBook') },
+            { value: 'unread', label: t('library.unread') },
+            { value: 'reading', label: t('library.reading') },
+            { value: 'finished', label: t('library.finished') },
+            { value: 'onKobo', label: t('library.onKobo') },
+          ]}
+        />
+        <Dropdown<LibrarySort>
+          label={t('library.sortLabel')}
+          closeLabel={t('library.closeMenu')}
+          value={sort}
+          onChange={setSort}
+          options={[
+            { value: 'recent', label: t('library.recent') },
+            { value: 'title', label: t('library.byTitle') },
+            { value: 'author', label: t('library.byAuthor') },
+            { value: 'series', label: t('library.series') },
+          ]}
+        />
+      </View>
 
       {library.offline ? (
         <AppText variant="muted" accessibilityRole="alert">
@@ -99,7 +117,7 @@ export function LibraryScreen({ onOpen }: LibraryScreenProps) {
         )
       ) : (
         <Grid
-          books={visibleBooks(books, tab, view)}
+          books={visibleBooks(books, tab, filter, sort)}
           empty={t(`library.empty.${tab}`)}
           cellWidth={cellWidth}
           onOpen={onOpen}
@@ -205,8 +223,11 @@ function Cell({
           />
         </View>
       ) : null}
-      {status ? (
-        <AppText variant="muted" style={styles.status}>
+      <AppText numberOfLines={2} style={styles.title}>
+        {book.title}
+      </AppText>
+      {status && label?.key !== 'library.unread' ? (
+        <AppText variant="muted" numberOfLines={1} style={styles.status}>
           {status}
         </AppText>
       ) : null}
@@ -230,5 +251,7 @@ const styles = StyleSheet.create({
   koboText: { fontFamily: fonts.bodyBold, fontSize: fontSize.tiny },
   bar: { height: 4, borderRadius: 2, overflow: 'hidden' },
   barFill: { height: 4 },
+  title: { fontFamily: fonts.bodySemiBold, fontSize: fontSize.small, lineHeight: 17 },
   status: { fontSize: fontSize.tiny },
+  menus: { flexDirection: 'row', flexWrap: 'nowrap', gap: 8 },
 });

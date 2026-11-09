@@ -1,6 +1,6 @@
 # 0034. Library filters are two rows: whose books, then one dropdown
 
-Status: accepted
+Status: superseded by 0037 (row 2)
 Date: 2026-11-09
 
 ## Context

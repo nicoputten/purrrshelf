@@ -33,6 +33,9 @@ Canvas board: 6 · Library — `docs/design/library.md`
   broker can't be reached. It is cleared on logout.
 - A Calibre book that no search hit has matched yet has no work id, so it
   shows with a placeholder cover and does not open a book page.
-- Filters redone on 2026-11-09 (ADR 0036): a segmented Mine / Partner's /
+- Filters redone on 2026-11-09 (ADR 0034): a segmented Mine / Partner's /
   All row, then one "Recently added ▾" dropdown holding the views, so the
   filters are always two rows.
+- Later the same day (ADR 0037): row 2 became a Show filter and a Sort by
+  dropdown (title, author, series, recently added), and covers got the title
+  under them instead of "Unread".

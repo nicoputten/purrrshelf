@@ -30,7 +30,7 @@ Changed after APP-08:
   Kobo reports a position, which it only does when it syncs. A finished book
   gets a full bar.
 
-Filters redone (ADR 0036), always two rows:
+Filters redone (ADR 0034), always two rows:
 
 - Row 1: a segmented control "Mine · 2" / "Partner's · 2" / "All · 4"
   (accent when selected), one always selected.
@@ -39,3 +39,13 @@ Filters redone (ADR 0036), always two rows:
   Series; the current one is accent with a ✓. Picking one closes the menu;
   tapping outside closes it unchanged. Screen readers hear "Sort and filter:
   Recently added".
+
+Filter, sort and titles (ADR 0037):
+
+- Row 2 is now two pills side by side: "All books ▾" (Show: All books,
+  Unread, Reading, Finished, On my Kobo) and "Recently added ▾" (Sort by:
+  Recently added, Title, Author, Series). Screen readers hear "Show: All
+  books" and "Sort by: Recently added".
+- Under each cover: the progress bar, then the title (semibold, 13, up to two
+  lines), then a muted status only when it says something ("42% read",
+  "Reading", "Finished"). "Unread" is no longer printed.
