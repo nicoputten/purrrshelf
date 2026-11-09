@@ -3,6 +3,10 @@
 Canvas boards: 4 · Requests & progress, 9c · Swat in the Requests screen.
 Stories: APP-05, DES-02.
 
+Since APP-14 this is a page of its own (from the Requests sheet or the
+Library tab), not a tab; Swat in the Requests screen (9c) is replaced by
+Swat in the activity pill (9d). See [navigation.md](navigation.md).
+
 - Title "Requests" and the budget pill.
 - Active request card: small cover, title, "For your Kobo · English", then a
   step list:

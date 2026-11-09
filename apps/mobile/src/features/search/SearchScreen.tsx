@@ -1,5 +1,4 @@
 import type { SearchLanguage } from '@purrshelf/contract';
-import { router } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -12,6 +11,7 @@ import { Screen } from '@/components/Screen';
 import { SearchField, type SearchInput } from '@/components/SearchField';
 import { Snackbar } from '@/components/Snackbar';
 import { Nap, PawLoader } from '@/components/motion';
+import { useActivity } from '@/features/activity/useActivity';
 import { ForYou, type Notice } from '@/features/forYou/ForYou';
 import { Top10Teaser } from '@/features/top10/Top10Teaser';
 import { errorMessage } from '@/lib/errors';
@@ -61,6 +61,7 @@ export function SearchScreen({ onOpen, onAdd, onOpenForYou, query: asked }: Sear
   const query = submitted === text ? text : debounced;
   const search = useBookSearch(query, language);
   const budget = useSearchBudget();
+  const openRequests = useActivity((s) => s.openSheet);
   const hits = search.data?.hits ?? [];
   const active = query.trim().length >= MIN_QUERY_LENGTH;
   // Sniffing while the first results load, while new results replace the old
@@ -87,7 +88,7 @@ export function SearchScreen({ onOpen, onAdd, onOpenForYou, query: asked }: Sear
     >
       <View style={styles.header}>
         <Logo />
-        <BudgetPill budget={budget} onPress={() => router.navigate('/requests')} />
+        <BudgetPill budget={budget} onPress={openRequests} />
       </View>
       <AppText variant="display" accessibilityRole="header">
         {t('home.heading')}

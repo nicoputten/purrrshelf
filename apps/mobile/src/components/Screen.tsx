@@ -21,5 +21,6 @@ export function Screen({ children, overlay }: { children: ReactNode; overlay?: R
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { padding: space.xl, gap: space.lg, flexGrow: 1 },
+  // Room at the bottom so the activity pill (APP-14) never hides the last item.
+  content: { padding: space.xl, paddingBottom: 96, gap: space.lg, flexGrow: 1 },
 });

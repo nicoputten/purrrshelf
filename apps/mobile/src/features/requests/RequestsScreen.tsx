@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { AppText } from '@/components/AppText';
 import { BookCover } from '@/components/BookCover';
 import { BudgetPill } from '@/components/BudgetPill';
@@ -14,7 +15,7 @@ import { useSearchBudget } from '@/features/search/useBookSearch';
 import { errorMessage } from '@/lib/errors';
 import { useSession } from '@/session/session';
 import { useTheme } from '@/theme/ThemeProvider';
-import { fonts, fontSize, radius, space } from '@/theme/tokens';
+import { fonts, fontSize, radius, sizes, space } from '@/theme/tokens';
 import {
   deliveredEvent,
   deliveredFresh,
@@ -57,11 +58,14 @@ export interface RequestsScreenProps {
   /** Opens "Pick another" for a request (APP-05). */
   onPick: (requestId: string) => void;
   onFindBook: () => void;
+  /** The full list is a page of its own (APP-14): it gets a back button. */
+  onBack?: () => void;
 }
 
 /** Requests & progress (APP-03, APP-05; canvas board 4): live over server-sent events. */
-export function RequestsScreen({ onPick, onFindBook }: RequestsScreenProps) {
+export function RequestsScreen({ onPick, onFindBook, onBack }: RequestsScreenProps) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   useRequestEvents();
   const requests = useRequests();
   const readers = useReaders();
@@ -73,6 +77,24 @@ export function RequestsScreen({ onPick, onFindBook }: RequestsScreenProps) {
 
   return (
     <Screen>
+      {onBack ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('book.back')}
+          onPress={onBack}
+          style={styles.back}
+        >
+          <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M15 5L8 12L15 19"
+              stroke={colors.text}
+              strokeWidth={2.4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+      ) : null}
       <View style={styles.header}>
         <AppText variant="display" accessibilityRole="header">
           {t('requests.title')}
@@ -298,6 +320,7 @@ function StepRow({
 }
 
 const styles = StyleSheet.create({
+  back: { width: sizes.touch, height: sizes.touch, justifyContent: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   state: { alignItems: 'center', gap: space.md, paddingVertical: 40 },
   card: { gap: space.md, padding: space.md, borderRadius: radius.card },

@@ -136,7 +136,9 @@ describe('Book detail', () => {
     );
     await view;
     expect(await screen.findByText('You’re reading this one')).toBeOnTheScreen();
-    expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({ now: 0 });
+    expect(screen.getByRole('progressbar', { name: 'Reading progress' })).toHaveAccessibilityValue({
+      now: 0,
+    });
   });
 
   it('shows a finished book with a full bar, and nothing for an unread one', async () => {
