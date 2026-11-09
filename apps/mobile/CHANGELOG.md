@@ -5,7 +5,7 @@
 
 ### New tricks
 
-* The Library filters now sit in two tidy rows: whose books, and which kind
+* The Library filters fit in two tidy rows: whose books, and a menu for recent, unread, on my Kobo and series
 
 
 ### Fixed scratches
