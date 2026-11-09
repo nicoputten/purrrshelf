@@ -1,5 +1,7 @@
 name: Release
 
+# Releases are cut from main only. Features land on develop (the default
+# branch); a release fast-forwards main to develop (ADR 0042).
 on:
   push:
     branches: [main]
@@ -23,6 +25,9 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          # Without this, release-please opens its PRs against the default
+          # branch, which is develop.
+          target-branch: main
 
   broker-image:
     needs: release-please

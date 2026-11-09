@@ -57,7 +57,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       # Caches the Gradle distribution, dependencies and build cache between
-      # runs (written from main, read-only elsewhere).
+      # runs (written from the default branch, develop; read-only elsewhere,
+      # but every branch can read develop's caches).
       - uses: gradle/actions/setup-gradle@v5
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
