@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.1.0...broker-v1.2.0) (2026-11-09)
+
+
+### Features
+
+* **broker:** remove the one-time Calibre library import ([5e93712](https://github.com/nicoputten/purrrshelf/commit/5e937127c9119e5ebbe3283d57ba43548d800032))
+* **broker:** work out book suggestions for each reader (BRK-11) ([a3171a1](https://github.com/nicoputten/purrrshelf/commit/a3171a196fe1c86a5130d7a71eb23814150e4873))
+
 ## [1.1.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.0.0...broker-v1.1.0) (2026-11-09)
 
 
