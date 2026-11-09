@@ -232,7 +232,7 @@ describe('For you helpers', () => {
         after: { title: 'The Salt Road', position: 1, basis: 'finished' },
       },
     });
-    expect(bannerText(item, t)).toMatch(/^For you · .+/);
+    expect(bannerText(item, t)).toBe('For you · Lantern Keepers 2 · after book 1 you finished');
   });
 
   it('is instant only for a library book I don’t own yet', () => {
