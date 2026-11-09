@@ -2,6 +2,7 @@ import type { MyReading } from '@purrshelf/contract';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { barPercent } from '@/features/library/library';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radius } from '@/theme/tokens';
 
@@ -32,12 +33,7 @@ export function ReadingProgress({ reading }: { reading: MyReading | null }) {
   const { colors } = useTheme();
   const progress = progressOf(reading);
   if (!progress) return null;
-  const percent =
-    progress.key === 'book.progress.read'
-      ? progress.percent
-      : progress.key === 'book.progress.finished'
-        ? 100
-        : null;
+  const percent = barPercent(reading) ?? 0;
   const label =
     progress.key === 'book.progress.read'
       ? t(progress.key, { percent: progress.percent })
@@ -45,31 +41,29 @@ export function ReadingProgress({ reading }: { reading: MyReading | null }) {
   return (
     <View style={styles.wrap}>
       <AppText style={styles.label}>{label}</AppText>
-      {percent !== null ? (
+      <View
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={t('book.progress.label')}
+        accessibilityValue={{ min: 0, max: 100, now: percent }}
+        style={[styles.track, { backgroundColor: colors.surfaceRaised }]}
+      >
+        <View style={[styles.fill, { backgroundColor: colors.accent, width: `${percent}%` }]} />
         <View
-          accessible
-          accessibilityRole="progressbar"
-          accessibilityLabel={t('book.progress.label')}
-          accessibilityValue={{ min: 0, max: 100, now: percent }}
-          style={[styles.track, { backgroundColor: colors.surfaceRaised }]}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={[
+            styles.thumb,
+            {
+              left: `${percent}%`,
+              backgroundColor: colors.accent,
+              borderColor: colors.background,
+            },
+          ]}
         >
-          <View style={[styles.fill, { backgroundColor: colors.accent, width: `${percent}%` }]} />
-          <View
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={[
-              styles.thumb,
-              {
-                left: `${percent}%`,
-                backgroundColor: colors.accent,
-                borderColor: colors.background,
-              },
-            ]}
-          >
-            <AppText style={[styles.paw, { color: colors.onAccent }]}>🐾</AppText>
-          </View>
+          <AppText style={[styles.paw, { color: colors.onAccent }]}>🐾</AppText>
         </View>
-      ) : null}
+      </View>
     </View>
   );
 }

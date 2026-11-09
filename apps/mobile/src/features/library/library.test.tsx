@@ -4,7 +4,7 @@ import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { setFetch, useSession } from '@/session/session';
 import { apiError, fakeBroker, ok } from '@/test/fakeBroker';
 import { renderWithProviders, resetApp } from '@/test/utils';
-import { readLabel, tabCounts, visibleBooks } from './library';
+import { barPercent, readLabel, tabCounts, visibleBooks } from './library';
 import { LibraryScreen } from './LibraryScreen';
 
 jest.setTimeout(15_000);
@@ -217,5 +217,18 @@ describe('library helpers', () => {
     [null, null],
   ] as const)('labels %j', (reading, label) => {
     expect(readLabel(book({ reading }))).toEqual(label);
+  });
+
+  it.each([
+    [{ status: 'reading', progressPercent: null }, 0],
+    [{ status: 'reading', progressPercent: 0 }, 0],
+    [{ status: 'reading', progressPercent: 0.2 }, 1],
+    [{ status: 'reading', progressPercent: 42.4 }, 42],
+    [{ status: 'unread', progressPercent: 130 }, 100],
+    [{ status: 'unread', progressPercent: null }, null],
+    [{ status: 'finished', progressPercent: null }, 100],
+    [null, null],
+  ] as const)('fills the bar for %j to %j', (reading, percent) => {
+    expect(barPercent(reading)).toBe(percent);
   });
 });

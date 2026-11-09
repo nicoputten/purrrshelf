@@ -24,6 +24,12 @@ Built in APP-07:
   one muted sentence. Loading shows the paw-print loader.
 - The search button and the bottom-bar badge come later.
 
+Changed after APP-08:
+
+- A book I am reading always gets a progress bar. It stays empty until my
+  Kobo reports a position, which it only does when it syncs. A finished book
+  gets a full bar.
+
 Filters redone (ADR 0034), always two rows:
 
 - Row 1: a segmented control "Mine · 2" / "Partner's · 2" / "All · 4"

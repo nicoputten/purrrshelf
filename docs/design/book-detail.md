@@ -66,3 +66,8 @@ My library (BRK-08, ADR 0009):
   7 days unless someone keeps it.
 - For a library book I don't own (the partner's), an accent **Add to my
   library** button makes it mine at once: no search, no grab.
+
+Changed after APP-08:
+
+- "You're reading this one" (reading, no position reported yet) now shows an
+  empty bar too, so a book in progress always has one.
