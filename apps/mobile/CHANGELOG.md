@@ -5,9 +5,9 @@
 
 ### New tricks
 
-* **mobile:** For you suggestions on the Search tab (APP-12) ([6da464d](https://github.com/nicoputten/purrrshelf/commit/6da464d4be7e04fe9fd27a6a5e3dd7ee13cbcaea))
-* **mobile:** say why a book was suggested and add a partner's book at once (APP-13) ([d854d9e](https://github.com/nicoputten/purrrshelf/commit/d854d9ebd37dfad64306b3263248261d8b15bbf1))
-* **mobile:** show book titles in the Library and sort by title, author or series ([e051477](https://github.com/nicoputten/purrrshelf/commit/e05147782890027ccfec4e64bf2959446b4dbe69))
+* For you: book suggestions on the Search tab, sniffed out from what you both read
+* Each suggestion says why it was picked, and adds a book for your partner in one tap
+* The Library shows book titles and sorts by title, author or series
 
 ## [1.5.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.4.0...mobile-v1.5.0) (2026-11-09)
 
