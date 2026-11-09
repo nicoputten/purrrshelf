@@ -5,7 +5,8 @@
 
 ### New tricks
 
-* **mobile:** install app updates without the Install screen ([43cf509](https://github.com/nicoputten/purrrshelf/commit/43cf509a4c32791dec248dc098bfaebf2bb1900b))
+* Updates now install themselves when you leave the app, no Install screen after the first one
+* New switch in Settings: install updates automatically (on, purring along by default)
 
 ## [1.2.2](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.1...mobile-v1.2.2) (2026-11-09)
 
