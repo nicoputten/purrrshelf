@@ -26,6 +26,8 @@ import { noLibraryCovers, type LibraryCovers } from './modules/covers/library-co
 import { coverRoutes } from './modules/covers/routes.js';
 import { CoverService } from './modules/covers/service.js';
 import { CoverStore } from './modules/covers/store.js';
+import { createCharts } from './modules/charts/index.js';
+import { chartRoutes } from './modules/charts/routes.js';
 import { createDiscover, defaultProviders } from './modules/discover/index.js';
 import { hardcoverTokenCheck } from './modules/discover/hardcover-token.js';
 import type { FetchLike as MetadataFetch } from './modules/discover/http.js';
@@ -217,6 +219,17 @@ export async function buildApp({
   });
 
   const odds = createOdds({ db: database.db, clock, works: discover });
+  const charts = createCharts({
+    db: database.db,
+    clock,
+    fetch,
+    timeoutMs: config.METADATA_TIMEOUT_MS,
+    users,
+    discover,
+    hasTrending: Boolean(config.HARDCOVER_API_TOKEN),
+    library: libraryState,
+    log: app.log,
+  });
 
   // Also hands the best metadata cover to imports (CoverService.forImport).
   const covers = new CoverService({
@@ -283,6 +296,7 @@ export async function buildApp({
       await api.register(readerRoutes, { users, requireAuth: authenticated });
       await api.register(recommendRoutes, { recommend, requireAuth: authenticated });
       await api.register(oddsRoutes, { odds, requireAuth: authenticated });
+      await api.register(chartRoutes, { charts, requireAuth: authenticated });
       await api.register(requestRoutes, {
         requests: downloads.requests,
         releases: downloads.pipeline,

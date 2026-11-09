@@ -133,6 +133,24 @@ const SERIES_QUERY = `query Series($id: Int!) {
   }
 }`;
 
+const TrendingResponse = z.object({
+  data: z.object({
+    books_trending: z.object({
+      ids: z.array(z.number()).nullish().catch(null),
+      error: str,
+    }),
+  }),
+});
+
+/** Hardcover's busiest list: the books its readers finished most in the last month. */
+const TRENDING_QUERY = `query Trending($limit: Int!) {
+  books_trending(duration: month, limit: $limit, offset: 0) { ids error }
+}`;
+
+const BOOKS_QUERY = `query Books($ids: [Int!]!) {
+  books(where: { id: { _in: $ids } }) { ${BOOK_FIELDS} }
+}`;
+
 /** Hardcover tokens are shown on its settings page as `Bearer <jwt>`; accept either form. */
 export function bareToken(token: string): string {
   return token.trim().replace(/^Bearer\s+/i, '');
@@ -230,6 +248,27 @@ export class HardcoverProvider implements MetadataProvider {
       entries.push({ position: entry.position, work });
     }
     return { id: String(series.id), name: ref.name, total: ref.total, entries };
+  }
+
+  /**
+   * Hardcover trending (BRK-12): the books its readers finished most this
+   * month, best first, with their genre tags as `subjects`. Two calls: the
+   * ids, then the books.
+   */
+  async trending(limit: number): Promise<ProviderWork[]> {
+    const parsed = TrendingResponse.safeParse(await this.graphql(TRENDING_QUERY, { limit }));
+    if (!parsed.success) throw new ProviderError('Hardcover trending reply has an unknown shape');
+    const { ids, error } = parsed.data.data.books_trending;
+    if (error) throw new ProviderError(`Hardcover trending: ${error}`);
+    if (!ids?.length) return [];
+    const books = BookResponse.safeParse(await this.graphql(BOOKS_QUERY, { ids }));
+    if (!books.success) throw new ProviderError('Hardcover books reply has an unknown shape');
+    const byId = new Map<number, ProviderWork>();
+    for (const raw of books.data.data.books) {
+      const book = Book.safeParse(raw);
+      if (book.success) byId.set(book.data.id, this.toWork(book.data));
+    }
+    return ids.flatMap((id) => byId.get(id) ?? []);
   }
 
   private toWork(book: Partial<Book> & Pick<Book, 'id' | 'title'>): ProviderWork {
