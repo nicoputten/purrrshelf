@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/nicoputten/purrrshelf/compare/broker-v1.2.0...broker-v1.2.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **broker:** budget pill shows the scarcest indexer, not a sum ([d3a115d](https://github.com/nicoputten/purrrshelf/commit/d3a115d4663f8958c4f7ff172a823530211cd5a7))
+* **broker:** search the one field as title, author or both ([42453ae](https://github.com/nicoputten/purrrshelf/commit/42453ae67df3e101a7b256e3b17695b15cfbe8e4))
+
 ## [1.2.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.1.0...broker-v1.2.0) (2026-11-09)
 
 
