@@ -40,7 +40,8 @@ Settings:
    "Create/View"). The broker changes the `Kobo` shelf through that token
    (ADR 0021), so a reader without one gets `KOBO_SYNC_NOT_SET_UP`.
 4. Each Kobo's `api_endpoint` in `.kobo/Kobo/Kobo eReader.conf` points at its
-   own user's sync URL.
+   own user's sync URL: CWA's LAN address, or `https://<kobo-host>/kobo/<token>`
+   to sync away from home too ([reverse-proxy.md](reverse-proxy.md) section 6).
 
 ## 4. Still to do before milestone 3
 
