@@ -13,6 +13,7 @@ import { SearchField, type SearchInput } from '@/components/SearchField';
 import { Snackbar } from '@/components/Snackbar';
 import { Nap, PawLoader } from '@/components/motion';
 import { ForYou, type Notice } from '@/features/forYou/ForYou';
+import { Top10Teaser } from '@/features/top10/Top10Teaser';
 import { errorMessage } from '@/lib/errors';
 import { fonts } from '@/theme/tokens';
 import { SearchResult } from './SearchResult';
@@ -31,6 +32,8 @@ export interface SearchScreenProps {
   onAdd?: (workId: string) => void;
   /** Opens a For you card's book page (APP-12), which then shows the reason. */
   onOpenForYou?: (workId: string) => void;
+  /** Runs this search, e.g. Top 10's "Search for it" (APP-15). */
+  query?: string;
 }
 
 const noop = () => undefined;
@@ -39,11 +42,20 @@ const noop = () => undefined;
  * Search (home): one field, language chips, results with covers and badges
  * (APP-02). With no search going, For you fills the space (APP-12).
  */
-export function SearchScreen({ onOpen, onAdd, onOpenForYou }: SearchScreenProps) {
+export function SearchScreen({ onOpen, onAdd, onOpenForYou, query: asked }: SearchScreenProps) {
   const { t } = useTranslation();
-  const [text, setText] = useState('');
-  const [submitted, setSubmitted] = useState('');
+  const [text, setText] = useState(asked ?? '');
+  const [submitted, setSubmitted] = useState(asked ?? '');
   const [language, setLanguage] = useState<SearchLanguage>('any');
+  // A new search from Top 10 ("Search for it") replaces what's in the field.
+  const [lastAsked, setLastAsked] = useState(asked);
+  if (asked !== lastAsked) {
+    setLastAsked(asked);
+    if (asked) {
+      setText(asked);
+      setSubmitted(asked);
+    }
+  }
   const debounced = useDebounced(text, SEARCH_DEBOUNCE_MS);
   // Pressing search on the keyboard skips the debounce.
   const query = submitted === text ? text : debounced;
@@ -100,11 +112,14 @@ export function SearchScreen({ onOpen, onAdd, onOpenForYou }: SearchScreenProps)
       />
 
       {!active && !waiting ? (
-        <ForYou
-          onOpen={onOpenForYou ?? onOpen ?? noop}
-          onSearch={() => field.current?.focus()}
-          onNotice={setNotice}
-        />
+        <>
+          <ForYou
+            onOpen={onOpenForYou ?? onOpen ?? noop}
+            onSearch={() => field.current?.focus()}
+            onNotice={setNotice}
+          />
+          <Top10Teaser />
+        </>
       ) : search.isError && !search.data ? (
         <View style={styles.state} accessibilityRole="alert">
           <AppText>{errorMessage(search.error, t)}</AppText>

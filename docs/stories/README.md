@@ -43,6 +43,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-12](APP-12.md) | See books picked for me on the Search tab                      | 10        | done      |
 | [APP-13](APP-13.md) | Add a suggested book, instantly when my partner has it         | 10        | done      |
 | [BRK-12](BRK-12.md) | Get genre top 10s for each reader                              | 11        | in review |
+| [APP-15](APP-15.md) | Browse genre top 10s in their own tab                          | 11        | in review |
 
 ## Template
 
