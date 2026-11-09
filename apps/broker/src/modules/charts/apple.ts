@@ -4,6 +4,13 @@ import { ProviderError, requestJson, type HttpOptions } from '../discover/http.j
 
 /** Apple's marketing feeds: public, no key. */
 export const APPLE_FEED_HOST = 'rss.marketingtools.apple.com';
+/**
+ * Apple's feed gateway stalls any client that doesn't look like a browser
+ * (including Node's default and our own agent) for 30 seconds and then
+ * answers 504, so the feed is asked for with the agent that was seen to
+ * work (2026-11-09).
+ */
+export const APPLE_USER_AGENT = 'Mozilla/5.0';
 /** The most a feed gives. */
 export const APPLE_FEED_SIZE = 100;
 
@@ -48,7 +55,9 @@ export async function fetchAppleChart(
   http: HttpOptions,
   region: ChartRegion,
 ): Promise<AppleEntry[]> {
-  const parsed = Feed.safeParse(await requestJson(http, appleFeedUrl(region)));
+  const parsed = Feed.safeParse(
+    await requestJson(http, appleFeedUrl(region), { headers: { 'user-agent': APPLE_USER_AGENT } }),
+  );
   if (!parsed.success) throw new ProviderError('Apple Books chart has an unknown shape');
   return parsed.data.feed.results.flatMap((raw) => {
     const r = Result.safeParse(raw);

@@ -150,6 +150,13 @@ describe('Apple feed', () => {
     expect(splitAuthors(null)).toEqual([]);
   });
 
+  it('asks like a browser: Apple stalls other clients with a 504 after 30 seconds', async () => {
+    const h = http(() => json({ feed: { results: [] } }));
+    await fetchAppleChart(h, 'nl');
+    const init = (h.fetch.mock.calls[0] as unknown[])[1] as RequestInit;
+    expect((init.headers as Record<string, string>)['user-agent']).toBe('Mozilla/5.0');
+  });
+
   it('reads entries, dropping unusable ones and bad genres', async () => {
     const entries = await fetchAppleChart(
       http(() =>
