@@ -141,6 +141,31 @@ describe('flatten and toSummary', () => {
     expect(flat.series?.id).toBe('hardcover:9');
   });
 
+  it('carries the low-odds facts: first date, all languages, Hardcover readers (BRK-13)', () => {
+    const flat = flatten({
+      sources: [
+        work({ provider: 'openlibrary', id: 'OL9W', title: 'A', languages: ['nl'], readers: 99 }),
+        work({
+          provider: 'hardcover',
+          id: '9',
+          title: 'A',
+          releaseDate: '2026-01-02',
+          languages: ['nl', 'en'],
+          readers: 4,
+        }),
+        work({ provider: 'googlebooks', id: 'g', title: 'A', releaseDate: '2026-01-05' }),
+      ],
+    });
+    expect(flat).toMatchObject({ releaseDate: '2026-01-02', languages: ['nl', 'en'], readers: 4 });
+    expect(
+      flatten({ sources: [work({ provider: 'openlibrary', id: 'x', title: 'A' })] }),
+    ).toMatchObject({
+      releaseDate: null,
+      languages: [],
+      readers: null,
+    });
+  });
+
   it('lists every cover URL, best first', () => {
     expect(coverUrls(group)).toEqual([
       'https://c.example.invalid/1.jpg',

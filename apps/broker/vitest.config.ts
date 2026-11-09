@@ -21,6 +21,8 @@ export default defineConfig({
         // Library adapters need full coverage (CLAUDE.md).
         'src/modules/library/**': { 100: true },
         'src/modules/releases/scoring.ts': { 100: true },
+        // The low-odds decision rules (BRK-13).
+        'src/modules/odds/decide.ts': { 100: true },
       },
     },
   },

@@ -110,6 +110,64 @@ describe('HardcoverProvider', () => {
     expect(await hc.getWork('abc')).toBeNull();
   });
 
+  it('reads the release date, edition languages and readers (BRK-13)', async () => {
+    const book = (over: object) =>
+      new HardcoverProvider(
+        http(async () =>
+          json({
+            data: {
+              books: [
+                {
+                  id: 601,
+                  title: 'Lamplight Ledger',
+                  editions: [
+                    { isbn_13: '9780000000064', language: { code2: 'nl' } },
+                    { isbn_13: null, language: { code2: 'en' } },
+                    { isbn_13: null, language: { code2: 'nl' } },
+                    { isbn_13: null, language: null },
+                  ],
+                  ...over,
+                },
+              ],
+            },
+          }),
+        ),
+        'tok',
+      ).getWork('601');
+    expect(await book({ release_date: '2024-02-29', users_count: 7 })).toMatchObject({
+      language: 'nl',
+      languages: ['nl', 'en'],
+      releaseDate: '2024-02-29',
+      readers: 7,
+    });
+    expect(await book({ release_date: '2024-02-29T00:00:00+00:00' })).toMatchObject({
+      releaseDate: '2024-02-29',
+      readers: null,
+    });
+    for (const [release_date, users_count] of [
+      ['2023-02-29', -1],
+      ['2024', 2.5],
+      [42, 'many'],
+    ]) {
+      expect(await book({ release_date, users_count })).toMatchObject({
+        releaseDate: null,
+        readers: null,
+      });
+    }
+  });
+
+  it('asks Hardcover for the release date and readers', async () => {
+    const { fetch } = fakeProviders();
+    expect(await new HardcoverProvider(http(fetch), 'tok').getWork('101')).toMatchObject({
+      languages: ['nl'],
+      releaseDate: null,
+      readers: null,
+    });
+    const { query: gql } = JSON.parse(String(fetch.mock.calls[0]![1]!.body)) as { query: string };
+    expect(gql).toContain('release_date');
+    expect(gql).toContain('users_count');
+  });
+
   it('reads a series, one book per position, in order', async () => {
     const { fetch } = fakeProviders();
     const series = await new HardcoverProvider(http(fetch), 'tok').getSeries('77');
@@ -300,5 +358,17 @@ describe('GoogleBooksProvider', () => {
     );
     await expect(gb.search(query)).rejects.toThrow('unknown shape');
     await expect(gb.getWork('abcd')).rejects.toThrow('unknown shape');
+  });
+
+  it('keeps a publication date only when it is a full date (BRK-13)', async () => {
+    const volume = (publishedDate: string) =>
+      new GoogleBooksProvider(
+        http(async () => json({ id: 'gbLedger1', volumeInfo: { title: 'X', publishedDate } })),
+        undefined,
+      ).getWork('gbLedger1');
+    expect((await volume('2026-11-02'))!.releaseDate).toBe('2026-11-02');
+    expect((await volume('2026-11'))!.releaseDate).toBeNull();
+    expect((await volume('2026'))!.releaseDate).toBeNull();
+    expect((await volume('2026-13-01'))!.releaseDate).toBeNull();
   });
 });

@@ -128,6 +128,15 @@ export function yearOf(raw: string | number | null | undefined): number | null {
   return m ? Number(m[1]) : null;
 }
 
+/** A full calendar date as YYYY-MM-DD (time part dropped), or null for anything less or invalid. */
+export function fullDate(raw: string | null | undefined): string | null {
+  const m = raw?.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T ])/);
+  if (!m) return null;
+  const date = `${m[1]}-${m[2]}-${m[3]}`;
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(date) ? date : null;
+}
+
 export function blankToNull(s: string | null | undefined): string | null {
   const t = s?.trim();
   return t ? t : null;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ProviderError, requestJson, type HttpOptions } from '../http.js';
-import { blankToNull, languageCode, normaliseIsbns, yearOf } from '../normalise.js';
+import { blankToNull, fullDate, languageCode, normaliseIsbns, yearOf } from '../normalise.js';
 import type { MetadataProvider, MetadataQuery, ProviderSeries, ProviderWork } from '../types.js';
 
 export const HARDCOVER_URL = 'https://api.hardcover.app/v1/graphql';
@@ -67,6 +67,8 @@ const Book = z.object({
   subtitle: str,
   description: str,
   release_year: num,
+  release_date: str,
+  users_count: num,
   pages: num,
   cached_image: z.object({ url: str }).nullish().catch(null),
   cached_contributors: Contributors,
@@ -113,7 +115,7 @@ const SEARCH_QUERY = `query Search($q: String!) {
   search(query: $q, query_type: "Book", per_page: 20, page: 1) { results }
 }`;
 
-const BOOK_FIELDS = `id title subtitle description release_year pages cached_image cached_contributors cached_tags
+const BOOK_FIELDS = `id title subtitle description release_year release_date users_count pages cached_image cached_contributors cached_tags
   book_series { position series { id name primary_books_count } }
   editions(limit: 25) { isbn_13 isbn_10 language { code2 } }`;
 
@@ -233,7 +235,7 @@ export class HardcoverProvider implements MetadataProvider {
   private toWork(book: Partial<Book> & Pick<Book, 'id' | 'title'>): ProviderWork {
     const main = book.book_series?.find((s) => s.series) ?? null;
     const editions = book.editions ?? [];
-    const languages = editions.map((e) => languageCode(e.language?.code2)).filter(Boolean);
+    const languages = editions.map((e) => languageCode(e.language?.code2)).filter(isString);
     return {
       provider: this.name,
       id: String(book.id),
@@ -255,8 +257,15 @@ export class HardcoverProvider implements MetadataProvider {
       description: blankToNull(book.description),
       subjects: (book.cached_tags?.Genre ?? []).map((g) => g.tag).slice(0, 10),
       pageCount: book.pages ?? null,
+      releaseDate: fullDate(book.release_date),
+      languages: [...new Set(languages)],
+      readers: readersOf(book.users_count),
     };
   }
+}
+
+function readersOf(count: number | null | undefined): number | null {
+  return typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : null;
 }
 
 function isString(v: unknown): v is string {

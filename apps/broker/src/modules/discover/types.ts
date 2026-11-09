@@ -19,6 +19,12 @@ export interface ProviderWork {
   description?: string | null;
   subjects?: string[];
   pageCount?: number | null;
+  /** Full publication date (YYYY-MM-DD) when a provider has one (low odds, BRK-13). */
+  releaseDate?: string | null;
+  /** ISO 639-1 codes of every known edition (low odds, BRK-13). */
+  languages?: string[];
+  /** Hardcover readers who have the book (`users_count`; low odds, BRK-13). */
+  readers?: number | null;
 }
 
 /** At least one of text, title, author or subject is set. */

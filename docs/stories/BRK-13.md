@@ -12,11 +12,11 @@ so that I don't spend scarce searches on a book that isn't out there.
 
 ## Acceptance criteria
 
-- [ ] `GET /requests/preview?workId=&language=` answers `{ workId, language, lowOdds }`, where `lowOdds` is null or the one strongest reason as a code
-- [ ] Reasons, strongest first: `LOW_ODDS_NOT_FOUND` (a request for this work ended "not found" in the last 30 days, with the date), `LOW_ODDS_NO_MATCH` (no ISBN or edition), `LOW_ODDS_NEW` (published in the last 14 days or not yet), `LOW_ODDS_LANGUAGE` (chosen language is not English, with the English edition when one is known), `LOW_ODDS_RARE` (fewer than 10 Hardcover readers)
-- [ ] A book already in the library gets no warning
-- [ ] Working it out uses only metadata and the requests table: no indexer call, and the zero-indexer test covers the new module
-- [ ] Tests first; the decision rules have 100% coverage
+- [x] `GET /requests/preview?workId=&language=` answers `{ workId, language, lowOdds }`, where `lowOdds` is null or the one strongest reason as a code
+- [x] Reasons, strongest first: `LOW_ODDS_NOT_FOUND` (a request for this work ended "not found" in the last 30 days, with the date), `LOW_ODDS_NO_MATCH` (no ISBN or edition), `LOW_ODDS_NEW` (published in the last 14 days or not yet), `LOW_ODDS_LANGUAGE` (chosen language is not English, with the English edition when one is known), `LOW_ODDS_RARE` (fewer than 10 Hardcover readers)
+- [x] A book already in the library gets no warning
+- [x] Working it out uses only metadata and the requests table: no indexer call, and the zero-indexer test covers the new module
+- [x] Tests first; the decision rules have 100% coverage
 
 ## Design
 
