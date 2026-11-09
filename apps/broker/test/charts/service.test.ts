@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDatabase, type DatabaseHandle } from '../../src/db/index.js';
 import { AppError } from '../../src/errors.js';
 import { UserRepository } from '../../src/modules/auth/users.js';
-import { fetchAppleChart, splitAuthors } from '../../src/modules/charts/apple.js';
+import { APPLE_ATTEMPTS, fetchAppleChart, splitAuthors } from '../../src/modules/charts/apple.js';
 import {
   appleGenres,
   hardcoverGenres,
@@ -150,11 +150,30 @@ describe('Apple feed', () => {
     expect(splitAuthors(null)).toEqual([]);
   });
 
-  it('asks like a browser: Apple stalls other clients with a 504 after 30 seconds', async () => {
+  it('asks with a browser agent and accepts anything', async () => {
     const h = http(() => json({ feed: { results: [] } }));
     await fetchAppleChart(h, 'nl');
     const init = (h.fetch.mock.calls[0] as unknown[])[1] as RequestInit;
-    expect((init.headers as Record<string, string>)['user-agent']).toBe('Mozilla/5.0');
+    expect(init.headers).toMatchObject({ 'user-agent': 'Mozilla/5.0', accept: '*/*' });
+  });
+
+  it('tries again when Apple answers 502/504 or hangs, which it often does', async () => {
+    let calls = 0;
+    const h = http(() => {
+      calls++;
+      if (calls === 1) return json({}, 502);
+      if (calls === 2) throw new DOMException('timed out', 'TimeoutError');
+      return json({ feed: { results: [{ name: 'Third Time Lucky' }] } });
+    });
+    const entries = await fetchAppleChart(h, 'us');
+    expect(entries.map((e) => e.title)).toEqual(['Third Time Lucky']);
+    expect(calls).toBe(3);
+  });
+
+  it(`gives up after ${APPLE_ATTEMPTS} tries`, async () => {
+    const h = http(() => json({}, 504));
+    await expect(fetchAppleChart(h, 'us')).rejects.toBeInstanceOf(ProviderError);
+    expect(h.fetch).toHaveBeenCalledTimes(APPLE_ATTEMPTS);
   });
 
   it('reads entries, dropping unusable ones and bad genres', async () => {
@@ -179,12 +198,10 @@ describe('Apple feed', () => {
   });
 
   it('throws a ProviderError for a reply it cannot read or a missing feed', async () => {
-    await expect(
-      fetchAppleChart(
-        http(() => json({ nope: true })),
-        'us',
-      ),
-    ).rejects.toBeInstanceOf(ProviderError);
+    const odd = http(() => json({ nope: true }));
+    await expect(fetchAppleChart(odd, 'us')).rejects.toBeInstanceOf(ProviderError);
+    // A reply in an unknown shape won't get better by asking again.
+    expect(odd.fetch).toHaveBeenCalledTimes(1);
     await expect(
       fetchAppleChart(
         http(() => json({}, 404)),

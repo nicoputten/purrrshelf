@@ -38,3 +38,8 @@ at (Hardcover, Apple Books, NYT, Bol.com, CPNB) and why.
   needs no extra lookup.
 - Charts are cached in the metadata cache table (`charts:<source>:<region>`),
   so no migration.
+
+- 2026-11-09, after release: Apple's feed is flaky from the home server
+  (random 502s, and hangs that end in a 504 after 30 seconds). The broker
+  now tries each Apple chart up to 6 times, 6 seconds a try
+  (`APPLE_ATTEMPTS`, `APPLE_TRY_MS` in `modules/charts/apple.ts`).

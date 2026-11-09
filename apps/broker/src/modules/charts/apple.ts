@@ -5,12 +5,14 @@ import { ProviderError, requestJson, type HttpOptions } from '../discover/http.j
 /** Apple's marketing feeds: public, no key. */
 export const APPLE_FEED_HOST = 'rss.marketingtools.apple.com';
 /**
- * Apple's feed gateway stalls any client that doesn't look like a browser
- * (including Node's default and our own agent) for 30 seconds and then
- * answers 504, so the feed is asked for with the agent that was seen to
- * work (2026-11-09).
+ * Apple's feed gateway is flaky from a home server: any request can get a
+ * quick answer, a 502, or hang for 30 seconds and then 504 (seen 2026-11-09,
+ * with and without a browser agent). An answer takes about a second, so
+ * each try gets {@link APPLE_TRY_MS} and there are {@link APPLE_ATTEMPTS}.
  */
-export const APPLE_USER_AGENT = 'Mozilla/5.0';
+export const APPLE_ATTEMPTS = 6;
+export const APPLE_TRY_MS = 6000;
+const APPLE_HEADERS = { accept: '*/*', 'user-agent': 'Mozilla/5.0' };
 /** The most a feed gives. */
 export const APPLE_FEED_SIZE = 100;
 
@@ -47,17 +49,26 @@ export function splitAuthors(artistName: string | null | undefined): string[] {
 }
 
 /**
- * The Apple Books ebook bestseller chart of one country (ADR 0039). Throws
- * {@link ProviderError} when Apple can't be reached or answers something we
- * can't read; entries without a title are dropped.
+ * The Apple Books ebook bestseller chart of one country (ADR 0039). Tries up
+ * to {@link APPLE_ATTEMPTS} times, then throws {@link ProviderError}; also
+ * throws it straight away for a reply we can't read. Entries without a title
+ * are dropped.
  */
 export async function fetchAppleChart(
   http: HttpOptions,
   region: ChartRegion,
 ): Promise<AppleEntry[]> {
-  const parsed = Feed.safeParse(
-    await requestJson(http, appleFeedUrl(region), { headers: { 'user-agent': APPLE_USER_AGENT } }),
-  );
+  let body: unknown;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      body = await requestJson(http, appleFeedUrl(region), { headers: APPLE_HEADERS });
+      break;
+    } catch (err) {
+      // A 5xx, a timeout or a dropped connection: Apple often answers the next try.
+      if (!(err instanceof ProviderError) || attempt >= APPLE_ATTEMPTS) throw err;
+    }
+  }
+  const parsed = Feed.safeParse(body);
   if (!parsed.success) throw new ProviderError('Apple Books chart has an unknown shape');
   return parsed.data.feed.results.flatMap((raw) => {
     const r = Result.safeParse(raw);

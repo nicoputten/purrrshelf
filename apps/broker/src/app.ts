@@ -223,7 +223,6 @@ export async function buildApp({
     db: database.db,
     clock,
     fetch,
-    timeoutMs: config.METADATA_TIMEOUT_MS,
     users,
     discover,
     hasTrending: Boolean(config.HARDCOVER_API_TOKEN),

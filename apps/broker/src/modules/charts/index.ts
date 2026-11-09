@@ -10,7 +10,7 @@ import type { LibraryItems } from '../library/items.js';
 import type { LibraryAdapter } from '../library/types.js';
 import { openRequests } from '../recommend/open-requests.js';
 import { ReaderShelf } from '../recommend/shelf.js';
-import { fetchAppleChart } from './apple.js';
+import { APPLE_TRY_MS, fetchAppleChart } from './apple.js';
 import { ChartService } from './service.js';
 
 /** The last good chart is kept this long, for when a source is down. */
@@ -20,7 +20,6 @@ export function createCharts(opts: {
   db: Db;
   clock: Clock;
   fetch: FetchLike;
-  timeoutMs: number;
   users: { findById(id: string): User | undefined };
   discover: DiscoverService;
   hasTrending: boolean;
@@ -33,7 +32,7 @@ export function createCharts(opts: {
   const { discover } = opts;
   return new ChartService({
     users: opts.users,
-    apple: (region) => fetchAppleChart({ fetch: opts.fetch, timeoutMs: opts.timeoutMs }, region),
+    apple: (region) => fetchAppleChart({ fetch: opts.fetch, timeoutMs: APPLE_TRY_MS }, region),
     works: {
       matchWork: (book) => discover.matchWork(book),
       summary: (id) => discover.summary(id),

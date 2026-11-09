@@ -4,6 +4,7 @@ import { Charts, TokenPair, type LibraryState } from '@purrshelf/contract';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { LibraryLookup } from '../../src/modules/discover/library-lookup.js';
 import { requests } from '../../src/db/schema.js';
+import { APPLE_ATTEMPTS } from '../../src/modules/charts/apple.js';
 import { login, makeTestApp, type TestContext } from '../helpers.js';
 import {
   ISBN_HAVELAAR,
@@ -203,7 +204,7 @@ describe('GET /charts', () => {
     ctx.clock.advance(25 * HOUR);
     appleDown = true;
     const charts = (await getCharts()) as Charts;
-    expect(providers.calls('apple:chart')).toBe(appleCalls + 2);
+    expect(providers.calls('apple:chart')).toBe(appleCalls + 2 * APPLE_ATTEMPTS);
     expect(charts.stale).toBe(true);
     expect(list(charts, 'apple', 'nl', 'all')!.items).toHaveLength(2);
   });
