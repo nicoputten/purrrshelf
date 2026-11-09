@@ -1,9 +1,47 @@
 # Releasing
 
-release-please opens one release PR per component (`broker`, `mobile`) from
-conventional commits on `main`. Merging a mobile release PR tags
-`mobile-vX.Y.Z`, and `release.yml` builds the release-signed APK and attaches
-it to the GitHub release (ADR 0028, 0030, 0031).
+Branches (ADR 0042):
+
+- `develop` is the default branch. Every feature and fix lands there by
+  fast-forward.
+- `main` holds what was released. It only moves when a release is cut.
+
+release-please runs on `main` and opens one release PR per component
+(`broker`, `mobile`) against `main`, from the conventional commits since the
+last release. Merging a mobile release PR tags `mobile-vX.Y.Z`, and
+`release.yml` builds the release-signed APK and attaches it to the GitHub
+release (ADR 0028, 0030, 0031). A broker release pushes the versioned image.
+
+## Cutting a release
+
+Several features can go out together: keep landing them on `develop` and
+cut the release once everything that belongs together is there.
+
+1. Make sure `develop` is green, then fast-forward `main` to it:
+
+   ```sh
+   git fetch origin
+   git push origin origin/develop:main
+   ```
+
+   Do not land anything else on `develop` until step 4.
+
+2. release-please opens or updates the release PRs on `main`. For mobile,
+   curate the notes (below).
+3. Merge each release PR by fast-forward (see below).
+4. Bring `develop` up to `main`, so the release commits are on both:
+
+   ```sh
+   git fetch origin
+   git push origin origin/main:develop
+   ```
+
+## Urgent fix while develop holds unreleased work
+
+Branch from `main`, fast-forward `main` to the fix, release it, then bring
+`main` into `develop`: if `develop` has not moved, fast-forward it; otherwise
+merge `main` into `develop` with a local merge commit (bot identity, no
+personal names).
 
 ## Mobile release notes (ADR 0033)
 
@@ -37,4 +75,5 @@ The app and broker strip any leftover Markdown links, hashes and ticket ids
 
 Merge by fast-forward. If `main` moved on, merge `main` into the release branch
 first (never force-push it), then fast-forward `main` to it, so GitHub marks
-the PR merged and release-please tags it.
+the PR merged and release-please tags it. Then catch `develop` up (step 4
+above).

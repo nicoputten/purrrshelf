@@ -37,6 +37,9 @@ pnpm lint && pnpm typecheck && pnpm format:check
 Configuration comes from environment variables; see `.env.example`. Never
 commit real values. See `CLAUDE.md` for the project rules.
 
+Work lands on `develop`; `main` holds what was released. See
+`docs/releases.md` for how a release is cut.
+
 ## Licence
 
 MIT

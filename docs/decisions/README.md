@@ -45,6 +45,8 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0038](0038-budget-pill-scarcest-indexer.md)                | The budget pill shows the scarcest indexer                              | accepted                   |
 | [0039](0039-genre-top-10s.md)                               | Genre top 10s from Apple Books charts and Hardcover trending            | accepted                   |
 | [0041](0041-low-odds-warning.md)                            | Warn before Add when a book will be hard to find                        | accepted                   |
+| [0042](0042-develop-branch-batched-releases.md)             | Features land on develop; a release fast-forwards main                  | accepted                   |
+| [0042](0042-kobo-sync-away-from-home.md)                    | Kobo sync away from home: only CWA's /kobo/ path, on its own host       | accepted                   |
 
 ## Template
 
