@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.3.0...mobile-v1.4.0) (2026-11-09)
+
+
+### New tricks
+
+* **mobile:** show the Library filters as two clear rows ([4ff0547](https://github.com/nicoputten/purrrshelf/commit/4ff054748722e19548ac07e3dff6b34192a43393))
+
+
+### Fixed scratches
+
+* **mobile:** show a progress bar for every book I am reading ([9381dbd](https://github.com/nicoputten/purrrshelf/commit/9381dbddb95b2fcbd78d0df931a3c2cd588fc9f0))
+
 ## [1.3.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.2.2...mobile-v1.3.0) (2026-11-09)
 
 
