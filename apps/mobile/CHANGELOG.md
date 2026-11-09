@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.4.0...mobile-v1.5.0) (2026-11-09)
+
+
+### New tricks
+
+* Settings is tidier: the Calibre import did its job and curled up for good. Your books stay right where they are
+
 ## [1.4.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.3.0...mobile-v1.4.0) (2026-11-09)
 
 
