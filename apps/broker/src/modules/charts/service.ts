@@ -4,9 +4,9 @@ import type { Clock } from '../../clock.js';
 import type { User } from '../../db/schema.js';
 import { AppError } from '../../errors.js';
 import type { LibraryLookup } from '../discover/library-lookup.js';
-import type { OpenRequests } from '../recommend/types.js';
+import type { OpenRequests, ReaderShelfBooks } from '../recommend/types.js';
 import type { AppleEntry } from './apple.js';
-import { appleGenres, hardcoverGenres, splitByGenre } from './genres.js';
+import { appleGenres, hardcoverGenres, splitByGenre, topGenre, type BookGenre } from './genres.js';
 
 /** Books per genre list. */
 export const PER_LIST = 10;
@@ -43,6 +43,8 @@ export interface ChartDeps {
   works: ChartWorks;
   library: LibraryLookup;
   openRequests: OpenRequests;
+  /** The reader's books and Kobo reading state, for their top genre. */
+  shelf: { books(user: User): Promise<ReaderShelfBooks> };
   cache: { get<T>(key: string): T | undefined; set(key: string, value: unknown): void };
   clock: Clock;
   log: Pick<FastifyBaseLogger, 'warn'>;
@@ -122,7 +124,19 @@ export class ChartService {
       charts,
       updatedAt: new Date(oldest).toISOString(),
       stale: loaded.some((l) => l.stale),
+      topGenre: await this.topGenre(user),
     };
+  }
+
+  /** Null when the reader has no Kobo reading data or the library can't be read. */
+  private async topGenre(user: User): Promise<BookGenre | null> {
+    try {
+      const { books, readingData } = await this.deps.shelf.books(user);
+      return readingData ? topGenre(books, this.deps.clock()) : null;
+    } catch (err) {
+      this.deps.log.warn({ err }, 'charts: top genre unavailable');
+      return null;
+    }
   }
 
   /** The cached chart when fresh, else a new one; the last good one when the source is down. */

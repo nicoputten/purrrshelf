@@ -6,7 +6,10 @@ import { MetadataCache } from '../discover/cache.js';
 import type { FetchLike } from '../discover/http.js';
 import type { LibraryLookup } from '../discover/library-lookup.js';
 import type { DiscoverService } from '../discover/service.js';
+import type { LibraryItems } from '../library/items.js';
+import type { LibraryAdapter } from '../library/types.js';
 import { openRequests } from '../recommend/open-requests.js';
+import { ReaderShelf } from '../recommend/shelf.js';
 import { fetchAppleChart } from './apple.js';
 import { ChartService } from './service.js';
 
@@ -22,6 +25,9 @@ export function createCharts(opts: {
   discover: DiscoverService;
   hasTrending: boolean;
   library: LibraryLookup;
+  /** Owned books and the CWA adapter, for the reader's top genre (BRK-14). */
+  items: LibraryItems;
+  libraryAdapter: LibraryAdapter | null;
   log: FastifyBaseLogger;
 }): ChartService {
   const { discover } = opts;
@@ -36,6 +42,7 @@ export function createCharts(opts: {
     },
     library: opts.library,
     openRequests: openRequests(opts.db),
+    shelf: new ReaderShelf(opts.items, opts.libraryAdapter),
     cache: new MetadataCache(opts.db, opts.clock, KEEP_MS),
     clock: opts.clock,
     log: opts.log,

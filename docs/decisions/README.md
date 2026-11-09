@@ -48,6 +48,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0041](0041-low-odds-warning.md)                            | Warn before Add when a book will be hard to find                        | accepted                   |
 | [0042](0042-develop-branch-batched-releases.md)             | Features land on develop; a release fast-forwards main                  | accepted                   |
 | [0043](0043-kobo-sync-away-from-home.md)                    | Kobo sync away from home: only CWA's /kobo/ path, on its own host       | accepted                   |
+| [0044](0044-reader-top-genre.md)                            | The reader's top genre this month leads the Search teaser               | accepted                   |
 
 ## Template
 

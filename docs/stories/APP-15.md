@@ -34,9 +34,8 @@ See [ADR 0039](../decisions/0039-genre-top-10s.md) for the chart sources.
 - Data: `useCharts()` (`['charts']`, one hour stale time); everything else
   is picked from that one answer in the app (source, region, genre).
 - The teaser should show the reader's most-finished genre this month. The
-  broker doesn't expose that yet, so it always shows Thrillers & crime
-  (TODO in `features/top10/Top10Teaser.tsx`). It needs a broker field, e.g.
-  `topGenre` on `/charts`.
+  broker didn't expose that yet, so it showed Thrillers & crime; BRK-14 and
+  APP-17 added it (`topGenre` on `/charts`, ADR 0044).
 - The request chip reads progress from the requests list already loaded by
   the activity pill or Requests; it never fetches it. Without it the chip
   says "Downloading".

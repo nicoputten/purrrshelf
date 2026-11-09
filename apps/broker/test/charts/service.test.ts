@@ -4,7 +4,14 @@ import { openDatabase, type DatabaseHandle } from '../../src/db/index.js';
 import { AppError } from '../../src/errors.js';
 import { UserRepository } from '../../src/modules/auth/users.js';
 import { fetchAppleChart, splitAuthors } from '../../src/modules/charts/apple.js';
-import { appleGenres, hardcoverGenres, splitByGenre } from '../../src/modules/charts/genres.js';
+import {
+  appleGenres,
+  hardcoverGenres,
+  splitByGenre,
+  tagGenres,
+  topGenre,
+  TOP_GENRE_DAYS,
+} from '../../src/modules/charts/genres.js';
 import {
   ChartService,
   REFRESH_MS,
@@ -13,6 +20,8 @@ import {
   type ChartWorks,
 } from '../../src/modules/charts/service.js';
 import { MetadataCache } from '../../src/modules/discover/cache.js';
+import type { ReadingState } from '../../src/modules/library/types.js';
+import type { ReaderShelfBooks } from '../../src/modules/recommend/types.js';
 import { ProviderError } from '../../src/modules/discover/http.js';
 import { PASSWORD, TestClock } from '../helpers.js';
 import { json } from '../metadata-fakes.js';
@@ -49,6 +58,17 @@ describe('genres', () => {
     expect(hardcoverGenres([])).toEqual([]);
   });
 
+  it('maps library tags, also Calibre-style compound and Dutch tags', () => {
+    expect(tagGenres(['Fiction / Thrillers', 'Mystery & Detective'])).toEqual(['thriller']);
+    expect(tagGenres(['Spanning', 'Historische roman', 'Non-fictie'])).toEqual([
+      'thriller',
+      'historical',
+      'nonfiction',
+    ]);
+    expect(tagGenres(['Biography & Memoir'])).toEqual(['biography']);
+    expect(tagGenres(['Fictional Fantasy', 'General'])).toEqual([]);
+  });
+
   it('cuts genre lists with ranks from 1, leaving out empty genres', () => {
     const ranked = [
       { id: 'a', genres: ['thriller' as const] },
@@ -62,6 +82,56 @@ describe('genres', () => {
       ['thriller', ['1a', '2c']],
       ['romance', ['1c']],
     ]);
+  });
+});
+
+describe('top genre', () => {
+  const now = new Date('2026-11-09T12:00:00Z');
+  const day = 24 * 60 * 60 * 1000;
+  const book = (
+    tags: string[],
+    status: ReadingState['status'],
+    daysAgo: number | null,
+  ): { tags: string[]; reading: ReadingState | null } => ({
+    tags,
+    reading: {
+      status,
+      progressPercent: null,
+      spentReadingMinutes: null,
+      remainingMinutes: null,
+      lastModified: daysAgo === null ? null : new Date(now.getTime() - daysAgo * day),
+    },
+  });
+
+  it('is the genre of the most books finished in the last 30 days', () => {
+    expect(
+      topGenre(
+        [
+          book(['Thriller'], 'finished', 2),
+          book(['Fantasy'], 'finished', 3),
+          book(['Science Fiction'], 'finished', 10),
+          book(['Thriller'], 'reading', 1),
+          book(['Thriller'], 'finished', TOP_GENRE_DAYS + 1),
+          book(['Thriller'], 'finished', null),
+          { tags: ['Thriller'], reading: null },
+        ],
+        now,
+      ),
+    ).toBe('fantasy_scifi');
+  });
+
+  it('breaks a tie by the most recent finish', () => {
+    expect(
+      topGenre([book(['Romance'], 'finished', 5), book(['Thriller'], 'finished', 1)], now),
+    ).toBe('thriller');
+    expect(
+      topGenre([book(['Thriller'], 'finished', 5), book(['Romance'], 'finished', 1)], now),
+    ).toBe('romance');
+  });
+
+  it('is null when nothing with a known genre was finished this month', () => {
+    expect(topGenre([book(['General'], 'finished', 1)], now)).toBeNull();
+    expect(topGenre([], now)).toBeNull();
   });
 });
 
@@ -132,6 +202,7 @@ describe('ChartService', () => {
   let apple: ReturnType<typeof vi.fn>;
   let log: { warn: ReturnType<typeof vi.fn> };
   let service: ChartService;
+  let shelf: ReturnType<typeof vi.fn>;
 
   const make = () => {
     const users = new UserRepository(database.db, clock.fn);
@@ -141,6 +212,7 @@ describe('ChartService', () => {
       works: works as unknown as ChartWorks,
       library: { match: async () => new Map() },
       openRequests: () => new Map(),
+      shelf: { books: shelf as unknown as ChartDeps['shelf']['books'] },
       cache: new MetadataCache(database.db, clock.fn, 30 * REFRESH_MS),
       clock: clock.fn,
       log: log as unknown as ChartDeps['log'],
@@ -162,10 +234,39 @@ describe('ChartService', () => {
       hasTrending: false,
     };
     log = { warn: vi.fn() };
+    shelf = vi.fn(async (): Promise<ReaderShelfBooks> => ({ books: [], readingData: false }));
     service = make();
   });
 
   afterEach(() => database.close());
+
+  it('adds the reader’s top genre from books finished this month', async () => {
+    shelf.mockResolvedValue({
+      readingData: true,
+      books: [
+        {
+          tags: ['Romance'],
+          reading: {
+            status: 'finished',
+            progressPercent: 100,
+            spentReadingMinutes: null,
+            remainingMinutes: null,
+            lastModified: new Date(clock.fn().getTime() - 60_000),
+          },
+        },
+      ],
+    });
+    expect((await service.get(userId)).topGenre).toBe('romance');
+  });
+
+  it('has no top genre without reading data, or when the library cannot be read', async () => {
+    expect((await service.get(userId)).topGenre).toBeNull();
+    shelf.mockRejectedValue(new Error('CWA down'));
+    const charts = await service.get(userId);
+    expect(charts.topGenre).toBeNull();
+    expect(charts.charts.length).toBeGreaterThan(0);
+    expect(log.warn).toHaveBeenCalled();
+  });
 
   it('needs a known user', async () => {
     await expect(service.get('nobody')).rejects.toMatchObject({ code: 'UNAUTHORIZED' });

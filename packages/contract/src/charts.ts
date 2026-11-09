@@ -72,6 +72,12 @@ export const Charts = z
     updatedAt: z.iso.datetime(),
     /** True when a refresh failed and these are the last good charts. */
     stale: z.boolean(),
+    /**
+     * The genre of most books the reader finished on their Kobo in the last
+     * 30 days (BRK-14, ADR 0044). Null without Kobo reading data or when no
+     * finished book has a known genre; the app then picks its own.
+     */
+    topGenre: ChartGenre.exclude(['all']).nullable(),
   })
   .meta({ id: 'Charts' });
 export type Charts = z.infer<typeof Charts>;

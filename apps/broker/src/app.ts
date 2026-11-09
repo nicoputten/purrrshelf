@@ -228,6 +228,8 @@ export async function buildApp({
     discover,
     hasTrending: Boolean(config.HARDCOVER_API_TOKEN),
     library: libraryState,
+    items: libraryItems,
+    libraryAdapter: library,
     log: app.log,
   });
 

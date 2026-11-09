@@ -77,6 +77,7 @@ Built (APP-15):
   Tapping a cover opens its book page (or searches for a book nobody
   knows). It shows nothing while loading or when the charts are down, so
   For you stays in charge of the screen.
-- The board picks the reader's most-finished genre this month; the broker
-  doesn't expose that yet, so the teaser shows Thrillers & crime for now
-  and leaves out the board's "Your top genre this month" line.
+- The teaser leads with the reader's most-finished genre this month
+  (`topGenre`, BRK-14/APP-17, ADR 0044) and shows "Your top genre this
+  month" (12, muted) under the title. Without a top genre, or when today's
+  chart has no list for it, it shows thrillers without that line.

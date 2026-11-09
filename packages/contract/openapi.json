@@ -1651,9 +1651,28 @@
           },
           "stale": {
             "type": "boolean"
+          },
+          "topGenre": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "thriller",
+                  "romance",
+                  "literary",
+                  "historical",
+                  "fantasy_scifi",
+                  "biography",
+                  "nonfiction"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
-        "required": ["charts", "updatedAt", "stale"],
+        "required": ["charts", "updatedAt", "stale", "topGenre"],
         "additionalProperties": false
       },
       "DiscoverSearchResult": {

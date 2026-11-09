@@ -48,6 +48,8 @@ Statuses: `todo`, `in progress`, `done`.
 | [OPS-04](OPS-04.md) | Sync my Kobo away from home                                    | 10        | done      |
 | [APP-14](APP-14.md) | Follow my requests from any tab                                | 11        | done      |
 | [APP-15](APP-15.md) | Browse genre top 10s in their own tab                          | 11        | done      |
+| [BRK-14](BRK-14.md) | Know my top genre this month                                   | 11        | done      |
+| [APP-17](APP-17.md) | See my top genre's Top 10 on Search                            | 11        | done      |
 
 ## Template
 

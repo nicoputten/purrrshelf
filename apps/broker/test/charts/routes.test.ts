@@ -141,6 +141,8 @@ describe('GET /charts', () => {
     owned.add('hardcover:101');
     const charts = (await getCharts()) as Charts;
     expect(charts.stale).toBe(false);
+    // No CWA library in this app: no Kobo reading data, so no top genre.
+    expect(charts.topGenre).toBeNull();
     expect(charts.charts.map((c) => `${c.source}:${c.region}:${c.genre}`)).toEqual([
       'apple:nl:all',
       'apple:nl:thriller',
