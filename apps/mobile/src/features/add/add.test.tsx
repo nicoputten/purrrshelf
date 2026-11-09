@@ -158,6 +158,162 @@ describe('Add sheet', () => {
   });
 });
 
+function preview(lowOdds: Record<string, unknown> | null, language = 'en') {
+  return ok({
+    workId: 'hardcover:301',
+    language,
+    lowOdds: lowOdds && {
+      notFoundAt: null,
+      releaseDate: null,
+      englishEditionWorkId: null,
+      readers: null,
+      ...lowOdds,
+    },
+  });
+}
+
+describe('low-odds warning (APP-16)', () => {
+  const cases = [
+    [
+      { code: 'LOW_ODDS_NOT_FOUND', notFoundAt: '2026-11-02T12:00:00.000Z' },
+      'Not found last time',
+      'We tried on 2 November and found nothing. Chances are low it turned up since.',
+    ],
+    [
+      { code: 'LOW_ODDS_NO_MATCH' },
+      'We barely know this book',
+      'There’s no ISBN or edition info, so it’s hard to search for well. Expect no result.',
+    ],
+    [
+      { code: 'LOW_ODDS_NEW', releaseDate: '2026-11-05' },
+      'This one is very new',
+      'New books often take a few weeks to turn up. Trying now may cost searches for nothing.',
+    ],
+    [
+      { code: 'LOW_ODDS_LANGUAGE' },
+      'Dutch books are hard to find',
+      'Few Dutch ebooks get shared, so this often ends with “couldn’t sniff this one out”. Don’t count on it.',
+    ],
+    [
+      { code: 'LOW_ODDS_RARE', readers: 3 },
+      'A rare one',
+      'Few people read this, so few copies get shared. It may not be out there.',
+    ],
+  ] as const;
+
+  it.each(cases)('shows one card for %j', async (lowOdds, title, body) => {
+    broker({ 'GET /requests/preview': () => preview(lowOdds) });
+    await open();
+    expect(await screen.findByText(title)).toBeOnTheScreen();
+    expect(screen.getByText(body)).toBeOnTheScreen();
+    expect(screen.getAllByTestId('low-odds-warning')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Fetch it anyway' })).toBeEnabled();
+    expect(screen.queryByRole('link', { name: 'Try the English edition instead' })).toBeNull();
+  });
+
+  it('asks for the work and the chosen language', async () => {
+    const b = broker({ 'GET /requests/preview': () => preview(null) });
+    await open();
+    await waitFor(() =>
+      expect(b.calls.some((c) => c.route === 'GET /requests/preview')).toBe(true),
+    );
+    expect(screen.getByRole('button', { name: 'Fetch it now' })).toBeOnTheScreen();
+    expect(screen.queryByTestId('low-odds-warning')).toBeNull();
+  });
+
+  it('shows no warning when the preview fails, and Add still works', async () => {
+    const b = broker({ 'GET /requests/preview': () => apiError(500, 'INTERNAL_ERROR') });
+    const user = userEvent.setup();
+    const onAdded = await open();
+    await waitFor(() =>
+      expect(b.calls.some((c) => c.route === 'GET /requests/preview')).toBe(true),
+    );
+    expect(screen.queryByTestId('low-odds-warning')).toBeNull();
+    await user.press(screen.getByRole('button', { name: 'Fetch it now' }));
+    await waitFor(() => expect(onAdded).toHaveBeenCalled());
+  });
+
+  it('does not ask for a book already in the library', async () => {
+    const b = broker({
+      'GET /works/hardcover:301': () =>
+        ok(work({ library: { itemId: 'item-1', owners: [], onMyKobo: false, reading: null } })),
+      'GET /requests/preview': () => preview({ code: 'LOW_ODDS_RARE' }),
+    });
+    await renderWithProviders(<AddSheetHost onAdded={jest.fn()} />);
+    await act(async () => useAddSheet.getState().open('hardcover:301'));
+    expect(await screen.findByText('Add to your library?')).toBeOnTheScreen();
+    expect(b.calls.some((c) => c.route === 'GET /requests/preview')).toBe(false);
+    expect(screen.queryByText('A rare one')).toBeNull();
+  });
+
+  it('follows the language picker', async () => {
+    const urls: string[] = [];
+    broker({
+      'GET /requests/preview': (_body, _headers, url) => {
+        urls.push(url.search);
+        const language = url.searchParams.get('language') ?? 'en';
+        return preview(language === 'nl' ? { code: 'LOW_ODDS_LANGUAGE' } : null, language);
+      },
+    });
+    const user = userEvent.setup();
+    await open();
+    await waitFor(() => expect(urls).toHaveLength(1));
+    expect(urls[0]).toBe('?workId=hardcover%3A301&language=en');
+    expect(screen.queryByText('Dutch books are hard to find')).toBeNull();
+    await user.press(screen.getByRole('radio', { name: 'Nederlands' }));
+    expect(await screen.findByText('Dutch books are hard to find')).toBeOnTheScreen();
+    expect(urls[1]).toBe('?workId=hardcover%3A301&language=nl');
+    expect(screen.getByRole('button', { name: 'Fetch it anyway' })).toBeOnTheScreen();
+    await user.press(screen.getByRole('radio', { name: 'English' }));
+    await waitFor(() => expect(screen.queryByText('Dutch books are hard to find')).toBeNull());
+    expect(screen.getByRole('button', { name: 'Fetch it now' })).toBeOnTheScreen();
+  });
+
+  it('switches to English when this work has an English edition', async () => {
+    broker({
+      'GET /works/hardcover:301': () => ok(work({ language: 'nl' })),
+      'GET /requests/preview': (_body, _headers, url) =>
+        url.searchParams.get('language') === 'nl'
+          ? preview({ code: 'LOW_ODDS_LANGUAGE', englishEditionWorkId: 'hardcover:301' }, 'nl')
+          : preview(null),
+    });
+    const user = userEvent.setup();
+    await open();
+    expect(screen.getByRole('radio', { name: 'Nederlands' })).toBeChecked();
+    await user.press(await screen.findByRole('link', { name: 'Try the English edition instead' }));
+    expect(screen.getByRole('radio', { name: 'English' })).toBeChecked();
+    await waitFor(() => expect(screen.queryByText('Dutch books are hard to find')).toBeNull());
+    expect(useAddSheet.getState().workId).toBe('hardcover:301');
+  });
+
+  it('opens the English edition when it is another work', async () => {
+    broker({
+      'GET /requests/preview': () =>
+        preview({ code: 'LOW_ODDS_LANGUAGE', englishEditionWorkId: 'hardcover:302' }),
+      'GET /works/hardcover:302': () =>
+        ok(work({ id: 'hardcover:302', title: 'The Salt Road (English)' })),
+    });
+    const user = userEvent.setup();
+    await open();
+    await user.press(await screen.findByRole('link', { name: 'Try the English edition instead' }));
+    expect(useAddSheet.getState().workId).toBe('hardcover:302');
+    expect(await screen.findByText(/The Salt Road \(English\)/)).toBeOnTheScreen();
+  });
+
+  it('speaks Dutch, with the date in Dutch', async () => {
+    broker({
+      'GET /requests/preview': () =>
+        preview({ code: 'LOW_ODDS_NOT_FOUND', notFoundAt: '2026-11-02T12:00:00.000Z' }),
+    });
+    usePreferences.setState({ language: 'nl' });
+    await renderWithProviders(<AddSheetHost onAdded={jest.fn()} />);
+    await act(async () => useAddSheet.getState().open('hardcover:301'));
+    expect(await screen.findByText('Vorige keer niet gevonden')).toBeOnTheScreen();
+    expect(screen.getByText(/We zochten op 2 november/)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Toch ophalen' })).toBeOnTheScreen();
+  });
+});
+
 describe('defaultLanguage', () => {
   it('prefers the book, then the last pick, then the app language', () => {
     expect(defaultLanguage('nl', 'en', 'en')).toBe('nl');

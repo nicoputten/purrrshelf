@@ -178,6 +178,30 @@ export const en = {
     addButton: 'Add',
     addA11y: 'Add {{title}}',
     addToLibrary: 'Add to library',
+    fetchAnyway: 'Fetch it anyway',
+    lowOdds: {
+      notFound: {
+        title: 'Not found last time',
+        body: 'We tried on {{date}} and found nothing. Chances are low it turned up since.',
+      },
+      noMatch: {
+        title: 'We barely know this book',
+        body: 'There’s no ISBN or edition info, so it’s hard to search for well. Expect no result.',
+      },
+      new: {
+        title: 'This one is very new',
+        body: 'New books often take a few weeks to turn up. Trying now may cost searches for nothing.',
+      },
+      language: {
+        title: 'Dutch books are hard to find',
+        body: 'Few Dutch ebooks get shared, so this often ends with “couldn’t sniff this one out”. Don’t count on it.',
+      },
+      rare: {
+        title: 'A rare one',
+        body: 'Few people read this, so few copies get shared. It may not be out there.',
+      },
+      englishEdition: 'Try the English edition instead',
+    },
   },
   requests: {
     title: 'Requests',

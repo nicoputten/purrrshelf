@@ -39,6 +39,8 @@ reasons. Broker: BRK-13, [ADR 0041](../decisions/0041-low-odds-warning.md).
   (`GET /requests/preview`) returns a reason. Only the strongest reason shows.
 - Card: warm brown background with a darker ginger border, radius 16, sleepy
   cat (closed eyes) on the left, a bold title and one line of text.
+  Colours are theme tokens (`warningSurface`, `warningBorder`, `warningText`,
+  `warningLink`); light mode uses a pale ginger card with brown text.
 - With a warning the button reads **Fetch it anyway**; it is never disabled
   by the warning.
 - The preview follows the language picker: switching to Nederlands can bring

@@ -1,6 +1,6 @@
 # BRK-13 Tell the app when a book will be hard to find
 
-Status: in review
+Status: done
 Milestone: 11
 Depends on: BRK-05
 
