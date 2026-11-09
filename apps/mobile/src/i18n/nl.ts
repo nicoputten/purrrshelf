@@ -131,6 +131,7 @@ export const nl: Translations = {
     creditHardcover: 'Trending op Hardcover',
     updated: 'bijgewerkt {{time}}',
     lastUpdated: 'laatst bijgewerkt {{time}}',
+    yourTopGenre: 'Jouw topgenre deze maand',
     teaserTitle: 'Top 10 {{genre}} vandaag',
     teaserGenre: {
       thriller: 'thrillers',

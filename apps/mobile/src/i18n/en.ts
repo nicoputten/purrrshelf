@@ -127,6 +127,7 @@ export const en = {
     creditHardcover: 'Trending on Hardcover',
     updated: 'updated {{time}}',
     lastUpdated: 'last updated {{time}}',
+    yourTopGenre: 'Your top genre this month',
     teaserTitle: 'Top 10 {{genre}} today',
     teaserGenre: {
       thriller: 'thrillers',

@@ -66,6 +66,35 @@ describe('Top 10 teaser on Search (APP-15)', () => {
     });
   });
 
+  it('leads with the reader’s top genre this month (APP-17)', async () => {
+    broker({
+      'GET /charts': () =>
+        charts(
+          [chart({ region: 'us', genre: 'thriller' }), chart({ region: 'us', genre: 'romance' })],
+          { topGenre: 'romance' },
+        ),
+    });
+    const navigate = jest.spyOn(router, 'navigate').mockImplementation(() => undefined);
+    await renderWithProviders(<SearchScreen />);
+    expect(await screen.findByText('Top 10 romance today')).toBeOnTheScreen();
+    expect(screen.getByText('Your top genre this month')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('link', { name: 'See all of the Top 10 romance' }));
+    expect(navigate).toHaveBeenLastCalledWith({
+      pathname: '/top10',
+      params: { genre: 'romance' },
+    });
+  });
+
+  it('falls back to thrillers when today’s chart has no list for the top genre', async () => {
+    broker({
+      'GET /charts': () =>
+        charts([chart({ region: 'us', genre: 'thriller' })], { topGenre: 'biography' }),
+    });
+    await renderWithProviders(<SearchScreen />);
+    expect(await screen.findByText('Top 10 thrillers today')).toBeOnTheScreen();
+    expect(screen.queryByText('Your top genre this month')).toBeNull();
+  });
+
   it('searches for an unknown teaser book', async () => {
     broker({
       'GET /charts': () =>

@@ -14,7 +14,7 @@ const SHOWN = 3;
 
 /**
  * The Top 10 teaser on the Search tab (board 15, last panel): the first three
- * books of one genre's bestsellers in the reader's language, and "See all".
+ * books of the reader's top genre (or thrillers) in their language, and "See all".
  * Shows nothing while loading or when the charts are unavailable: For you
  * above it carries the screen.
  */
@@ -22,10 +22,14 @@ export function Top10Teaser() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { data } = useCharts();
-  // TODO(APP-15): the reader's most-finished genre this month, once the
-  // broker exposes it (e.g. a `topGenre` on /charts). Until then: thrillers.
-  const genre = DEFAULT_GENRE;
-  const chart = findChart(data, 'apple', homeRegion(data), genre);
+  // The reader's most-finished genre this month (APP-17); thrillers when the
+  // broker has none or today's chart has no list for it.
+  const region = homeRegion(data);
+  const top = data?.topGenre ?? null;
+  const topChart = top ? findChart(data, 'apple', region, top) : undefined;
+  const personal = Boolean(topChart && topChart.items.length > 0);
+  const genre = personal && top ? top : DEFAULT_GENRE;
+  const chart = personal ? topChart : findChart(data, 'apple', region, genre);
   if (!chart || chart.items.length === 0) return null;
   const genreName = t(`top10.teaserGenre.${genre}`);
 
@@ -56,6 +60,11 @@ export function Top10Teaser() {
           <AppText style={[styles.link, { color: colors.accent }]}>{t('top10.seeAll')}</AppText>
         </Pressable>
       </View>
+      {personal ? (
+        <AppText variant="muted" style={styles.because}>
+          {t('top10.yourTopGenre')}
+        </AppText>
+      ) : null}
       <View style={styles.covers}>
         {chart.items.slice(0, SHOWN).map((entry) => (
           <Pressable
@@ -112,4 +121,5 @@ const styles = StyleSheet.create({
     textShadowRadius: 0,
   },
   credit: { fontSize: fontSize.tiny },
+  because: { fontSize: fontSize.small, marginTop: -space.sm },
 });

@@ -244,4 +244,10 @@ export function chart(over: Record<string, unknown> = {}, count = 10) {
 
 /** A /charts answer. */
 export const charts = (list: unknown[], over: Record<string, unknown> = {}) =>
-  ok({ charts: list, updatedAt: '2026-11-09T06:00:00.000Z', stale: false, ...over });
+  ok({
+    charts: list,
+    updatedAt: '2026-11-09T06:00:00.000Z',
+    stale: false,
+    topGenre: null,
+    ...over,
+  });
