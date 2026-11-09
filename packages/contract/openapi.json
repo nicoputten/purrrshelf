@@ -817,6 +817,39 @@
         ]
       }
     },
+    "/api/v1/charts": {
+      "get": {
+        "operationId": "charts",
+        "summary": "Top 10s by genre: Apple Books bestsellers for the languages I read and Hardcover trending. Metadata only, never spends an indexer search.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Charts"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/recommendations/{workId}/dismiss": {
       "post": {
         "operationId": "dismissRecommendation",
@@ -1448,6 +1481,126 @@
           }
         },
         "required": ["windowMinutes", "searches", "indexers"],
+        "additionalProperties": false
+      },
+      "Charts": {
+        "type": "object",
+        "properties": {
+          "charts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": ["apple", "hardcover"]
+                },
+                "region": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": ["nl", "us"]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "genre": {
+                  "type": "string",
+                  "enum": [
+                    "all",
+                    "thriller",
+                    "romance",
+                    "literary",
+                    "historical",
+                    "fantasy_scifi",
+                    "biography",
+                    "nonfiction"
+                  ]
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "rank": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "authors": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "work": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/WorkSummary"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "request": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "searching",
+                                  "waiting_budget",
+                                  "not_found",
+                                  "choose_release",
+                                  "downloading",
+                                  "download_failed",
+                                  "importing",
+                                  "import_failed",
+                                  "in_library",
+                                  "pushed",
+                                  "cancelled"
+                                ]
+                              }
+                            },
+                            "required": ["id", "status"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["rank", "title", "authors", "work", "request"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["source", "region", "genre", "items"],
+              "additionalProperties": false
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        },
+        "required": ["charts", "updatedAt", "stale"],
         "additionalProperties": false
       },
       "DiscoverSearchResult": {

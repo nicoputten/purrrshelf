@@ -24,6 +24,7 @@ import {
   workIdOf,
   type MergedWork,
 } from './merge.js';
+import type { HardcoverProvider } from './providers/hardcover.js';
 import type { MetadataProvider, MetadataQuery, ProviderSeries, ProviderWork } from './types.js';
 
 const MAX_HITS = 30;
@@ -322,6 +323,34 @@ export class DiscoverService {
     if (!match) return null;
     this.deps.cache.set(`hit:${mergedId(match)}`, match);
     return mergedId(match);
+  }
+
+  /** A work as a card, without library state (charts add it per reader). */
+  async summary(id: string): Promise<WorkSummary> {
+    return toSummary(await this.workGroup(id), null);
+  }
+
+  /**
+   * Hardcover trending (BRK-12), best first, each with its genre tags. Every
+   * book is cached as a work, so its book page needs no extra lookup.
+   * Throws METADATA_UNAVAILABLE when Hardcover is not configured or failed.
+   */
+  async trending(limit: number): Promise<{ work: WorkSummary; tags: string[] }[]> {
+    const provider = this.provider('hardcover') as HardcoverProvider | undefined;
+    if (!provider) throw unavailable();
+    let works: ProviderWork[];
+    try {
+      works = await provider.trending(limit);
+    } catch (err) {
+      this.deps.log.warn({ err, provider: 'hardcover' }, 'hardcover trending failed');
+      throw unavailable();
+    }
+    return works.map((w) => {
+      const group: MergedWork = { sources: [w] };
+      this.deps.cache.set(`hardcover:work:${w.id}`, w);
+      this.deps.cache.set(`hit:${mergedId(group)}`, group);
+      return { work: toSummary(group, null), tags: w.subjects ?? [] };
+    });
   }
 
   /** Cover URLs for a work, best first (used by the cover service). */

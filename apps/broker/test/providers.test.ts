@@ -8,7 +8,7 @@ import {
 import { GoogleBooksProvider } from '../src/modules/discover/providers/googlebooks.js';
 import { bareToken, HardcoverProvider } from '../src/modules/discover/providers/hardcover.js';
 import { OpenLibraryProvider } from '../src/modules/discover/providers/openlibrary.js';
-import { fakeProviders, ISBN_HAVELAAR, json } from './metadata-fakes.js';
+import { fakeProviders, hardcover, ISBN_HAVELAAR, json } from './metadata-fakes.js';
 
 const http = (fetch: FetchLike) => ({ fetch, timeoutMs: 1000 });
 const query = { title: 'havelaar', language: 'any' as const };
@@ -90,6 +90,48 @@ describe('HardcoverProvider', () => {
       position: 1,
       total: 3,
     });
+  });
+
+  it('reads trending books in trending order, with genre tags', async () => {
+    const { fetch } = fakeProviders({
+      'hardcover:Trending': () =>
+        json({ data: { books_trending: { ids: [301, 404, 101], error: null } } }),
+      'hardcover:Books': () =>
+        json({
+          data: { books: [hardcover.book101.data.books[0], hardcover.book301.data.books[0], {}] },
+        }),
+    });
+    const works = await new HardcoverProvider(http(fetch), 'tok').trending(3);
+    expect(works.map((w) => [w.id, w.subjects])).toEqual([
+      ['301', []],
+      ['101', ['Classics', 'Satire']],
+    ]);
+    expect(JSON.parse(String(fetch.mock.calls[1]![1]!.body)).variables).toEqual({
+      ids: [301, 404, 101],
+    });
+  });
+
+  it('answers no trending books without a second call, and fails on errors', async () => {
+    const empty = fakeProviders({
+      'hardcover:Trending': () => json({ data: { books_trending: { ids: [], error: null } } }),
+    });
+    expect(await new HardcoverProvider(http(empty.fetch), 'tok').trending(5)).toEqual([]);
+    expect(empty.fetch).toHaveBeenCalledTimes(1);
+
+    const replies = [{ data: { books_trending: { ids: null, error: 'too busy' } } }, { data: {} }];
+    for (const reply of replies) {
+      const { fetch } = fakeProviders({ 'hardcover:Trending': () => json(reply) });
+      await expect(new HardcoverProvider(http(fetch), 'tok').trending(5)).rejects.toBeInstanceOf(
+        ProviderError,
+      );
+    }
+    const badBooks = fakeProviders({
+      'hardcover:Trending': () => json({ data: { books_trending: { ids: [1] } } }),
+      'hardcover:Books': () => json({ data: { nope: [] } }),
+    });
+    await expect(
+      new HardcoverProvider(http(badBooks.fetch), 'tok').trending(5),
+    ).rejects.toBeInstanceOf(ProviderError);
   });
 
   it('reads a book with language, genres and series', async () => {

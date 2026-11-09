@@ -1,6 +1,6 @@
 # APP-12 See books picked for me on the Search tab
 
-Status: in review
+Status: done
 Milestone: 10
 Depends on: BRK-11
 

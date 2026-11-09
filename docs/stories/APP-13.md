@@ -1,6 +1,6 @@
 # APP-13 Add a suggested book, instantly when my partner has it
 
-Status: in review
+Status: done
 Milestone: 10
 Depends on: APP-12
 

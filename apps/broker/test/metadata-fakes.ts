@@ -214,7 +214,7 @@ export function json(body: unknown, status = 200): Response {
   });
 }
 
-type Handler = (url: URL, init: RequestInit | undefined) => Response | Promise<Response>;
+export type Handler = (url: URL, init: RequestInit | undefined) => Response | Promise<Response>;
 
 /** A fake internet with the three providers; tests can override single routes. */
 export function fakeProviders(overrides: Partial<Record<string, Handler>> = {}) {
@@ -247,6 +247,7 @@ export function fakeProviders(overrides: Partial<Record<string, Handler>> = {}) 
       if (url.pathname.startsWith('/authors/')) return 'openlibrary:author';
       return 'openlibrary:work';
     }
+    if (url.host === 'rss.marketingtools.apple.com') return 'apple:chart';
     if (url.host === 'www.googleapis.com') {
       return url.pathname === '/books/v1/volumes' ? 'googlebooks:search' : 'googlebooks:volume';
     }

@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { AppRelease } from './app-updates.js';
 import { Budget } from './budget.js';
+import { Charts } from './charts.js';
 import {
   Dismissal,
   DismissalsRemoved,
@@ -232,6 +233,15 @@ export const endpoints = {
       "For you: next in my series, more from authors I read, books on my partner's shelf. Metadata only, never spends an indexer search.",
     auth: true,
     response: Recommendations,
+    status: 200,
+  },
+  charts: {
+    method: 'GET',
+    path: '/charts',
+    summary:
+      'Top 10s by genre: Apple Books bestsellers for the languages I read and Hardcover trending. Metadata only, never spends an indexer search.',
+    auth: true,
+    response: Charts,
     status: 200,
   },
   dismissRecommendation: {
