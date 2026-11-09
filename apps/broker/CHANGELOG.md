@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.2.1...broker-v1.3.0) (2026-11-09)
+
+
+### Features
+
+* **broker:** genre top 10s from Apple Books charts and Hardcover trending ([d3a5a9d](https://github.com/nicoputten/purrrshelf/commit/d3a5a9d3dc34a0747191a3b72f947260d6679da4))
+* **broker:** reader's top genre this month on /charts (BRK-14) ([b3695e3](https://github.com/nicoputten/purrrshelf/commit/b3695e300a5d56560c2bf7aff901779fd0980f31))
+* **broker:** warn before Add when a book will be hard to find (BRK-13) ([bb62c16](https://github.com/nicoputten/purrrshelf/commit/bb62c167e0a1421fe6212e07f50d8ada5951e08c))
+
 ## [1.2.1](https://github.com/nicoputten/purrrshelf/compare/broker-v1.2.0...broker-v1.2.1) (2026-11-09)
 
 
