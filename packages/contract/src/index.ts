@@ -1,6 +1,7 @@
 export * from './app-updates.js';
 export * from './budget.js';
 export * from './errors.js';
+export * from './recommendations.js';
 export * from './requests.js';
 export * from './schemas.js';
 export {

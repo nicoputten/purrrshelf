@@ -23,6 +23,10 @@ create table series (id integer primary key, name text not null, sort text);
 create table books_series_link (id integer primary key, book integer not null, series integer not null);
 create table identifiers (id integer primary key, book integer not null, type text not null default 'isbn', val text not null);
 create table data (id integer primary key, book integer not null, format text not null, uncompressed_size integer not null, name text not null);
+create table tags (id integer primary key, name text not null unique);
+create table books_tags_link (id integer primary key, book integer not null, tag integer not null);
+create table languages (id integer primary key, lang_code text not null unique, link text not null default '');
+create table books_languages_link (id integer primary key, book integer not null, lang_code integer not null, item_order integer not null default 0);
 `;
 
 const APP_SCHEMA = `
@@ -52,6 +56,9 @@ export interface FakeBook {
   identifiers?: { type: string; val: string }[];
   formats?: string[];
   timestamp?: string | null;
+  tags?: string[];
+  /** Calibre's ISO 639-2/3 codes, e.g. `eng`, `nld`. */
+  languages?: string[];
 }
 
 export const READER_A = { cwaUserId: 3 };
@@ -151,6 +158,20 @@ export class FakeCwa {
         type,
         val,
       );
+    }
+    for (const name of book.tags ?? []) {
+      m.prepare('insert or ignore into tags (name) values (?)').run(name);
+      const tag = m.prepare('select id from tags where name = ?').get(name) as { id: number };
+      m.prepare('insert into books_tags_link (book, tag) values (?, ?)').run(book.id, tag.id);
+    }
+    for (const [order, code] of (book.languages ?? []).entries()) {
+      m.prepare('insert or ignore into languages (lang_code) values (?)').run(code);
+      const lang = m.prepare('select id from languages where lang_code = ?').get(code) as {
+        id: number;
+      };
+      m.prepare(
+        'insert into books_languages_link (book, lang_code, item_order) values (?, ?, ?)',
+      ).run(book.id, lang.id, order);
     }
     for (const format of book.formats ?? ['EPUB']) {
       m.prepare('insert into data (book, format, uncompressed_size, name) values (?, ?, 1, ?)').run(

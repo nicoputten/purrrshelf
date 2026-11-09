@@ -39,6 +39,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0032](0032-motion-with-reanimated.md)                      | Cat animations with Reanimated and SVG                                  | accepted                   |
 | [0033](0033-readable-cat-styled-release-notes.md)           | Release notes are short, plain and cat-styled                           | accepted                   |
 | [0034](0034-library-filters-two-rows.md)                    | Library filters are two rows: whose books, then one dropdown            | accepted                   |
+| [0035](0035-recommendations-for-you.md)                     | For you: how recommendations are computed, filtered and refreshed       | accepted                   |
 
 ## Template
 

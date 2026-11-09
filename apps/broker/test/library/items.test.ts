@@ -54,4 +54,24 @@ describe('LibraryItems', () => {
     expect(items.isOwner(item.id, a.id)).toBe(true);
     expect(items.isOwner('other', a.id)).toBe(false);
   });
+
+  it('lists what one reader owns, newest first', async () => {
+    const a = await users.create({ username: 'a', displayName: 'Reader One', password: PASSWORD });
+    const b = await users.create({ username: 'b', displayName: 'Reader Two', password: PASSWORD });
+    const first = items.ensure({ workId: null, calibreBookId: 7, title: 'B' });
+    const second = items.ensure({ workId: null, calibreBookId: 8, title: 'A' });
+    const third = items.ensure({ workId: null, calibreBookId: 9, title: 'C' });
+    items.own(first.id, a.id);
+    clock.advance(1000);
+    items.own(second.id, a.id);
+    items.own(third.id, a.id);
+    items.own(third.id, b.id);
+    expect(items.ownedBy(a.id).map((o) => [o.item.title, o.ownedAt.getTime()])).toEqual([
+      ['A', clock.now.getTime()],
+      ['C', clock.now.getTime()],
+      ['B', clock.now.getTime() - 1000],
+    ]);
+    expect(items.ownedBy(b.id).map((o) => o.item.id)).toEqual([third.id]);
+    expect(items.ownedBy('nobody')).toEqual([]);
+  });
 });

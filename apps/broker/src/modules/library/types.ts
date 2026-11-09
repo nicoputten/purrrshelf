@@ -23,6 +23,10 @@ export interface LibraryBook {
   isbns: string[];
   /** Upper-case Calibre formats, e.g. `["EPUB"]`. The library stores EPUB (ADR 0016). */
   formats: string[];
+  /** Calibre tags (genres), alphabetical. Only as good as the library's metadata. */
+  tags: string[];
+  /** ISO 639-1 codes (`en`, `nl`) from Calibre's languages, first one first. */
+  languages: string[];
   /** Folder of the book relative to the library root. */
   path: string;
   addedAt: Date;
@@ -72,6 +76,8 @@ export interface LibraryAdapter {
   removeFromKoboShelf(owner: LibraryOwner, bookId: number): Promise<void>;
   getDeviceState(owner: LibraryOwner, bookId: number): Promise<DeviceState>;
   getReadingState(owner: LibraryOwner, bookId: number): Promise<ReadingState>;
+  /** Reading state of every book the owner's Kobo reported on, by Calibre book id (one query). */
+  getReadingStates(owner: LibraryOwner): Promise<Map<number, ReadingState>>;
   /** Deletes the book and its files from the library. Only for books nobody owns (ADR 0009). */
   deleteBook(bookId: number): Promise<void>;
   /** Cheap check for /health. */

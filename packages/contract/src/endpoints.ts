@@ -1,6 +1,13 @@
 import type { z } from 'zod';
 import { AppRelease } from './app-updates.js';
 import { Budget } from './budget.js';
+import {
+  Dismissal,
+  DismissalsRemoved,
+  DismissParams,
+  DismissRequest,
+  Recommendations,
+} from './recommendations.js';
 import { ErrorResponse } from './errors.js';
 import {
   AddRequest,
@@ -219,6 +226,34 @@ export const endpoints = {
     auth: true,
     params: WorkParams,
     response: SimilarWorks,
+    status: 200,
+  },
+  recommendations: {
+    method: 'GET',
+    path: '/recommendations',
+    summary:
+      "For you: next in my series, more from authors I read, books on my partner's shelf. Metadata only, never spends an indexer search.",
+    auth: true,
+    response: Recommendations,
+    status: 200,
+  },
+  dismissRecommendation: {
+    method: 'POST',
+    path: '/recommendations/:workId/dismiss',
+    summary: 'Not for me (hide this book for good) or Fewer by this author. Idempotent.',
+    auth: true,
+    params: DismissParams,
+    body: DismissRequest,
+    response: Dismissal,
+    status: 200,
+  },
+  undoDismissRecommendation: {
+    method: 'DELETE',
+    path: '/recommendations/:workId/dismiss',
+    summary: 'Undo: forget my dismissals made from this book. Idempotent.',
+    auth: true,
+    params: DismissParams,
+    response: DismissalsRemoved,
     status: 200,
   },
   libraryBooks: {

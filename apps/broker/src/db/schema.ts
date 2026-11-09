@@ -270,3 +270,49 @@ export const ownerships = sqliteTable(
 
 export type LibraryItemRow = typeof libraryItems.$inferSelect;
 export type OwnershipRow = typeof ownerships.$inferSelect;
+
+export const dismissalKinds = ['book', 'author'] as const;
+export type DismissalKind = (typeof dismissalKinds)[number];
+
+/**
+ * "Not for me" and "Fewer by this author" on For you (BRK-11, ADR 0035).
+ * `book` rows hide one book for good (matched by work id and by title +
+ * author); `author` rows down-rank an author until `expires_at`.
+ */
+export const recommendationDismissals = sqliteTable(
+  'recommendation_dismissals',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: text('kind', { enum: dismissalKinds }).notNull(),
+    /** Normalised title + author (`book`) or author (`author`). */
+    key: text('key').notNull(),
+    /** The book the reader tapped; undo removes every dismissal made from it. */
+    workId: text('work_id').notNull(),
+    /** The author's name as shown, for `author`. */
+    author: text('author'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.kind, t.key] }),
+    index('recommendation_dismissals_work_idx').on(t.userId, t.workId),
+  ],
+);
+
+export type RecommendationDismissalRow = typeof recommendationDismissals.$inferSelect;
+
+/**
+ * The reader's last computed series and author rows (ADR 0035): reused for
+ * 24 hours, or until the set of books they finished changes.
+ */
+export const recommendationCache = sqliteTable('recommendation_cache', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  /** Hash of what the rows were built from (finished or owned books). */
+  fingerprint: text('fingerprint').notNull(),
+  rowsJson: text('rows_json').notNull(),
+  computedAt: integer('computed_at', { mode: 'timestamp_ms' }).notNull(),
+});

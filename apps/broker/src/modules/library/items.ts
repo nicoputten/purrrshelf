@@ -200,6 +200,17 @@ export class LibraryItems {
     return map;
   }
 
+  /** The items this user owns and when they got each, newest first. */
+  ownedBy(userId: string): { item: LibraryItemRow; ownedAt: Date }[] {
+    return this.db
+      .select({ item: libraryItems, ownedAt: ownerships.addedAt })
+      .from(ownerships)
+      .innerJoin(libraryItems, eq(libraryItems.id, ownerships.itemId))
+      .where(eq(ownerships.userId, userId))
+      .orderBy(desc(ownerships.addedAt), asc(libraryItems.title))
+      .all();
+  }
+
   isOwner(itemId: string, userId: string): boolean {
     return (
       this.db

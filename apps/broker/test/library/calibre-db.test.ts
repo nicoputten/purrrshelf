@@ -20,6 +20,8 @@ beforeEach(() => {
       { type: 'goodreads', val: '12345' },
     ],
     formats: ['epub', 'AZW3'],
+    tags: ['Mystery', 'Cosy'],
+    languages: ['nld', 'eng'],
   });
   cwa.addBook({ id: 2, title: '100% Cotton_Socks', authors: ['Bram Inkwell'], timestamp: null });
   cwa.addBook({
@@ -49,6 +51,8 @@ describe('CalibreDb', () => {
       series: { name: 'Harbour Tales', index: 2.5 },
       isbns: ['9798000000014'],
       formats: ['AZW3', 'EPUB'],
+      tags: ['Cosy', 'Mystery'],
+      languages: ['nl', 'en'],
       path: 'Author/The Lighthouse Cat (1)',
       addedAt: new Date('2026-01-02T03:04:05.678Z'),
     });
@@ -56,7 +60,13 @@ describe('CalibreDb', () => {
 
   it('copes with a book without authors, series, formats or timestamp', () => {
     expect(db.getBook(2)).toMatchObject({ series: null, addedAt: new Date(0) });
-    expect(db.getBook(3)).toMatchObject({ authors: [], formats: [], isbns: ['000000000X'] });
+    expect(db.getBook(3)).toMatchObject({
+      authors: [],
+      formats: [],
+      isbns: ['000000000X'],
+      tags: [],
+      languages: [],
+    });
     expect(db.getBook(4)).toBeNull();
   });
 

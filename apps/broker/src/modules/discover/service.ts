@@ -8,6 +8,7 @@ import type {
   SimilarWorks,
   WorkDetail,
   WorkSeries,
+  WorkSummary,
 } from '@purrshelf/contract';
 import type { FastifyBaseLogger } from 'fastify';
 import { AppError } from '../../errors.js';
@@ -245,17 +246,10 @@ export class DiscoverService {
       );
     }
 
-    const sameLanguage = (g: MergedWork) => {
-      const lang = flatten(g).language;
-      return !flat.language || !lang || lang === flat.language;
-    };
-    const related = async (q: MetadataQuery) => {
-      const { lists } = await this.fanOut(q);
-      const groups = mergeResults(lists).filter(sameLanguage);
-      for (const g of groups) this.deps.cache.set(`hit:${mergedId(g)}`, g);
-      const library = await this.matchLibrary(userId, groups);
-      return groups.map((g) => toSummary(g, library.get(mergedId(g)) ?? null));
-    };
+    const sameLanguage = (w: WorkSummary) =>
+      !flat.language || !w.language || w.language === flat.language;
+    const related = async (q: MetadataQuery) =>
+      (await this.related(userId, q)).works.filter(sameLanguage);
 
     const author = flat.authors[0];
     if (author) add('author', await related({ author, language: 'any' }));
@@ -264,6 +258,32 @@ export class DiscoverService {
       add('subject', await related({ subject, language: 'any' }));
     }
     return { works };
+  }
+
+  /**
+   * Books by an author in any language, with library state (For you,
+   * BRK-11). Metadata only. Throws METADATA_UNAVAILABLE when no provider
+   * answered, so a caller can tell "nothing found" from "could not look".
+   */
+  async byAuthor(userId: string, author: string): Promise<WorkSummary[]> {
+    const { works, answered } = await this.related(userId, { author, language: 'any' });
+    if (!answered) throw unavailable();
+    return works;
+  }
+
+  /** Merged hits for a related-books query, remembered like search hits so their pages open. */
+  private async related(
+    userId: string,
+    q: MetadataQuery,
+  ): Promise<{ works: WorkSummary[]; answered: boolean }> {
+    const { lists, statuses } = await this.fanOut(q);
+    const groups = mergeResults(lists);
+    for (const g of groups) this.deps.cache.set(`hit:${mergedId(g)}`, g);
+    const library = await this.matchLibrary(userId, groups);
+    return {
+      works: groups.map((g) => toSummary(g, library.get(mergedId(g)) ?? null)),
+      answered: statuses.some((s) => s.status === 'ok'),
+    };
   }
 
   /** Title and authors for a placeholder cover. */

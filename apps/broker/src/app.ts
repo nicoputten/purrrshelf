@@ -48,6 +48,8 @@ import type { LibraryAdapter } from './modules/library/types.js';
 import type { LibraryItems as OwnershipStore } from './modules/requests/delivery.js';
 import { SabnzbdClient, type DownloadClient } from './modules/sabnzbd/client.js';
 import { readerRoutes } from './modules/readers/routes.js';
+import { createRecommend } from './modules/recommend/index.js';
+import { recommendRoutes } from './modules/recommend/routes.js';
 import { requestRoutes } from './modules/requests/routes.js';
 import { requestView } from './modules/requests/view.js';
 import { libraryBookLookup } from './modules/search/library-book-lookup.js';
@@ -189,16 +191,27 @@ export async function buildApp({
   app.decorate('downloads', downloads);
   app.addHook('onClose', () => downloads.jobs.stop());
 
+  const libraryState =
+    libraryLookup ??
+    (library
+      ? new ItemLibraryLookup(libraryItems, library, (id) => users.findById(id))
+      : noLibraryState);
   const discover = createDiscover({
     config,
     db: database.db,
     clock,
     providers: metadataProviders ?? defaultProviders(config, fetch),
-    library:
-      libraryLookup ??
-      (library
-        ? new ItemLibraryLookup(libraryItems, library, (id) => users.findById(id))
-        : noLibraryState),
+    library: libraryState,
+    log: app.log,
+  });
+  const recommend = createRecommend({
+    db: database.db,
+    clock,
+    users,
+    items: libraryItems,
+    library,
+    works: discover,
+    matcher: libraryState,
     log: app.log,
   });
 
@@ -268,6 +281,7 @@ export async function buildApp({
       await api.register(budgetRoutes, { budget: downloads.budget, requireAuth: authenticated });
       await api.register(discoverRoutes, { discover, requireAuth: authenticated });
       await api.register(readerRoutes, { users, requireAuth: authenticated });
+      await api.register(recommendRoutes, { recommend, requireAuth: authenticated });
       await api.register(requestRoutes, {
         requests: downloads.requests,
         releases: downloads.pipeline,

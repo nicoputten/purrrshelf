@@ -50,6 +50,13 @@
       "when": 1794157279614,
       "tag": "0006_daily_indexer_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794225228557,
+      "tag": "0007_recommendations",
+      "breakpoints": true
     }
   ]
 }
