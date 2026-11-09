@@ -29,3 +29,31 @@ Built (APP-03):
 Motion (DES-02): "Fetch it now" and "Add to my library" are ears-up buttons
 (squish, ears pop up, a heart floats up); the press goes through at once.
 Loading parts of the sheet show the paw-print loader.
+
+## Low-odds warning (APP-16)
+
+Canvas boards: 3b · Add sheet: Dutch book warning, 3c · Low odds warning: all
+reasons. Broker: BRK-13, [ADR 0041](../decisions/0041-low-odds-warning.md).
+
+- Shown above the button, under the cost box, only when the broker's preview
+  (`GET /requests/preview`) returns a reason. Only the strongest reason shows.
+- Card: warm brown background with a darker ginger border, radius 16, sleepy
+  cat (closed eyes) on the left, a bold title and one line of text.
+- With a warning the button reads **Fetch it anyway**; it is never disabled
+  by the warning.
+- The preview follows the language picker: switching to Nederlands can bring
+  up the Dutch warning, switching back to English takes it away.
+- Texts (English; Dutch in the app's `nl` strings):
+  - Not found last time: "We tried on 2 November and found nothing. Chances
+    are low it turned up since."
+  - We barely know this book: "There's no ISBN or edition info, so it's hard
+    to search for well. Expect no result."
+  - This one is very new: "New books often take a few weeks to turn up.
+    Trying now may cost searches for nothing."
+  - Dutch books are hard to find: "Few Dutch ebooks get shared, so this often
+    ends with "couldn't sniff this one out". Don't count on it." Link **Try
+    the English edition instead** switches the picker to English (or opens the
+    English edition's sheet); hidden when no English edition is known.
+  - A rare one: "Few people read this, so few copies get shared. It may not
+    be out there."
+- Not built: "Remind me in 2 weeks" on the new-book warning (ADR 0041).

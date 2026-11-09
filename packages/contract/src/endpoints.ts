@@ -10,6 +10,7 @@ import {
   Recommendations,
 } from './recommendations.js';
 import { ErrorResponse } from './errors.js';
+import { RequestPreview, RequestPreviewQuery } from './odds.js';
 import {
   AddRequest,
   BookRequest,
@@ -135,6 +136,16 @@ export const endpoints = {
     body: AddRequest,
     response: BookRequest,
     status: 201,
+  },
+  requestPreview: {
+    method: 'GET',
+    path: '/requests/preview',
+    summary:
+      'Before Add: the strongest reason a search is unlikely to find this book, as a code. Free: never searches an indexer.',
+    auth: true,
+    query: RequestPreviewQuery,
+    response: RequestPreview,
+    status: 200,
   },
   requests: {
     method: 'GET',

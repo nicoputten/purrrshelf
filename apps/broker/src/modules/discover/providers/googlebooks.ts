@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { ProviderError, requestJson, type HttpOptions } from '../http.js';
-import { blankToNull, languageCode, normaliseIsbns, stripHtml, yearOf } from '../normalise.js';
+import {
+  blankToNull,
+  fullDate,
+  languageCode,
+  normaliseIsbns,
+  stripHtml,
+  yearOf,
+} from '../normalise.js';
 import type { MetadataProvider, MetadataQuery, ProviderWork } from '../types.js';
 
 export const GOOGLE_BOOKS_URL = 'https://www.googleapis.com/books/v1';
@@ -102,6 +109,7 @@ export class GoogleBooksProvider implements MetadataProvider {
       description: v.description ? blankToNull(stripHtml(v.description)) : null,
       subjects: (v.categories ?? []).slice(0, 10),
       pageCount: v.pageCount ?? null,
+      releaseDate: fullDate(v.publishedDate),
     };
   }
 }

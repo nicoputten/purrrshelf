@@ -75,6 +75,9 @@ export function flatten(group: MergedWork): ProviderWork {
     description: first(all, (s) => s.description),
     subjects: first(all, (s) => s.subjects) ?? [],
     pageCount: first(all, (s) => s.pageCount),
+    releaseDate: first(all, (s) => s.releaseDate),
+    languages: [...new Set(all.flatMap((s) => s.languages ?? []))],
+    readers: all.find((s) => s.provider === 'hardcover')?.readers ?? null,
   };
 }
 

@@ -1,6 +1,6 @@
 # BRK-12 Get genre top 10s for each reader
 
-Status: in review
+Status: done
 Milestone: 11
 Depends on: BRK-02, BRK-11
 
