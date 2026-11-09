@@ -5,8 +5,8 @@
 
 ### New tricks
 
-* For you: book suggestions on the Search tab, sniffed out from what you both read
-* Each suggestion says why it was picked, and adds a book for your partner in one tap
+* For you: suggestions under the search bar, like the next book in your series or more from authors you read
+* Each suggestion says why it was picked, and a book your partner already has joins your shelf in one tap, no download needed
 * The Library shows book titles and sorts by title, author or series
 
 ## [1.5.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.4.0...mobile-v1.5.0) (2026-11-09)
