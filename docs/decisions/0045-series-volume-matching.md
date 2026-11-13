@@ -25,6 +25,9 @@ and the one with the most grabs wins, so a reader who added book 1 got book
   a range is rejected as `title_mismatch`, both by the search judge (so the
   search goes on) and by scoring (so it is never grabbed). The app already
   translates that reason as "another book", so the API doesn't change.
+- The "already in the library?" check before a search skips a Calibre book
+  whose title names another volume (`Fifth Title: Series Book 5`) or that is
+  filed under the same series at another index.
 - A release without a volume number is judged as before.
 
 ## Consequences

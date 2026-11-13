@@ -39,6 +39,13 @@ function words(s: string): string[] {
     .filter(Boolean);
 }
 
+/** A series name's words without a leading article ("The Series" = "Series"). */
+export function seriesWords(name: string): string[] {
+  const ws = words(name);
+  while (ws.length > 1 && LEADING_ARTICLE.test(ws[0] as string)) ws.shift();
+  return ws;
+}
+
 /** A phrase as a regex that allows any punctuation between its words. */
 function phrase(ws: string[]): string {
   return `(?<![\\p{L}\\p{N}])${ws.join(`${NOT_WORD}+`)}(?![\\p{L}\\p{N}])`;
@@ -57,8 +64,7 @@ function toVolume(from: string, to: string | undefined): Volume {
  */
 export function detectVolume(releaseTitle: string, seriesName: string, title: string): Volume {
   const name = fold(releaseTitle);
-  const series = words(seriesName);
-  while (series.length > 1 && LEADING_ARTICLE.test(series[0] as string)) series.shift();
+  const series = seriesWords(seriesName);
 
   if (series.length > 0) {
     const after = new RegExp(
