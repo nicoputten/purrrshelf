@@ -42,6 +42,7 @@ import { LibraryBrowser } from './modules/library/browse.js';
 import { CleanupJobs, LibraryCleanup } from './modules/library/cleanup.js';
 import { Ownership } from './modules/library/ownership.js';
 import { LibraryItems } from './modules/library/items.js';
+import { KoboResender, KoboResendJobs } from './modules/library/kobo-resend.js';
 import { Kobos } from './modules/library/kobos.js';
 import { ItemLibraryLookup } from './modules/library/lookup.js';
 import { libraryRoutes } from './modules/library/routes.js';
@@ -146,7 +147,10 @@ export async function buildApp({
 
   const authenticated = requireAuth(accessTokens, clock);
   const libraryItems = new LibraryItems(database.db, clock);
-  const kobos = new Kobos(libraryItems, users, library);
+  const koboResender = library
+    ? new KoboResender(database.db, clock, library, users, app.log)
+    : undefined;
+  const kobos = new Kobos(libraryItems, users, library, koboResender);
   const ownership = new Ownership(libraryItems, library, (id) => users.findById(id));
   if (library) {
     const cleanup = new CleanupJobs(
@@ -157,6 +161,11 @@ export async function buildApp({
     );
     app.addHook('onReady', async () => cleanup.start());
     app.addHook('onClose', () => cleanup.stop());
+  }
+  if (library && koboResender) {
+    const resendJobs = new KoboResendJobs(database.db, clock, koboResender, app.log);
+    app.addHook('onReady', async () => resendJobs.start());
+    app.addHook('onClose', () => resendJobs.stop());
   }
   const libraryBrowser = new LibraryBrowser(libraryItems, library, (id) => users.findById(id));
   const downloadClient =

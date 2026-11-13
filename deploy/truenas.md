@@ -105,6 +105,14 @@ shelf or Kobo sync token is missing:
 docker exec -it <broker-container> node dist/cli-main.js user link-cwa <username> --cwa-user <CWA user name>
 ```
 
+The broker checks every 10 minutes that each book on a reader's Kobo shelf
+really reached their Kobo, and resends any that got lost in a failed sync
+(ADR 0047). To see which books are still on their way:
+
+```sh
+docker exec -it <broker-container> node dist/cli-main.js kobo status [<username>]
+```
+
 ## 8. Remote access
 
 Expose only the broker, through Nginx Proxy Manager with HTTPS and HSTS. See

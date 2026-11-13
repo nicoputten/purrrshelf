@@ -37,6 +37,7 @@ create table book_shelf_link (id integer primary key, book_id integer, "order" i
 create table remote_auth_token (id integer primary key, auth_token varchar unique, user_id integer, verified boolean,
   expiration datetime, token_type integer);
 create table kobo_synced_books (id integer primary key, user_id integer, book_id integer);
+create table downloads (id integer primary key, book_id integer, user_id integer);
 create table book_read_link (id integer primary key, book_id integer, user_id integer, read_status integer not null default 0,
   last_modified datetime, last_time_started_reading datetime, times_started_reading integer not null default 0);
 create table kobo_reading_state (id integer primary key, user_id integer, book_id integer, last_modified datetime,

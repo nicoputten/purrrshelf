@@ -57,6 +57,13 @@
       "when": 1794225228557,
       "tag": "0007_recommendations",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794529702079,
+      "tag": "0008_kobo_resends",
+      "breakpoints": true
     }
   ]
 }

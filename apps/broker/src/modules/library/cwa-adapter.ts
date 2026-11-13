@@ -5,6 +5,7 @@ import { bookNotFound, koboShelfMissing, koboSyncNotSetUp, libraryUnavailable } 
 import type {
   DeviceState,
   FindBooksQuery,
+  KoboSyncBook,
   LibraryAdapter,
   LibraryBook,
   LibraryOwner,
@@ -116,6 +117,11 @@ export class CwaAdapter implements LibraryAdapter {
   async getDeviceState(owner: LibraryOwner, bookId: number): Promise<DeviceState> {
     const shelf = this.resolveKoboShelf(owner);
     return this.appDb.deviceState(owner.cwaUserId, shelf.id, bookId);
+  }
+
+  async listKoboSync(owner: LibraryOwner): Promise<KoboSyncBook[]> {
+    const shelf = this.resolveKoboShelf(owner);
+    return this.appDb.koboSync(owner.cwaUserId, shelf.id);
   }
 
   async getReadingState(owner: LibraryOwner, bookId: number): Promise<ReadingState> {
