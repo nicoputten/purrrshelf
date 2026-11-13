@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.2...broker-v1.3.3) (2026-11-13)
+
+
+### Bug Fixes
+
+* **broker:** never grab another book of the same series (BRK-15) ([08ce151](https://github.com/nicoputten/purrrshelf/commit/08ce15124da9a076e3e4fc04bf14c084bcc9588a))
+
 ## [1.3.2](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.1...broker-v1.3.2) (2026-11-09)
 
 
