@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.3...broker-v1.3.4) (2026-11-13)
+
+
+### Bug Fixes
+
+* **broker:** don't take another volume as "already in the library" (BRK-15) ([a1e7601](https://github.com/nicoputten/purrrshelf/commit/a1e76012ec28b59b8881ff6655e8af81f023eecd))
+
 ## [1.3.3](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.2...broker-v1.3.3) (2026-11-13)
 
 
