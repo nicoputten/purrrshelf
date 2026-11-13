@@ -129,6 +129,11 @@ publishes on the NAS.
 ```nginx
 # Only CWA's Kobo sync API is public; the web UI and login are not.
 location /kobo/ {
+    # CWA's sync answer carries large x-kobo-sync* headers; nginx's default
+    # buffer is too small for them and the Kobo gets a 502 ("sync failed").
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
     include conf.d/include/proxy.conf;
 }
 location / {
