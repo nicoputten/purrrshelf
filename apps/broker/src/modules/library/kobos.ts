@@ -1,6 +1,6 @@
 import type { ItemKobo, ItemKobos, KoboState } from '@purrshelf/contract';
 import { AppError } from '../../errors.js';
-import type { User } from '../../db/schema.js';
+import type { KoboResendPhase, User } from '../../db/schema.js';
 import type { LibraryItems } from './items.js';
 import { libraryUnavailable } from './errors.js';
 import type { DeviceState, LibraryAdapter } from './types.js';
@@ -10,12 +10,24 @@ export interface KoboUsers {
   findById(id: string): User | undefined;
 }
 
+/** What Kobos needs from the resend job (BRK-16). */
+export interface KoboResends {
+  phaseOf(userId: string, calibreBookId: number): KoboResendPhase | null;
+  cancel(userId: string, calibreBookId: number): void;
+}
+
 /**
  * Shelf state → what the reader sees. A changed shelf reaches the Kobo at
- * its next sync, so until then the book is `sending` or `removing`.
+ * its next sync, so until then the book is `sending` or `removing`. A book
+ * is only `on_device` once the Kobo really has it (ADR 0046); a book the
+ * broker took off the shelf to resend it is still `sending`.
  */
-export function koboState({ onKoboShelf, syncedToDevice }: DeviceState): KoboState {
-  if (onKoboShelf) return syncedToDevice ? 'on_device' : 'sending';
+export function koboState(
+  { onKoboShelf, syncedToDevice, deliveredToDevice }: DeviceState,
+  resending = false,
+): KoboState {
+  if (onKoboShelf) return syncedToDevice && deliveredToDevice ? 'on_device' : 'sending';
+  if (resending) return 'sending';
   return syncedToDevice ? 'removing' : 'not_on_device';
 }
 
@@ -30,6 +42,7 @@ export class Kobos {
     private readonly items: LibraryItems,
     private readonly users: KoboUsers,
     private readonly library: LibraryAdapter | null,
+    private readonly resends?: KoboResends,
   ) {}
 
   async list(itemId: string, askingUserId: string): Promise<ItemKobos> {
@@ -61,6 +74,7 @@ export class Kobos {
   async remove(itemId: string, userId: string, askingUserId: string): Promise<ItemKobos> {
     const { item, cwaUserId, library } = this.target(itemId, userId);
     await library.removeFromKoboShelf({ cwaUserId }, item.calibreBookId);
+    this.resends?.cancel(userId, item.calibreBookId);
     return this.list(itemId, askingUserId);
   }
 
@@ -87,6 +101,7 @@ export class Kobos {
     try {
       return koboState(
         await this.requireLibrary().getDeviceState({ cwaUserId: user.cwaUserId }, calibreBookId),
+        this.resends?.phaseOf(user.id, calibreBookId) === 'off_shelf',
       );
     } catch (err) {
       // One reader's missing shelf must not hide the other reader's Kobo.

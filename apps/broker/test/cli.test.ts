@@ -6,6 +6,7 @@ import { verifyPassword } from '../src/modules/auth/passwords.js';
 import { PASSWORD, TestClock } from './helpers.js';
 import { FakeNewznab, fixture } from './fake-newznab.js';
 import { FakeCwa } from './library/fake-cwa.js';
+import { koboResends } from '../src/db/schema.js';
 
 function harness(password = PASSWORD) {
   const handle = openDatabase(':memory:');
@@ -21,7 +22,7 @@ function harness(password = PASSWORD) {
     openDatabase: () => shared,
   };
   const users = new UserRepository(handle.db, new TestClock().fn);
-  return { io, out, err, users };
+  return { io, out, err, users, db: handle.db };
 }
 
 describe('purrshelf CLI', () => {
@@ -326,5 +327,85 @@ describe('purrshelf user link-cwa', () => {
     await runCli(['user', 'add', 'reader', '--name', 'R'], h.io);
     expect(await runCli(['user', 'link-cwa', 'reader', '--cwa-user', 'a'], h.io)).toBe(1);
     expect(h.err.at(-1)).toMatch(/Cannot open CWA app.db/);
+  });
+});
+
+describe('purrshelf kobo status', () => {
+  async function setup() {
+    const cwa = new FakeCwa();
+    cwa.addBook({ id: 7, title: 'The Lighthouse Cat' });
+    cwa.addBook({ id: 8, title: 'A Map of Quiet Rivers' });
+    cwa.addBook({ id: 9, title: 'Salt and Lanterns' });
+    cwa.addBook({ id: 10, title: 'The Borrowed Moon' });
+    const h = harness();
+    h.io.env.CWA_CONFIG_PATH = cwa.dir;
+    h.io.env.CALIBRE_LIBRARY_PATH = cwa.dir;
+    for (const name of ['reader', 'partner', 'unlinked', 'noshelf']) {
+      await runCli(['user', 'add', name, '--name', name], h.io);
+    }
+    h.users.setCwaUserId('reader', 3);
+    h.users.setCwaUserId('partner', 4);
+    h.users.setCwaUserId('noshelf', 6);
+    h.out.length = 0;
+    return { cwa, h };
+  }
+
+  it('lists, per reader, the books that have not reached their Kobo yet', async () => {
+    const { cwa, h } = await setup();
+    try {
+      // Reader A: 7 delivered, 8 lost in a sync, 9 not synced yet,
+      // 10 off the shelf (being resent), 11 gone from the library but leaving the Kobo.
+      cwa.app.exec(`insert into book_shelf_link (book_id, shelf) values (7, 2), (8, 2), (9, 2);
+        insert into kobo_synced_books (user_id, book_id) values (3, 7), (3, 8), (3, 10), (3, 11);
+        insert into downloads (user_id, book_id) values (3, 7)`);
+      const reader = h.users.findByUsername('reader')!;
+      const now = new Date();
+      h.db
+        .insert(koboResends)
+        .values({
+          userId: reader.id,
+          calibreBookId: 10,
+          phase: 'off_shelf',
+          since: now,
+          createdAt: now,
+        })
+        .run();
+      expect(await runCli(['kobo', 'status'], h.io)).toBe(0);
+      expect(h.out).toEqual([
+        'reader: 3 on the Kobo shelf, 1 on the Kobo',
+        '  #8\tA Map of Quiet Rivers\tmarked synced but not on the Kobo; resending soon',
+        '  #9\tSalt and Lanterns\tgoes out with the next sync',
+        '  #10\tThe Borrowed Moon\tresending: off the shelf until the next sync',
+        '  #11\t(no longer in the library)\tleaves the Kobo with the next sync',
+        'partner: 0 on the Kobo shelf, 0 on the Kobo',
+        'unlinked: not linked to CWA',
+        'noshelf: needs exactly one shelf "Kobo" with Kobo sync on',
+      ]);
+
+      h.out.length = 0;
+      expect(await runCli(['kobo', 'status', 'Partner'], h.io)).toBe(0);
+      expect(h.out).toEqual(['partner: 0 on the Kobo shelf, 0 on the Kobo']);
+    } finally {
+      cwa.close();
+    }
+  });
+
+  it('fails on an unknown reader, an unknown command or unreadable databases', async () => {
+    const { cwa, h } = await setup();
+    try {
+      expect(await runCli(['kobo', 'status', 'ghost'], h.io)).toBe(1);
+      expect(h.err.at(-1)).toBe('No user "ghost"');
+      expect(await runCli(['kobo', 'resend'], h.io)).toBe(2);
+      expect(h.err.at(-1)).toMatch(/^Usage:/);
+      cwa.app.exec('insert into book_shelf_link (book_id, shelf) values (7, 2)');
+      h.io.env.CALIBRE_LIBRARY_PATH = `${cwa.dir}/missing`;
+      expect(await runCli(['kobo', 'status'], h.io)).toBe(1);
+      expect(h.err.at(-1)).toMatch(/^Cannot read CWA's databases:/);
+      delete h.io.env.CWA_CONFIG_PATH;
+      delete h.io.env.CALIBRE_LIBRARY_PATH;
+      expect(await runCli(['kobo', 'status'], h.io)).toBe(1);
+    } finally {
+      cwa.close();
+    }
   });
 });

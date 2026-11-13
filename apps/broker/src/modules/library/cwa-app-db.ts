@@ -1,5 +1,5 @@
 import { parseSqliteTime, ReadOnlySqlite } from './sqlite-readonly.js';
-import type { DeviceState, ReadingState, ReadStatus } from './types.js';
+import type { DeviceState, KoboSyncBook, ReadingState, ReadStatus } from './types.js';
 
 export interface CwaShelf {
   id: number;
@@ -109,16 +109,56 @@ export class CwaAppDb {
   }
 
   deviceState(cwaUserId: number, shelfId: number, bookId: number): DeviceState {
-    return this.sqlite.run((db) => ({
-      onKoboShelf:
+    const [book] = this.koboSyncWhere(cwaUserId, shelfId, bookId);
+    return {
+      onKoboShelf: book?.onKoboShelf ?? false,
+      syncedToDevice: book?.syncedToDevice ?? false,
+      deliveredToDevice: book?.deliveredToDevice ?? false,
+    };
+  }
+
+  /**
+   * Every book on the shelf or in `kobo_synced_books` for this user. A book
+   * counts as delivered when the user's Kobo downloaded it (CWA's `downloads`
+   * table, written by the Kobo download route) or reported a reading state
+   * for it (`kobo_reading_state`, created when the Kobo asks for the state).
+   */
+  koboSync(cwaUserId: number, shelfId: number): KoboSyncBook[] {
+    return this.koboSyncWhere(cwaUserId, shelfId, null);
+  }
+
+  private koboSyncWhere(cwaUserId: number, shelfId: number, bookId: number | null): KoboSyncBook[] {
+    const oneBook = bookId === null ? '' : 'where book_id = ?';
+    const args = bookId === null ? [] : [bookId];
+    return this.sqlite.run((db) =>
+      (
         db
-          .prepare('select 1 from book_shelf_link where shelf = ? and book_id = ? limit 1')
-          .get(shelfId, bookId) !== undefined,
-      syncedToDevice:
-        db
-          .prepare('select 1 from kobo_synced_books where user_id = ? and book_id = ? limit 1')
-          .get(cwaUserId, bookId) !== undefined,
-    }));
+          .prepare(
+            `with ids as (
+               select book_id from book_shelf_link where shelf = ?
+               union select book_id from kobo_synced_books where user_id = ?
+             )
+             select book_id,
+               exists(select 1 from book_shelf_link where shelf = ? and book_id = ids.book_id) as on_shelf,
+               exists(select 1 from kobo_synced_books where user_id = ? and book_id = ids.book_id) as synced,
+               exists(select 1 from downloads where user_id = ? and book_id = ids.book_id)
+                 or exists(select 1 from kobo_reading_state where user_id = ? and book_id = ids.book_id)
+                 as delivered
+             from ids ${oneBook} order by book_id`,
+          )
+          .all(shelfId, cwaUserId, shelfId, cwaUserId, cwaUserId, cwaUserId, ...args) as {
+          book_id: number;
+          on_shelf: number;
+          synced: number;
+          delivered: number;
+        }[]
+      ).map((r) => ({
+        bookId: r.book_id,
+        onKoboShelf: Boolean(r.on_shelf),
+        syncedToDevice: Boolean(r.synced),
+        deliveredToDevice: Boolean(r.delivered),
+      })),
+    );
   }
 
   readingState(cwaUserId: number, bookId: number): ReadingState {

@@ -1,7 +1,7 @@
 import { ItemKobos, TokenPair } from '@purrshelf/contract';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { users as usersTable } from '../../src/db/schema.js';
+import { koboResends, users as usersTable } from '../../src/db/schema.js';
 import { LibraryItems } from '../../src/modules/library/items.js';
 import { koboState } from '../../src/modules/library/kobos.js';
 import type { CwaAdapter } from '../../src/modules/library/cwa-adapter.js';
@@ -66,13 +66,20 @@ afterEach(async () => {
 
 describe('koboState', () => {
   it.each([
-    [true, true, 'on_device'],
-    [true, false, 'sending'],
-    [false, true, 'removing'],
-    [false, false, 'not_on_device'],
-  ] as const)('shelf %s, synced %s → %s', (onKoboShelf, syncedToDevice, state) => {
-    expect(koboState({ onKoboShelf, syncedToDevice })).toBe(state);
-  });
+    [true, true, true, false, 'on_device'],
+    [true, true, false, false, 'sending'],
+    [true, false, false, false, 'sending'],
+    [false, true, true, false, 'removing'],
+    [false, true, false, false, 'removing'],
+    [false, false, false, false, 'not_on_device'],
+    [false, true, false, true, 'sending'],
+    [false, false, false, true, 'sending'],
+  ] as const)(
+    'shelf %s, synced %s, delivered %s, resending %s → %s',
+    (onKoboShelf, syncedToDevice, deliveredToDevice, resending, state) => {
+      expect(koboState({ onKoboShelf, syncedToDevice, deliveredToDevice }, resending)).toBe(state);
+    },
+  );
 });
 
 describe('Kobo endpoints', () => {
@@ -99,7 +106,27 @@ describe('Kobo endpoints', () => {
     expect(items.isOwner(itemId, me)).toBe(true);
 
     cwa.app.prepare('insert into kobo_synced_books (user_id, book_id) values (?, 7)').run(3);
+    // Marked synced is not enough: the Kobo has to fetch the file (ADR 0046).
+    expect((await kobosOf('GET', `${itemId}/kobos`))[0]!.state).toBe('sending');
+    cwa.app.prepare('insert into downloads (user_id, book_id) values (?, 7)').run(3);
     expect((await kobosOf('GET', `${itemId}/kobos`))[0]!.state).toBe('on_device');
+  });
+
+  it('shows a book the broker is resending as sending, and stops resending when I remove it', async () => {
+    // The broker took the lost book off the shelf; CWA still has its mark.
+    cwa.app.prepare('insert into kobo_synced_books (user_id, book_id) values (?, 7)').run(3);
+    const row = { userId: me, calibreBookId: 7, since: ctx.clock.fn(), createdAt: ctx.clock.fn() };
+    ctx.database.db
+      .insert(koboResends)
+      .values({ ...row, phase: 'off_shelf' })
+      .run();
+    expect((await kobosOf('GET', `${itemId}/kobos`))[0]!.state).toBe('sending');
+
+    await kobosOf('PUT', `${itemId}/kobos/${me}`);
+    expect(ctx.database.db.select().from(koboResends).all()).toHaveLength(1);
+    const kobos = await kobosOf('DELETE', `${itemId}/kobos/${me}`);
+    expect(kobos[0]!.state).toBe('removing');
+    expect(ctx.database.db.select().from(koboResends).all()).toEqual([]);
   });
 
   it('sends to my partner’s Kobo, who becomes an owner too', async () => {

@@ -161,15 +161,36 @@ describe('CwaAdapter: device and reading state', () => {
     expect(await adapter.getDeviceState(READER_A, 10)).toEqual({
       onKoboShelf: true,
       syncedToDevice: true,
+      deliveredToDevice: false,
     });
     expect(await adapter.getDeviceState(READER_B, 10)).toEqual({
       onKoboShelf: false,
       syncedToDevice: false,
+      deliveredToDevice: false,
     });
     expect(await adapter.getDeviceState(READER_B, 11)).toEqual({
       onKoboShelf: false,
       syncedToDevice: true,
+      deliveredToDevice: false,
     });
+  });
+
+  it('counts a book as delivered once that reader’s Kobo downloaded it or reported on it', async () => {
+    cwa.app.exec(`insert into book_shelf_link (book_id, shelf) values (10, 2), (11, 2), (12, 2);
+      insert into kobo_synced_books (user_id, book_id) values (3, 10), (3, 11), (3, 12), (3, 13);
+      insert into downloads (user_id, book_id) values (3, 10), (4, 11);
+      insert into kobo_reading_state (user_id, book_id) values (3, 12)`);
+    expect(await adapter.getDeviceState(READER_A, 10)).toMatchObject({ deliveredToDevice: true });
+    // Reader B's download says nothing about reader A's Kobo.
+    expect(await adapter.getDeviceState(READER_A, 11)).toMatchObject({ deliveredToDevice: false });
+    expect(await adapter.getDeviceState(READER_A, 12)).toMatchObject({ deliveredToDevice: true });
+    expect(await adapter.listKoboSync(READER_A)).toEqual([
+      { bookId: 10, onKoboShelf: true, syncedToDevice: true, deliveredToDevice: true },
+      { bookId: 11, onKoboShelf: true, syncedToDevice: true, deliveredToDevice: false },
+      { bookId: 12, onKoboShelf: true, syncedToDevice: true, deliveredToDevice: true },
+      { bookId: 13, onKoboShelf: false, syncedToDevice: true, deliveredToDevice: false },
+    ]);
+    expect(await adapter.listKoboSync(READER_B)).toEqual([]);
   });
 
   it('reports reading state from the Kobo sync tables', async () => {
