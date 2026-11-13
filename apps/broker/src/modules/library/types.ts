@@ -51,8 +51,19 @@ export interface FindBooksQuery {
 export interface DeviceState {
   /** The book is on the owner's Kobo shelf in CWA. */
   onKoboShelf: boolean;
-  /** CWA has handed the book to the owner's Kobo in a sync. */
+  /** CWA has handed the book to the owner's Kobo in a sync (it may not have arrived). */
   syncedToDevice: boolean;
+  /**
+   * The owner's Kobo really has the book: it downloaded the file or reported
+   * a reading position for it. CWA marks a book synced before the Kobo gets
+   * the sync reply, so `syncedToDevice` alone can be wrong (ADR 0046).
+   */
+  deliveredToDevice: boolean;
+}
+
+/** One book in the owner's Kobo sync: on their Kobo shelf, synced, or both. */
+export interface KoboSyncBook extends DeviceState {
+  bookId: number;
 }
 
 export type ReadStatus = 'unread' | 'reading' | 'finished';
@@ -75,6 +86,8 @@ export interface LibraryAdapter {
   /** Idempotent: removing a book that is not on the shelf is fine. */
   removeFromKoboShelf(owner: LibraryOwner, bookId: number): Promise<void>;
   getDeviceState(owner: LibraryOwner, bookId: number): Promise<DeviceState>;
+  /** Every book on the owner's Kobo shelf or marked synced to their Kobo (one query). */
+  listKoboSync(owner: LibraryOwner): Promise<KoboSyncBook[]>;
   getReadingState(owner: LibraryOwner, bookId: number): Promise<ReadingState>;
   /** Reading state of every book the owner's Kobo reported on, by Calibre book id (one query). */
   getReadingStates(owner: LibraryOwner): Promise<Map<number, ReadingState>>;

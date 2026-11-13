@@ -51,6 +51,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-14](BRK-14.md) | Know my top genre this month                                   | 11        | done      |
 | [APP-17](APP-17.md) | See my top genre's Top 10 on Search                            | 11        | done      |
 | [BRK-15](BRK-15.md) | Never get another book of the series                           | 11        | done      |
+| [BRK-16](BRK-16.md) | Make sure every book on my Kobo shelf reaches my Kobo          | 12        | in review |
 
 ## Template
 

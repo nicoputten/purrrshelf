@@ -50,6 +50,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0043](0043-kobo-sync-away-from-home.md)                    | Kobo sync away from home: only CWA's /kobo/ path, on its own host       | accepted                   |
 | [0044](0044-reader-top-genre.md)                            | The reader's top genre this month leads the Search teaser               | accepted                   |
 | [0045](0045-series-volume-matching.md)                      | Reject releases of another book in the same series                      | accepted                   |
+| [0046](0046-resend-books-the-kobo-never-received.md)        | Resend books the Kobo never received: off the shelf and back on         | accepted                   |
 
 ## Template
 

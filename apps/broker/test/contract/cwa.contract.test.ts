@@ -99,6 +99,7 @@ describe.skipIf(!fixture)('CwaAdapter against CWA v4.0.8', () => {
     expect(await adapter.getDeviceState(readerA!, bookA!)).toEqual({
       onKoboShelf: true,
       syncedToDevice: false,
+      deliveredToDevice: false,
     });
     expect((await adapter.getDeviceState(readerB!, bookA!)).onKoboShelf).toBe(false);
 
@@ -108,6 +109,67 @@ describe.skipIf(!fixture)('CwaAdapter against CWA v4.0.8', () => {
     expect((await adapter.getDeviceState(readerA!, bookA!)).onKoboShelf).toBe(false);
     expect((await adapter.getDeviceState(readerB!, bookA!)).onKoboShelf).toBe(true);
     await adapter.removeFromKoboShelf(readerB!, bookA!);
+  });
+
+  it('needs off the shelf and back on to resend a book a Kobo never got (ADR 0046)', async () => {
+    const token = adapter.appDb.koboToken(readerA!.cwaUserId)!;
+    const book = (await adapter.getBook(bookB!))!;
+    const kobo = (path: string, headers: Record<string, string> = {}) =>
+      fetch(new URL(`/kobo/${token}${path}`, f.baseUrl), { headers });
+    // A Kobo sends back the sync token from its last sync, like a real one.
+    let syncToken: string | null = null;
+    const sync = async (): Promise<string[]> => {
+      const res = await kobo(
+        '/v1/library/sync',
+        syncToken ? { 'x-kobo-synctoken': syncToken } : {},
+      );
+      expect(res.status).toBe(200);
+      syncToken = res.headers.get('x-kobo-synctoken') ?? syncToken;
+      const items = (await res.json()) as Record<
+        string,
+        { BookEntitlement?: { Id: string; IsRemoved?: boolean } }
+      >[];
+      return items
+        .flatMap((i) => [i.NewEntitlement, i.ChangedEntitlement])
+        .flatMap((e) =>
+          e?.BookEntitlement && !e.BookEntitlement.IsRemoved ? [e.BookEntitlement.Id] : [],
+        );
+    };
+    const state = () => adapter.getDeviceState(readerA!, bookB!);
+
+    await sync();
+    await adapter.addToKoboShelf(readerA!, bookB!);
+    // This reply is "lost": CWA marks the book synced anyway.
+    expect(await sync()).toContain(book.uuid);
+    expect(await state()).toEqual({
+      onKoboShelf: true,
+      syncedToDevice: true,
+      deliveredToDevice: false,
+    });
+    expect(await sync()).not.toContain(book.uuid);
+
+    await adapter.removeFromKoboShelf(readerA!, bookB!);
+    await sync(); // clears CWA's mark
+    expect((await state()).syncedToDevice).toBe(false);
+    await adapter.addToKoboShelf(readerA!, bookB!);
+    expect(await sync()).toContain(book.uuid);
+
+    // The Kobo fetches the file: now it counts as delivered.
+    const file = await kobo(`/download/${bookB!}/epub`);
+    expect(file.status).toBe(200);
+    await file.arrayBuffer();
+    expect(await state()).toEqual({
+      onKoboShelf: true,
+      syncedToDevice: true,
+      deliveredToDevice: true,
+    });
+    expect(await adapter.listKoboSync(readerA!)).toContainEqual({
+      bookId: bookB!,
+      ...(await state()),
+    });
+
+    await adapter.removeFromKoboShelf(readerA!, bookB!);
+    await sync();
   });
 
   it('reads an untouched book as unread', async () => {

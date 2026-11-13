@@ -4,6 +4,9 @@ import { systemClock } from './clock.js';
 import type { DatabaseHandle } from './db/index.js';
 import { join } from 'node:path';
 import { UserError, UserRepository } from './modules/auth/users.js';
+import { eq } from 'drizzle-orm';
+import { koboResends, type KoboResendPhase } from './db/schema.js';
+import { CalibreDb } from './modules/library/calibre-db.js';
 import { CwaAppDb } from './modules/library/cwa-app-db.js';
 import {
   BudgetExhaustedError,
@@ -39,6 +42,7 @@ const USAGE = `Usage:
   purrshelf indexer list
   purrshelf indexer remove <id>
   purrshelf indexer caps <id>      (reads t=caps once; costs one search from the budget)
+  purrshelf kobo status [<username>]   (which books on each Kobo shelf really reached the Kobo)
 
 The password is read from PURRSHELF_PASSWORD or from the first line of stdin.
 Adding an existing indexer id updates it. The indexer's API key is never
@@ -73,7 +77,7 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   }
   const { positionals, values } = parsed;
   const [group, command, username] = positionals;
-  if (values.help || (group !== 'user' && group !== 'indexer') || !command) {
+  if (values.help || !['user', 'indexer', 'kobo'].includes(group ?? '') || !command) {
     (values.help ? io.out : io.err)(USAGE);
     return values.help ? 0 : 2;
   }
@@ -87,6 +91,17 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
     }
   }
   const users = new UserRepository(database.db, systemClock);
+  if (group === 'kobo') {
+    try {
+      if (command !== 'status') {
+        io.err(USAGE);
+        return 2;
+      }
+      return koboStatus(users, database, username, io);
+    } finally {
+      database.close();
+    }
+  }
   try {
     switch (command) {
       case 'list': {
@@ -180,6 +195,82 @@ function linkCwa(users: UserRepository, username: string, cwaUser: string, io: C
     return 1;
   } finally {
     appDb.close();
+  }
+}
+
+const RESEND_PHASES: Record<KoboResendPhase, string> = {
+  waiting: 'marked synced but not on the Kobo; resending soon',
+  off_shelf: 'resending: off the shelf until the next sync',
+  back_on: 'resending: back on the shelf, goes out with the next sync',
+  given_up: 'still not on the Kobo after several resends; check it by hand',
+};
+
+/**
+ * Read-only report of every reader's Kobo shelf (BRK-16): which books the
+ * Kobo really has, and which are still on their way or being resent.
+ */
+function koboStatus(
+  users: UserRepository,
+  database: DatabaseHandle,
+  username: string | undefined,
+  io: CliIo,
+): number {
+  const wanted = username?.trim().toLowerCase();
+  const readers = users.list().filter((u) => !wanted || u.username === wanted);
+  if (wanted && readers.length === 0) {
+    io.err(`No user "${username}"`);
+    return 1;
+  }
+  const appDb = new CwaAppDb(join(io.env.CWA_CONFIG_PATH ?? '/cwa-config', 'app.db'));
+  const calibre = new CalibreDb(
+    join(io.env.CALIBRE_LIBRARY_PATH ?? '/calibre-library', 'metadata.db'),
+  );
+  const shelfName = io.env.CWA_KOBO_SHELF_NAME ?? 'Kobo';
+  try {
+    for (const user of readers) {
+      if (user.cwaUserId === null) {
+        io.out(`${user.username}: not linked to CWA`);
+        continue;
+      }
+      const shelves = appDb.shelvesByName(user.cwaUserId, shelfName);
+      const [shelf] = shelves;
+      if (shelves.length !== 1 || !shelf?.koboSync) {
+        io.out(`${user.username}: needs exactly one shelf "${shelfName}" with Kobo sync on`);
+        continue;
+      }
+      const books = appDb.koboSync(user.cwaUserId, shelf.id);
+      const resends = new Map(
+        database.db
+          .select()
+          .from(koboResends)
+          .where(eq(koboResends.userId, user.id))
+          .all()
+          .map((r) => [r.calibreBookId, r]),
+      );
+      const onShelf = books.filter((b) => b.onKoboShelf);
+      const delivered = onShelf.filter((b) => b.syncedToDevice && b.deliveredToDevice);
+      io.out(
+        `${user.username}: ${onShelf.length} on the ${shelfName} shelf, ${delivered.length} on the Kobo`,
+      );
+      for (const b of books) {
+        const resend = resends.get(b.bookId);
+        let state: string | null = null;
+        if (resend) state = RESEND_PHASES[resend.phase];
+        else if (b.onKoboShelf && !b.syncedToDevice) state = 'goes out with the next sync';
+        else if (b.onKoboShelf && !b.deliveredToDevice) state = RESEND_PHASES.waiting;
+        else if (!b.onKoboShelf && b.syncedToDevice) state = 'leaves the Kobo with the next sync';
+        if (!state) continue;
+        const title = calibre.getBook(b.bookId)?.title ?? '(no longer in the library)';
+        io.out(`  #${b.bookId}\t${title}\t${state}`);
+      }
+    }
+    return 0;
+  } catch (e) {
+    io.err(`Cannot read CWA's databases: ${(e as Error).message}`);
+    return 1;
+  } finally {
+    appDb.close();
+    calibre.close();
   }
 }
 

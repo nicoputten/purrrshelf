@@ -316,3 +316,33 @@ export const recommendationCache = sqliteTable('recommendation_cache', {
   rowsJson: text('rows_json').notNull(),
   computedAt: integer('computed_at', { mode: 'timestamp_ms' }).notNull(),
 });
+
+export const koboResendPhases = ['waiting', 'off_shelf', 'back_on', 'given_up'] as const;
+export type KoboResendPhase = (typeof koboResendPhases)[number];
+
+/**
+ * Books CWA marked synced to a reader's Kobo that never arrived, and how far
+ * the broker is with resending them (BRK-16, ADR 0046): `waiting` (grace
+ * period), `off_shelf` (taken off the Kobo shelf until the next sync clears
+ * CWA's mark), `back_on` (put back, waiting for the Kobo to fetch it),
+ * `given_up` (still missing after the last attempt). Delivered books are
+ * removed from this table.
+ */
+export const koboResends = sqliteTable(
+  'kobo_resends',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    calibreBookId: integer('calibre_book_id').notNull(),
+    phase: text('phase', { enum: koboResendPhases }).notNull(),
+    /** How many times the book was put back on the shelf. */
+    attempts: integer('attempts').notNull().default(0),
+    /** When the current phase started. */
+    since: integer('since', { mode: 'timestamp_ms' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.calibreBookId] })],
+);
+
+export type KoboResendRow = typeof koboResends.$inferSelect;
