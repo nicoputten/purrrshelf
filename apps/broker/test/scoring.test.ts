@@ -200,6 +200,40 @@ describe('scoreRelease', () => {
 });
 
 describe('rankReleases', () => {
+  it('never picks a more popular release of another book in the series (BRK-15)', () => {
+    // The real case: book 1 is titled after its series, and every volume's
+    // release name holds the whole title. The book 5 release had more grabs.
+    const first: BookQuery = {
+      title: 'Lantern Keepers',
+      authors: ['Ada Quill'],
+      language: 'en',
+      series: { name: 'Lantern Keepers', position: 1 },
+    };
+    const list = [
+      release({
+        guid: 'b5',
+        title: 'Ada Quill - [Lantern Keepers 05] - The Salt Choir (epub)',
+        grabs: 574,
+      }),
+      release({
+        guid: 'b2',
+        title: 'Ada Quill - [Lantern Keepers 02] - Glass Tide (epub)',
+        grabs: 659,
+      }),
+      release({ guid: 'all', title: 'Ada Quill - Lantern Keepers 1-7 (epub)', grabs: 900 }),
+      release({
+        guid: 'b1',
+        title: 'Ada Quill - [Lantern Keepers 01] - Lantern Keepers (epub)',
+        grabs: 536,
+      }),
+    ];
+    const ranked = rankReleases(first, list, { now: NOW, failedGuids: new Set() });
+    expect(ranked.best?.release.guid).toBe('b1');
+    for (const other of ranked.ranked.filter((r) => r.release.guid !== 'b1')) {
+      expect(other.rejected).toEqual(['title_mismatch']);
+    }
+  });
+
   it('orders by score, rejected last, and picks the best above the threshold', () => {
     const list = [
       release({ guid: 'pdf', title: 'Ada Quill - The Lighthouse Cartographer PDF' }),

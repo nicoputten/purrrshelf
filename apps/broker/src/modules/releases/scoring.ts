@@ -1,5 +1,6 @@
 import { normalise } from '../search/judge.js';
 import { cleanTitle, type BookQuery } from '../search/planner.js';
+import { isOtherVolume } from '../search/volume.js';
 
 /** What scoring needs to know about one search result. */
 export interface ReleaseCandidate {
@@ -130,8 +131,10 @@ export function scoreRelease(
   const have = new Set(normalise(release.title));
   const want = normalise(cleanTitle(query.title));
   const titleMatch = want.length ? want.filter((w) => have.has(w)).length / want.length : 0;
-  if (titleMatch < MIN_TITLE_MATCH) rejected.push('title_mismatch');
-  else if (titleMatch < 1) points -= 5;
+  // Another book of the same series is "another book" too (BRK-15).
+  if (titleMatch < MIN_TITLE_MATCH || isOtherVolume(query, release.title)) {
+    rejected.push('title_mismatch');
+  } else if (titleMatch < 1) points -= 5;
 
   const surnames = query.authors.flatMap((a) => normalise(a).slice(-1));
   const authorMatch = surnames.length === 0 || surnames.some((s) => have.has(s));

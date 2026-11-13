@@ -50,6 +50,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-15](APP-15.md) | Browse genre top 10s in their own tab                          | 11        | done      |
 | [BRK-14](BRK-14.md) | Know my top genre this month                                   | 11        | done      |
 | [APP-17](APP-17.md) | See my top genre's Top 10 on Search                            | 11        | done      |
+| [BRK-15](BRK-15.md) | Never get another book of the series                           | 11        | done      |
 
 ## Template
 

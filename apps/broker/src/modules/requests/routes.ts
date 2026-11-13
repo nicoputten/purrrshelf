@@ -20,7 +20,12 @@ export interface WorkInfo {
   getWork(
     userId: string,
     workId: string,
-  ): Promise<{ title: string; authors: string[]; isbns: string[] }>;
+  ): Promise<{
+    title: string;
+    authors: string[];
+    isbns: string[];
+    series?: { name: string; position: number | null } | null;
+  }>;
 }
 
 /** The release pipeline as far as "Pick another" and Cancel need it. */
@@ -112,6 +117,9 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
           authors: work.authors,
           language,
           ...(isbn13 ? { isbn13 } : {}),
+          ...(work.series
+            ? { series: { name: work.series.name, position: work.series.position } }
+            : {}),
         },
         pushTo: [...new Set(pushTo)],
       });

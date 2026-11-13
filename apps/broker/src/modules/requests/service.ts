@@ -21,6 +21,7 @@ const BookQuerySchema = z.object({
   authors: z.array(z.string()),
   isbn13: z.string().optional(),
   language: z.enum(['en', 'nl']),
+  series: z.object({ name: z.string(), position: z.number().nullable() }).optional(),
 });
 
 export interface NewRequest {

@@ -130,6 +130,21 @@ describe('titleMatchJudge', () => {
     expect(titleMatchJudge.acceptable(query, item('The Lighthouse Keeper'))).toBe(false);
   });
 
+  it('rejects another book of the same series, so the search goes on', () => {
+    const first: BookQuery = {
+      title: 'Lantern Keepers',
+      authors: ['Ada Quill'],
+      language: 'en',
+      series: { name: 'Lantern Keepers', position: 1 },
+    };
+    expect(
+      titleMatchJudge.acceptable(first, item('Ada Quill - [Lantern Keepers 05] - The Salt Choir')),
+    ).toBe(false);
+    expect(
+      titleMatchJudge.acceptable(first, item('Ada Quill - [Lantern Keepers 01] - Lantern Keepers')),
+    ).toBe(true);
+  });
+
   it('rejects everything for a title without words', () => {
     expect(titleMatchJudge.acceptable({ ...query, title: '?' }, item('?'))).toBe(false);
   });

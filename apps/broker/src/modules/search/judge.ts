@@ -1,5 +1,6 @@
 import type { NewznabItem } from '../budget/gateway.js';
 import { cleanTitle, type BookQuery } from './planner.js';
+import { isOtherVolume } from './volume.js';
 
 /** Decides whether a search result is good enough to stop searching. */
 export interface ReleaseJudge {
@@ -17,12 +18,13 @@ export function normalise(s: string): string[] {
 
 /**
  * Minimal judge until release scoring (BRK-06): every word of the cleaned
- * title appears in the release name.
+ * title appears in the release name, and it is not another book of the
+ * same series (BRK-15).
  */
 export const titleMatchJudge: ReleaseJudge = {
   acceptable(query, item) {
     const want = normalise(cleanTitle(query.title));
     const have = new Set(normalise(item.title));
-    return want.length > 0 && want.every((w) => have.has(w));
+    return want.length > 0 && want.every((w) => have.has(w)) && !isOtherVolume(query, item.title);
   },
 };

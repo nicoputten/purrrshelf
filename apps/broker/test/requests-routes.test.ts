@@ -7,7 +7,7 @@ import {
   TokenPair,
   requestStatuses as contractStatuses,
 } from '@purrshelf/contract';
-import { ownerships, requestStatuses, users } from '../src/db/schema.js';
+import { ownerships, requests, requestStatuses, users } from '../src/db/schema.js';
 import type { LibraryAdapter, LibraryOwner } from '../src/modules/library/types.js';
 import type { LibraryItems } from '../src/modules/requests/delivery.js';
 import { fakeProviders, ISBN_SALT_ROAD } from './metadata-fakes.js';
@@ -203,6 +203,24 @@ describe('POST /requests', () => {
       [b.id, 'Pride and Prejudice', 'nl'],
       [a.id, 'The Salt Road', 'en'],
     ]);
+  });
+
+  it("searches with the work's place in its series, so another volume is never taken", async () => {
+    const { post, settled } = await setup();
+    const inSeries = BookRequest.parse(
+      (await post({ workId: SALT_ROAD, language: 'en', pushTo: [] })).json(),
+    );
+    const single = BookRequest.parse(
+      (await post({ workId: 'openlibrary:OL202W', language: 'en', pushTo: [] })).json(),
+    );
+    await settled(inSeries.id, 'not_found');
+    await settled(single.id, 'not_found');
+    const query = (id: string) =>
+      JSON.parse(
+        ctx.database.db.select().from(requests).where(eq(requests.id, id)).get()!.queryJson,
+      ) as { series?: unknown };
+    expect(query(inSeries.id).series).toEqual({ name: 'Lantern Keepers', position: 1 });
+    expect(query(single.id).series).toBeUndefined();
   });
 
   it('refuses an unknown reader or a bad body', async () => {

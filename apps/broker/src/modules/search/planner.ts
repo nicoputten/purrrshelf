@@ -6,6 +6,8 @@ export interface BookQuery {
   authors: string[];
   isbn13?: string | undefined;
   language: 'en' | 'nl';
+  /** The work's series and its place in it, so another volume is never taken for it. */
+  series?: { name: string; position: number | null } | undefined;
 }
 
 export const variantIds = ['book', 'author_title', 'title', 'isbn'] as const;
