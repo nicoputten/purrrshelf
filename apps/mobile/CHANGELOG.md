@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.7.0...mobile-v1.8.0) (2026-11-16)
+
+
+### New tricks
+
+* **broker:** search an indexer with my own words (BRK-18) ([9f00942](https://github.com/nicoputten/purrrshelf/commit/9f00942f291c12f5225ee2542ac3a05569277cb0))
+* **mobile:** search it myself and wrong book (APP-18, APP-19) ([7696391](https://github.com/nicoputten/purrrshelf/commit/7696391f7caeb12940a2dfa7a429471ce2b668d4))
+
+
+### Fixed scratches
+
+* **mobile:** show a book as added right after Add (APP-20) ([820ed99](https://github.com/nicoputten/purrrshelf/commit/820ed99a40dcc42edfedbf671f432169fb549744))
+
 ## [1.7.0](https://github.com/nicoputten/purrrshelf/compare/mobile-v1.6.0...mobile-v1.7.0) (2026-11-09)
 
 
