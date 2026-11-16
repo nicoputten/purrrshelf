@@ -14,11 +14,15 @@ import { RequestPreview, RequestPreviewQuery } from './odds.js';
 import {
   AddRequest,
   BookRequest,
+  ManualSearch,
+  ManualSearchResult,
   Readers,
   ReleaseList,
   RequestList,
   RequestParams,
   RequestReleaseParams,
+  RequestSearches,
+  WrongBook,
 } from './requests.js';
 import {
   DiscoverSearchQuery,
@@ -131,7 +135,7 @@ export const endpoints = {
     method: 'POST',
     path: '/requests',
     summary:
-      'Add a book: owns it right away when the library has it, otherwise starts the paid indexer search. Answers the open request when there is one.',
+      'Add a book: owns it right away when the library has it, otherwise starts the paid indexer search (or, with search "manual", waits for the reader\'s own words). Answers the open request when there is one.',
     auth: true,
     body: AddRequest,
     response: BookRequest,
@@ -197,6 +201,37 @@ export const endpoints = {
     summary: 'Stop or dismiss a request',
     auth: true,
     params: RequestParams,
+    response: BookRequest,
+    status: 200,
+  },
+  requestSearches: {
+    method: 'GET',
+    path: '/requests/:id/searches',
+    summary: 'What was searched for this request, newest first. Free: never searches.',
+    auth: true,
+    params: RequestParams,
+    response: RequestSearches,
+    status: 200,
+  },
+  searchRequest: {
+    method: 'POST',
+    path: '/requests/:id/search',
+    summary:
+      "Search it yourself: one search on one indexer with the reader's words. Results go to choose_release; nothing is grabbed.",
+    auth: true,
+    params: RequestParams,
+    body: ManualSearch,
+    response: ManualSearchResult,
+    status: 200,
+  },
+  wrongBook: {
+    method: 'POST',
+    path: '/requests/:id/wrong-book',
+    summary:
+      'Wrong book: take it off the Kobos and out of the library, never pick that release again, then search as chosen.',
+    auth: true,
+    params: RequestParams,
+    body: WrongBook,
     response: BookRequest,
     status: 200,
   },

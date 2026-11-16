@@ -55,7 +55,7 @@ import { recommendRoutes } from './modules/recommend/routes.js';
 import { createOdds } from './modules/odds/index.js';
 import { oddsRoutes } from './modules/odds/routes.js';
 import { requestRoutes } from './modules/requests/routes.js';
-import { requestView } from './modules/requests/view.js';
+import { requestSearches, requestView } from './modules/requests/view.js';
 import { libraryBookLookup } from './modules/search/library-book-lookup.js';
 import { meRoutes } from './modules/me/routes.js';
 
@@ -312,6 +312,7 @@ export async function buildApp({
         releases: downloads.pipeline,
         events: downloads.events,
         view: (row) => requestView(database.db, row),
+        searches: (row) => requestSearches(database.db, row),
         works: discover,
         readerIds: () => users.list().map((u) => u.id),
         requireAuth: authenticated,

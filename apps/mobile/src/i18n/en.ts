@@ -465,6 +465,8 @@ export const en = {
     REQUEST_STATE: 'That can’t be done with this request right now.',
     RELEASE_UNAVAILABLE: 'That release is no longer available. Pick another one.',
     DOWNLOADS_NOT_SET_UP: 'Downloads are not set up on the server yet. Ask the admin.',
+    BUDGET_EXHAUSTED: 'No searches left on this indexer right now.',
+    INDEXER_UNAVAILABLE: 'That indexer didn’t answer. Try the other one or try again later.',
     unknown: 'Something went wrong. Try again.',
   },
   motion: {

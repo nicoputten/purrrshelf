@@ -11,7 +11,7 @@ import { registerErrorHandling } from '../src/errors.js';
 import { releases, requests } from '../src/db/schema.js';
 import type { PreHandler } from '../src/modules/auth/authenticate.js';
 import { requestRoutes } from '../src/modules/requests/routes.js';
-import { requestView } from '../src/modules/requests/view.js';
+import { requestSearches, requestView } from '../src/modules/requests/view.js';
 import type { ImportLibrary } from '../src/modules/releases/pipeline.js';
 import type { DownloadClient, DownloadState } from '../src/modules/sabnzbd/client.js';
 import { fixture } from './fake-newznab.js';
@@ -82,6 +82,7 @@ async function build(withServices = true, extra: Parameters<typeof makeHarness>[
     releases: h.pipeline,
     events: h.events,
     view: (row) => requestView(h.database.db, row),
+    searches: (row) => requestSearches(h.database.db, row),
     works: { getWork: async () => ({ title: QUERY.title, authors: QUERY.authors, isbns: [] }) },
     readerIds: () => [h.userId],
     requireAuth: fakeAuth,

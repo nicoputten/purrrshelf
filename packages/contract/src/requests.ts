@@ -44,6 +44,11 @@ export const AddRequest = z
     language: BookLanguage,
     /** Readers (user ids) whose Kobo gets the book once it is in the library. */
     pushTo: z.array(z.string().min(1)).max(10),
+    /**
+     * `manual`: make the request without searching, so the reader can search
+     * with their own words (ADR 0048). Defaults to the automatic search.
+     */
+    search: z.enum(['auto', 'manual']).optional(),
   })
   .meta({ id: 'AddRequest' });
 export type AddRequest = z.infer<typeof AddRequest>;
@@ -155,3 +160,52 @@ export type RequestReleaseParams = z.infer<typeof RequestReleaseParams>;
  * `request` event (a {@link BookRequest}) whenever one of my requests changes.
  */
 export const requestEventsPath = '/requests/events';
+
+/** Most characters a reader's own search words may have. */
+export const MANUAL_SEARCH_MAX_LENGTH = 200;
+
+/** "Search it yourself": one search on one indexer with the reader's words (BRK-18, ADR 0048). */
+export const ManualSearch = z
+  .object({
+    words: z.string().trim().min(1).max(MANUAL_SEARCH_MAX_LENGTH),
+    indexerId: z.string().min(1).max(64),
+  })
+  .meta({ id: 'ManualSearch' });
+export type ManualSearch = z.infer<typeof ManualSearch>;
+
+export const ManualSearchResult = z
+  .object({
+    request: BookRequest,
+    /** Releases the search found; 0 leaves the request as it was. */
+    resultCount: z.number().int().nonnegative(),
+  })
+  .meta({ id: 'ManualSearchResult' });
+export type ManualSearchResult = z.infer<typeof ManualSearchResult>;
+
+/** One search spent on a request, as "What we tried" shows it. */
+export const SearchAttemptView = z.object({
+  /** The words sent to the indexer. */
+  words: z.string(),
+  indexerName: z.string(),
+  resultCount: z.number().int().nonnegative(),
+  /** At least one release looked like this book. */
+  hit: z.boolean(),
+  /** The reader's own words rather than an automatic query. */
+  manual: z.boolean(),
+  /** The indexer answered with an error. */
+  failed: z.boolean(),
+  createdAt: z.iso.datetime(),
+});
+export type SearchAttemptView = z.infer<typeof SearchAttemptView>;
+
+export const RequestSearches = z
+  .object({ searches: z.array(SearchAttemptView) })
+  .meta({ id: 'RequestSearches' });
+export type RequestSearches = z.infer<typeof RequestSearches>;
+
+/** What happens after "Wrong book?" (BRK-19, ADR 0048). */
+export const WrongBookNext = z.enum(['search_myself', 'search_again', 'remove_only']);
+export type WrongBookNext = z.infer<typeof WrongBookNext>;
+
+export const WrongBook = z.object({ then: WrongBookNext }).meta({ id: 'WrongBook' });
+export type WrongBook = z.infer<typeof WrongBook>;

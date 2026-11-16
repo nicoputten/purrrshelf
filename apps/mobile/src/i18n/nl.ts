@@ -473,6 +473,9 @@ export const nl: Translations = {
     REQUEST_STATE: 'Dat kan nu niet met deze aanvraag.',
     RELEASE_UNAVAILABLE: 'Die release is niet meer beschikbaar. Kies een andere.',
     DOWNLOADS_NOT_SET_UP: 'Downloaden is nog niet ingesteld op de server. Vraag het de beheerder.',
+    BUDGET_EXHAUSTED: 'Er zijn nu geen zoekopdrachten meer over op deze indexer.',
+    INDEXER_UNAVAILABLE:
+      'Die indexer gaf geen antwoord. Probeer de andere of probeer het later opnieuw.',
     unknown: 'Er ging iets mis. Probeer het opnieuw.',
   },
   motion: {

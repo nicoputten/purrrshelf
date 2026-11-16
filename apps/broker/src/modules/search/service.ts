@@ -8,6 +8,7 @@ import type { IndexerGateway, NewznabCaps, NewznabItem } from '../budget/gateway
 import type { IndexerRepository } from '../indexers/repository.js';
 import type { ReleaseJudge } from './judge.js';
 import {
+  BOOKS_CATEGORY,
   orderByHitRate,
   variantsFor,
   type BookQuery,
@@ -25,6 +26,20 @@ export type SearchOutcome =
   | { kind: 'found'; indexerId: string; releaseCount: number }
   | { kind: 'not_found'; reason: string }
   | { kind: 'waiting_budget'; nextFreeAt: Date };
+
+/** The indexer of a manual search is unknown, switched off, or answered with an error. */
+export class IndexerUnavailableError extends Error {
+  override name = 'IndexerUnavailableError';
+}
+
+/** The variant a reader's own words are recorded as; the planner never runs it. */
+export const MANUAL_VARIANT = 'manual';
+
+/** Options for one automatic search round. */
+export interface RunOptions {
+  /** Skip "do we already have it?" (after a wrong book, ADR 0048). */
+  skipLibrary?: boolean;
+}
 
 function guessFormat(title: string): string | null {
   const m = title.toLowerCase().match(/\b(epub|azw3|mobi|pdf|cbz|cbr|kepub)\b/);
@@ -46,9 +61,15 @@ export class IndexerSearch {
     private readonly clock: Clock,
   ) {}
 
-  async run(request: RequestRow, query: BookQuery): Promise<SearchOutcome> {
-    const owned = await this.library.findBook(query);
-    if (owned) return { kind: 'in_library', calibreBookId: owned.calibreBookId };
+  async run(
+    request: RequestRow,
+    query: BookQuery,
+    options: RunOptions = {},
+  ): Promise<SearchOutcome> {
+    if (!options.skipLibrary) {
+      const owned = await this.library.findBook(query);
+      if (owned) return { kind: 'in_library', calibreBookId: owned.calibreBookId };
+    }
 
     // A search limit of 0 switches an indexer off.
     const indexers = this.indexers.list().filter((i) => i.searchLimitPerDay > 0);
@@ -104,6 +125,43 @@ export class IndexerSearch {
     return { kind: 'exhausted_variants' };
   }
 
+  /**
+   * "Search it yourself" (BRK-18, ADR 0048): one search on one indexer with
+   * the reader's words, through the budget like every other search. Every
+   * release found is stored, acceptable or not: the reader picks. Answers how
+   * many came back. Never waits for budget: {@link BudgetExhaustedError}
+   * goes back to the caller with nothing sent.
+   */
+  async manual(
+    request: RequestRow,
+    query: BookQuery,
+    indexerId: string,
+    words: string,
+  ): Promise<number> {
+    const indexer = this.indexers.get(indexerId);
+    if (!indexer || indexer.searchLimitPerDay <= 0) {
+      throw new IndexerUnavailableError(`No indexer "${indexerId}" to search`);
+    }
+    const label = `search q=${words}`;
+    let items: NewznabItem[];
+    try {
+      items = await this.gateway.search(indexer, { t: 'search', q: words, cat: BOOKS_CATEGORY });
+    } catch (err) {
+      if (err instanceof BudgetExhaustedError) throw err;
+      // The call went out: it is spent and recorded.
+      const message = (err as Error).message;
+      this.record(request, indexer, MANUAL_VARIANT, label, 0, false, message);
+      if (err instanceof IndexerLimitReachedError) {
+        throw new BudgetExhaustedError(indexer.id, 'search', this.gateway.nextFreeSearch(indexer));
+      }
+      throw new IndexerUnavailableError(`${indexer.name}: ${message}`);
+    }
+    const hit = items.some((i) => this.judge.acceptable(query, i));
+    this.record(request, indexer, MANUAL_VARIANT, label, items.length, hit);
+    if (items.length > 0) this.storeReleases(request, indexer, items);
+    return items.length;
+  }
+
   /** Variant/indexer pairs already spent since this search round began. */
   private triedThisRound(request: RequestRow): Set<string> {
     const rows = this.db
@@ -138,7 +196,7 @@ export class IndexerSearch {
   private record(
     request: RequestRow,
     indexer: Indexer,
-    variant: VariantId,
+    variant: VariantId | typeof MANUAL_VARIANT,
     query: string,
     resultCount: number,
     hit: boolean,

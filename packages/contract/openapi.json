@@ -282,7 +282,7 @@
     "/api/v1/requests": {
       "post": {
         "operationId": "addRequest",
-        "summary": "Add a book: owns it right away when the library has it, otherwise starts the paid indexer search. Answers the open request when there is one.",
+        "summary": "Add a book: owns it right away when the library has it, otherwise starts the paid indexer search (or, with search \"manual\", waits for the reader's own words). Answers the open request when there is one.",
         "responses": {
           "201": {
             "description": "OK",
@@ -639,6 +639,161 @@
             "bearer": []
           }
         ]
+      }
+    },
+    "/api/v1/requests/{id}/searches": {
+      "get": {
+        "operationId": "requestSearches",
+        "summary": "What was searched for this request, newest first. Free: never searches.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestSearches"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/requests/{id}/search": {
+      "post": {
+        "operationId": "searchRequest",
+        "summary": "Search it yourself: one search on one indexer with the reader's words. Results go to choose_release; nothing is grabbed.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualSearchResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualSearch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/requests/{id}/wrong-book": {
+      "post": {
+        "operationId": "wrongBook",
+        "summary": "Wrong book: take it off the Kobos and out of the library, never pick that release again, then search as chosen.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRequest"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrongBook"
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/discover/search": {
@@ -1294,6 +1449,10 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "search": {
+            "type": "string",
+            "enum": ["auto", "manual"]
           }
         },
         "required": ["workId", "language", "pushTo"],
@@ -1786,7 +1945,9 @@
               "RELEASE_UNAVAILABLE",
               "DOWNLOADS_NOT_SET_UP",
               "KOBO_NOT_LINKED",
-              "APP_UPDATE_UNAVAILABLE"
+              "APP_UPDATE_UNAVAILABLE",
+              "BUDGET_EXHAUSTED",
+              "INDEXER_UNAVAILABLE"
             ]
           },
           "message": {
@@ -2048,6 +2209,38 @@
       },
       "LogoutRequest": {
         "$ref": "#/components/schemas/RefreshRequest"
+      },
+      "ManualSearch": {
+        "type": "object",
+        "properties": {
+          "words": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "indexerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": ["words", "indexerId"],
+        "additionalProperties": false
+      },
+      "ManualSearchResult": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/BookRequest"
+          },
+          "resultCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["request", "resultCount"],
+        "additionalProperties": false
       },
       "Me": {
         "type": "object",
@@ -2483,6 +2676,56 @@
         "required": ["workId", "language", "lowOdds"],
         "additionalProperties": false
       },
+      "RequestSearches": {
+        "type": "object",
+        "properties": {
+          "searches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "words": {
+                  "type": "string"
+                },
+                "indexerName": {
+                  "type": "string"
+                },
+                "resultCount": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "hit": {
+                  "type": "boolean"
+                },
+                "manual": {
+                  "type": "boolean"
+                },
+                "failed": {
+                  "type": "boolean"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                }
+              },
+              "required": [
+                "words",
+                "indexerName",
+                "resultCount",
+                "hit",
+                "manual",
+                "failed",
+                "createdAt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["searches"],
+        "additionalProperties": false
+      },
       "SimilarWorks": {
         "type": "object",
         "properties": {
@@ -2738,6 +2981,17 @@
           }
         },
         "required": ["series", "entries"],
+        "additionalProperties": false
+      },
+      "WrongBook": {
+        "type": "object",
+        "properties": {
+          "then": {
+            "type": "string",
+            "enum": ["search_myself", "search_again", "remove_only"]
+          }
+        },
+        "required": ["then"],
         "additionalProperties": false
       }
     },

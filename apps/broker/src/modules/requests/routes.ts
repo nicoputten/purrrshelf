@@ -2,13 +2,17 @@ import {
   endpoints,
   requestEventsPath,
   type BookRequest,
+  type ManualSearchResult,
   type ReleaseList,
   type RequestList,
+  type RequestSearches,
 } from '@purrshelf/contract';
 import type { FastifyBaseLogger } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import type { RequestRow } from '../../db/schema.js';
 import { AppError } from '../../errors.js';
+import { BudgetExhaustedError } from '../budget/budget.js';
+import { IndexerUnavailableError } from '../search/service.js';
 import type { PreHandler } from '../auth/authenticate.js';
 import { DownloadsNotSetUpError, ReleaseError } from '../releases/pipeline.js';
 import type { RequestEvents } from './events.js';
@@ -40,6 +44,8 @@ export interface RequestRoutesOptions {
   releases: ReleaseActions;
   events: RequestEvents;
   view: (row: RequestRow) => BookRequest;
+  /** "What we tried" for a request (BRK-18). */
+  searches: (row: RequestRow) => RequestSearches;
   works: WorkInfo;
   /** Ids of the readers a book may be pushed to. */
   readerIds: () => string[];
@@ -61,6 +67,14 @@ function apiError(err: unknown): unknown {
     return new AppError(409, 'DOWNLOADS_NOT_SET_UP', err.message);
   }
   if (err instanceof ReleaseError) return new AppError(409, 'RELEASE_UNAVAILABLE', err.message);
+  if (err instanceof BudgetExhaustedError) {
+    return new AppError(409, 'BUDGET_EXHAUSTED', err.message, {
+      nextFreeAt: err.nextFreeAt.toISOString(),
+    });
+  }
+  if (err instanceof IndexerUnavailableError) {
+    return new AppError(502, 'INDEXER_UNAVAILABLE', err.message);
+  }
   return err;
 }
 
@@ -73,6 +87,8 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
     pickRelease,
     retryRequest,
     cancelRequest,
+    requestSearches,
+    searchRequest,
   } = endpoints;
 
   /** The user's own request; someone else's is as good as missing. */
@@ -96,7 +112,7 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
     },
     async (request, reply): Promise<BookRequest> => {
       const userId = userOf(request);
-      const { workId, language, pushTo } = request.body;
+      const { workId, language, pushTo, search } = request.body;
       const readers = new Set(opts.readerIds());
       const unknown = pushTo.filter((id) => !readers.has(id));
       if (unknown.length > 0) {
@@ -122,6 +138,7 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
             : {}),
         },
         pushTo: [...new Set(pushTo)],
+        ...(search ? { search } : {}),
       });
       follow(row.id, done);
       return opts.view(row);
@@ -203,6 +220,38 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
         const { request: started, done } = opts.requests.startRetry(row.id);
         follow(row.id, done);
         return opts.view(started);
+      } catch (err) {
+        throw apiError(err);
+      }
+    },
+  );
+
+  app.get(
+    requestSearches.path,
+    {
+      preHandler: opts.requireAuth,
+      schema: { params: requestSearches.params, response: { 200: requestSearches.response } },
+    },
+    async (request): Promise<RequestSearches> =>
+      opts.searches(mine(userOf(request), request.params.id)),
+  );
+
+  app.post(
+    searchRequest.path,
+    {
+      preHandler: opts.requireAuth,
+      schema: {
+        params: searchRequest.params,
+        body: searchRequest.body,
+        response: { 200: searchRequest.response },
+      },
+    },
+    async (request): Promise<ManualSearchResult> => {
+      const row = mine(userOf(request), request.params.id);
+      try {
+        const { words, indexerId } = request.body;
+        const done = await opts.requests.searchByHand(row.id, indexerId, words);
+        return { request: opts.view(done.request), resultCount: done.resultCount };
       } catch (err) {
         throw apiError(err);
       }

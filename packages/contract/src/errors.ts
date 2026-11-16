@@ -22,6 +22,8 @@ export const errorCodes = [
   'DOWNLOADS_NOT_SET_UP',
   'KOBO_NOT_LINKED',
   'APP_UPDATE_UNAVAILABLE',
+  'BUDGET_EXHAUSTED',
+  'INDEXER_UNAVAILABLE',
 ] as const;
 
 export const ErrorCode = z.enum(errorCodes);

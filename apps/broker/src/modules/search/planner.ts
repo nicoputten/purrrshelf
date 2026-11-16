@@ -24,6 +24,8 @@ export interface QueryVariant {
 /** Newznab categories: 7000 Books, 7020 Books/Ebook. */
 const EBOOK = '7020';
 const BOOKS = '7000';
+/** All books (7000): what a reader's own search looks in. */
+export const BOOKS_CATEGORY = BOOKS;
 
 /** Drops a subtitle ("Title: A Novel") and a series suffix ("Title (Series #2)"). */
 export function cleanTitle(title: string): string {

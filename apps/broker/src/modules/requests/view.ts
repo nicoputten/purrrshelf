@@ -1,4 +1,4 @@
-import type { BookRequest, PickedRelease } from '@purrshelf/contract';
+import type { BookRequest, PickedRelease, RequestSearches } from '@purrshelf/contract';
 import { and, desc, eq } from 'drizzle-orm';
 import type { Db } from '../../db/index.js';
 import {
@@ -53,5 +53,47 @@ export function requestView(db: Db, row: RequestRow): BookRequest {
     release: picked ? pickedRelease(picked) : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+/**
+ * The words an attempt sent, from its stored label: `search q=<words>` or
+ * `book title=<title>[ author=<author>]` (see search/planner.ts).
+ */
+export function attemptWords(label: string): string {
+  const q = /^search q=(.*)$/s.exec(label);
+  if (q) return q[1] ?? '';
+  const book = /^book title=(.*?)(?: author=(.*))?$/s.exec(label);
+  if (book) return [book[2], book[1]].filter(Boolean).join(' ');
+  return label;
+}
+
+/** "What we tried" (BRK-18): every search spent on a request, newest first. Reads the database only. */
+export function requestSearches(db: Db, row: RequestRow): RequestSearches {
+  const rows = db
+    .select({
+      query: searchAttempts.query,
+      variant: searchAttempts.variant,
+      resultCount: searchAttempts.resultCount,
+      hit: searchAttempts.hit,
+      error: searchAttempts.error,
+      createdAt: searchAttempts.createdAt,
+      name: indexers.name,
+    })
+    .from(searchAttempts)
+    .innerJoin(indexers, eq(indexers.id, searchAttempts.indexerId))
+    .where(eq(searchAttempts.requestId, row.id))
+    .orderBy(desc(searchAttempts.id))
+    .all();
+  return {
+    searches: rows.map((r) => ({
+      words: attemptWords(r.query),
+      indexerName: r.name,
+      resultCount: r.resultCount,
+      hit: r.hit,
+      manual: r.variant === 'manual',
+      failed: r.error !== null,
+      createdAt: r.createdAt.toISOString(),
+    })),
   };
 }

@@ -5,7 +5,7 @@ import type { Clock } from '../../clock.js';
 import type { Db } from '../../db/index.js';
 import { requests, type RequestRow, type RequestStatus } from '../../db/schema.js';
 import type { BookQuery } from '../search/planner.js';
-import type { IndexerSearch, SearchOutcome } from '../search/service.js';
+import type { IndexerSearch, RunOptions, SearchOutcome } from '../search/service.js';
 import { assertTransition, canRetry, InvalidTransitionError } from './status.js';
 
 /**
@@ -29,6 +29,8 @@ export interface NewRequest {
   workId: string;
   query: BookQuery;
   pushTo: string[];
+  /** `manual`: no search now; the reader searches with their own words (ADR 0048). */
+  search?: 'auto' | 'manual';
 }
 
 export class RequestNotFoundError extends Error {
@@ -112,6 +114,7 @@ export class RequestService {
   start(input: NewRequest): { request: RequestRow; done: Promise<RequestRow> } {
     const now = this.clock();
     const query = BookQuerySchema.parse(input.query);
+    const manual = input.search === 'manual';
     const row = this.notify(
       this.db
         .insert(requests)
@@ -122,7 +125,8 @@ export class RequestService {
           queryJson: JSON.stringify(query),
           language: query.language,
           mediaType: 'ebook',
-          status: 'searching',
+          // A manual request waits for the reader's words in the pick step.
+          status: manual ? 'choose_release' : 'searching',
           pushToJson: JSON.stringify(input.pushTo),
           searchStartedAt: now,
           createdAt: now,
@@ -131,7 +135,29 @@ export class RequestService {
         .returning()
         .get(),
     );
-    return { request: row, done: this.runSearch(row) };
+    return { request: row, done: manual ? Promise.resolve(row) : this.runSearch(row) };
+  }
+
+  /**
+   * "Search it yourself" (BRK-18): one search with the reader's words on one
+   * indexer. With results the request waits in choose_release for the reader
+   * to pick; with none it stays as it was. Allowed where Try again is.
+   */
+  async searchByHand(
+    id: string,
+    indexerId: string,
+    words: string,
+  ): Promise<{ request: RequestRow; resultCount: number }> {
+    const request = this.get(id);
+    if (!canRetry(request.status)) throw new InvalidTransitionError(request.status, 'searching');
+    const query = BookQuerySchema.parse(JSON.parse(request.queryJson));
+    const resultCount = await this.search.manual(request, query, indexerId, words);
+    if (resultCount === 0) return { request, resultCount };
+    // The status may have moved while the indexer answered (a cancel): only go on from where we were.
+    const current = this.get(id);
+    if (current.status !== request.status) return { request: current, resultCount };
+    const searching = this.setStatus(current, 'searching');
+    return { request: this.setStatus(searching, 'choose_release'), resultCount };
   }
 
   /** "Try again": a new, paid search round. */
@@ -163,12 +189,13 @@ export class RequestService {
     return this.db.select().from(requests).where(eq(requests.id, id)).get();
   }
 
-  private async runSearch(request: RequestRow): Promise<RequestRow> {
+  private async runSearch(request: RequestRow, options: RunOptions = {}): Promise<RequestRow> {
     let outcome: SearchOutcome;
     try {
       outcome = await this.search.run(
         request,
         BookQuerySchema.parse(JSON.parse(request.queryJson)),
+        options,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
