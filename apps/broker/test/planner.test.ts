@@ -59,6 +59,34 @@ describe('variantsFor', () => {
     ]);
   });
 
+  it('searches a one-word title with its subtitle, so the bare word is not the only query (BRK-20)', () => {
+    const lamp: BookQuery = {
+      title: 'Lamp: The Story of the Keeper',
+      authors: ['Ada Quill'],
+      language: 'en',
+    };
+    const title = variantsFor(lamp, null).find((v) => v.id === 'title');
+    expect(title).toEqual({
+      id: 'title',
+      params: { t: 'search', q: 'Lamp Story Keeper', cat: '7000' },
+      label: 'search q=Lamp Story Keeper',
+    });
+    // Author + title keeps the short title: release names with the author rarely carry the subtitle.
+    expect(variantsFor(lamp, null)[0]?.params.q).toBe('Ada Quill Lamp');
+  });
+
+  it('keeps the short title when it already tells the book apart', () => {
+    const q: BookQuery = { ...query, title: 'The Lighthouse Cartographer: A Novel' };
+    expect(variantsFor(q, null).find((v) => v.id === 'title')?.params.q).toBe(
+      'The Lighthouse Cartographer',
+    );
+  });
+
+  it('keeps a one-word title without a subtitle', () => {
+    const q: BookQuery = { ...query, title: 'Lamp' };
+    expect(variantsFor(q, null).find((v) => v.id === 'title')?.params.q).toBe('Lamp');
+  });
+
   it('skips t=book without caps, or when it cannot search by title', () => {
     expect(variantsFor(query, null).map((v) => v.id)).toEqual(['author_title', 'title', 'isbn']);
     expect(

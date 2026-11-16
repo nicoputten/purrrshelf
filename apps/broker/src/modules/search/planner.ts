@@ -1,4 +1,5 @@
 import type { NewznabCaps, NewznabParams } from '../budget/gateway.js';
+import { MIN_TELLING_WORDS, normalise, tellingCount, tellingWords } from './words.js';
 
 /** What a request searches for: a snapshot of the work the user added. */
 export interface BookQuery {
@@ -32,6 +33,16 @@ export function cleanTitle(title: string): string {
     .trim();
 }
 
+/**
+ * The title-only query. A one-word title ("Atlas") finds any book with that
+ * word, and its release may not name the author, so it is searched with its
+ * subtitle's telling words too ("Atlas Story Pa Salt", BRK-20).
+ */
+function titleOnlyQuery(full: string, short: string): string {
+  if (full === short || tellingCount(normalise(short)) >= MIN_TELLING_WORDS) return short;
+  return tellingWords(full);
+}
+
 /** Every variant this indexer can run for the query, in the default order. */
 export function variantsFor(query: BookQuery, caps: NewznabCaps | null): QueryVariant[] {
   const author = query.authors[0];
@@ -54,10 +65,11 @@ export function variantsFor(query: BookQuery, caps: NewznabCaps | null): QueryVa
       label: `search q=${q}`,
     });
   }
+  const titleQuery = titleOnlyQuery(query.title, title);
   out.push({
     id: 'title',
-    params: { t: 'search', q: title, cat: BOOKS },
-    label: `search q=${title}`,
+    params: { t: 'search', q: titleQuery, cat: BOOKS },
+    label: `search q=${titleQuery}`,
   });
   if (query.isbn13) {
     out.push({

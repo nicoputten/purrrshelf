@@ -52,6 +52,7 @@ changes, add a new ADR and mark the old one `superseded by NNNN`.
 | [0045](0045-series-volume-matching.md)                      | Reject releases of another book in the same series                      | accepted                   |
 | [0046](0046-one-word-titles-need-the-author.md)             | A one-word title needs the author in the release name                   | accepted                   |
 | [0047](0047-resend-books-the-kobo-never-received.md)        | Resend books the Kobo never received: off the shelf and back on         | accepted                   |
+| [0049](0049-one-word-title-searches-subtitle.md)            | A one-word title is searched with its subtitle                          | accepted                   |
 
 ## Template
 
