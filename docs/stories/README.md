@@ -52,7 +52,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-17](APP-17.md) | See my top genre's Top 10 on Search                            | 11        | done      |
 | [BRK-15](BRK-15.md) | Never get another book of the series                           | 11        | done      |
 | [BRK-16](BRK-16.md) | Never take a book that only shares one title word              | 11        | done      |
-| [BRK-17](BRK-17.md) | Make sure every book on my Kobo shelf reaches my Kobo          | 12        | in review |
+| [BRK-17](BRK-17.md) | Make sure every book on my Kobo shelf reaches my Kobo          | 12        | done      |
 
 ## Template
 

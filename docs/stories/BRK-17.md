@@ -1,6 +1,6 @@
 # BRK-17 Make sure every book on my Kobo shelf reaches my Kobo
 
-Status: in review
+Status: done
 Milestone: 12
 Depends on: APP-06, OPS-04
 
