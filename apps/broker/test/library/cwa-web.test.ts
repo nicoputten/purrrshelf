@@ -57,6 +57,35 @@ describe('CwaWebSession', () => {
     expect(logins()).toHaveLength(2);
   });
 
+  it('logs in again when CWA rejects a stale CSRF token, and retries the POST once (BRK-21)', async () => {
+    await session.login();
+    let refusals = 1;
+    cwa.behaviour.override = (call) =>
+      call.path === '/x' && refusals-- > 0
+        ? new Response('Bad Request', { status: 400 })
+        : undefined;
+    const res = await session.post('/x');
+    expect(res.status).not.toBe(400);
+    expect(logins()).toHaveLength(2);
+    expect(cwa.calls.filter((c) => c.path === '/x')).toHaveLength(2);
+  });
+
+  it('passes a second 400 on, so the caller reports the refusal', async () => {
+    await session.login();
+    cwa.behaviour.override = (call) =>
+      call.path === '/x' ? new Response('Bad Request', { status: 400 }) : undefined;
+    expect((await session.post('/x')).status).toBe(400);
+    expect(logins()).toHaveLength(2);
+  });
+
+  it('does not log in again for a 400 on a GET', async () => {
+    await session.login();
+    cwa.behaviour.override = (call) =>
+      call.path === '/x' ? new Response('Bad Request', { status: 400 }) : undefined;
+    expect((await session.get('/x')).status).toBe(400);
+    expect(logins()).toHaveLength(1);
+  });
+
   it('gives up when CWA keeps sending it to the login page', async () => {
     await session.login();
     cwa.behaviour.override = (call) =>

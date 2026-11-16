@@ -55,6 +55,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-17](BRK-17.md) | Make sure every book on my Kobo shelf reaches my Kobo          | 12        | done      |
 | [APP-20](APP-20.md) | See a book I add from the library on its page at once          | 11        | done      |
 | [BRK-20](BRK-20.md) | Find a one-word title by its subtitle too                      | 12        | done      |
+| [BRK-21](BRK-21.md) | Keep deleting books after CWA's form token expires             | 12        | done      |
 
 ## Template
 

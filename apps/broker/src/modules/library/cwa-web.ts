@@ -64,14 +64,19 @@ export class CwaWebSession {
    * POSTs a form as the service account with the CSRF token CWA expects
    * (as a form field and as the `X-CSRFToken` header its AJAX endpoints read).
    */
-  post(path: string, form: Record<string, string> = {}): Promise<Response> {
-    return this.withSession(path, (csrf) =>
+  async post(path: string, form: Record<string, string> = {}): Promise<Response> {
+    const send = (csrf: string) =>
       this.send(path, {
         method: 'POST',
         headers: { 'content-type': 'application/x-www-form-urlencoded', 'x-csrftoken': csrf },
         body: new URLSearchParams({ csrf_token: csrf, ...form }).toString(),
-      }),
-    );
+      });
+    const res = await this.withSession(path, send);
+    if (res.status !== 400) return res;
+    // CWA's CSRF tokens expire (an hour) while the session lives on, and a
+    // stale token gets a bare 400: log in for a fresh token and try once more (BRK-21).
+    this.csrfToken = null;
+    return this.withSession(path, send);
   }
 
   /** GETs a page as the service account. */
