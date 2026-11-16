@@ -1,6 +1,5 @@
-import { normalise } from '../search/judge.js';
-import { cleanTitle, type BookQuery } from '../search/planner.js';
-import { isOtherVolume } from '../search/volume.js';
+import { matchBook } from '../search/match.js';
+import type { BookQuery } from '../search/planner.js';
 
 /** What scoring needs to know about one search result. */
 export interface ReleaseCandidate {
@@ -128,16 +127,13 @@ export function scoreRelease(
   else if (language === query.language) points += 10;
   else rejected.push('language_mismatch');
 
-  const have = new Set(normalise(release.title));
-  const want = normalise(cleanTitle(query.title));
-  const titleMatch = want.length ? want.filter((w) => have.has(w)).length / want.length : 0;
-  // Another book of the same series is "another book" too (BRK-15).
-  if (titleMatch < MIN_TITLE_MATCH || isOtherVolume(query, release.title)) {
+  const { titleMatch, authorMatch, otherVolume, identified } = matchBook(query, release.title);
+  // Another book of the same series is "another book" too (BRK-15), and so is
+  // a one-word title without the author: "Atlas" also names "Atlas of Hell" (BRK-16).
+  if (titleMatch < MIN_TITLE_MATCH || otherVolume || !identified) {
     rejected.push('title_mismatch');
   } else if (titleMatch < 1) points -= 5;
 
-  const surnames = query.authors.flatMap((a) => normalise(a).slice(-1));
-  const authorMatch = surnames.length === 0 || surnames.some((s) => have.has(s));
   points += authorMatch ? 5 : -10;
 
   const size = sizePoints(release.size);

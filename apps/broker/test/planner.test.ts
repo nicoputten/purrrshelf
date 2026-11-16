@@ -145,6 +145,16 @@ describe('titleMatchJudge', () => {
     ).toBe(true);
   });
 
+  it('rejects a one-word title without the author, so the search goes on (BRK-16)', () => {
+    const lamp: BookQuery = {
+      title: 'Lamp: The Story of the Keeper',
+      authors: ['Ada Quill'],
+      language: 'en',
+    };
+    expect(titleMatchJudge.acceptable(lamp, item('Lamp of Ashes (epub)'))).toBe(false);
+    expect(titleMatchJudge.acceptable(lamp, item('Ada Quill - Lamp (epub)'))).toBe(true);
+  });
+
   it('rejects everything for a title without words', () => {
     expect(titleMatchJudge.acceptable({ ...query, title: '?' }, item('?'))).toBe(false);
   });

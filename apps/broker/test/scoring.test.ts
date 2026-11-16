@@ -142,6 +142,21 @@ describe('scoreRelease', () => {
     expect(s.score).toBeLessThan(score(release()).score);
   });
 
+  it('rejects a one-word title without the author: another book (BRK-16)', () => {
+    const lamp: BookQuery = {
+      title: 'Lamp: The Story of the Keeper',
+      authors: ['Ada Quill'],
+      language: 'en',
+    };
+    const ctx = { now: NOW, failedGuids: new Set<string>() };
+    const other = scoreRelease(lamp, release({ title: 'Lamp of Ashes (epub)', grabs: 900 }), ctx);
+    expect(other.rejected).toEqual(['title_mismatch']);
+    expect(other.score).toBe(0);
+    const right = scoreRelease(lamp, release({ title: 'Ada Quill - Lamp (epub)' }), ctx);
+    expect(right.rejected).toEqual([]);
+    expect(right.score).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
   it('accepts any author when the work has none', () => {
     const s = scoreRelease({ ...query, authors: [] }, release(), {
       now: NOW,
