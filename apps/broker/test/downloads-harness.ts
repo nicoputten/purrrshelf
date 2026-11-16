@@ -40,7 +40,7 @@ export interface Harness extends Downloads {
 export async function makeHarness(
   extra: Pick<
     DownloadsDeps,
-    'sab' | 'importLibrary' | 'settings' | 'shelves' | 'libraryItems'
+    'sab' | 'importLibrary' | 'settings' | 'shelves' | 'libraryItems' | 'wrongBook'
   > = {},
 ): Promise<Harness> {
   const database = openDatabase(':memory:');

@@ -16,7 +16,7 @@ import { IndexerUnavailableError } from '../search/service.js';
 import type { PreHandler } from '../auth/authenticate.js';
 import { DownloadsNotSetUpError, ReleaseError } from '../releases/pipeline.js';
 import type { RequestEvents } from './events.js';
-import type { RequestService } from './service.js';
+import { LibraryNotSetUpError, type RequestService } from './service.js';
 import { InvalidTransitionError } from './status.js';
 
 /** What the add route needs to know about a work: the metadata the search runs on. */
@@ -72,6 +72,9 @@ function apiError(err: unknown): unknown {
       nextFreeAt: err.nextFreeAt.toISOString(),
     });
   }
+  if (err instanceof LibraryNotSetUpError) {
+    return new AppError(502, 'LIBRARY_UNAVAILABLE', err.message);
+  }
   if (err instanceof IndexerUnavailableError) {
     return new AppError(502, 'INDEXER_UNAVAILABLE', err.message);
   }
@@ -89,6 +92,7 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
     cancelRequest,
     requestSearches,
     searchRequest,
+    wrongBook,
   } = endpoints;
 
   /** The user's own request; someone else's is as good as missing. */
@@ -252,6 +256,28 @@ export const requestRoutes: FastifyPluginAsyncZod<RequestRoutesOptions> = async 
         const { words, indexerId } = request.body;
         const done = await opts.requests.searchByHand(row.id, indexerId, words);
         return { request: opts.view(done.request), resultCount: done.resultCount };
+      } catch (err) {
+        throw apiError(err);
+      }
+    },
+  );
+
+  app.post(
+    wrongBook.path,
+    {
+      preHandler: opts.requireAuth,
+      schema: {
+        params: wrongBook.params,
+        body: wrongBook.body,
+        response: { 200: wrongBook.response },
+      },
+    },
+    async (request): Promise<BookRequest> => {
+      const row = mine(userOf(request), request.params.id);
+      try {
+        const { request: next, done } = await opts.requests.wrongBook(row.id, request.body.then);
+        follow(row.id, done);
+        return opts.view(next);
       } catch (err) {
         throw apiError(err);
       }

@@ -3,10 +3,10 @@ import { and, desc, eq, notInArray } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Clock } from '../../clock.js';
 import type { Db } from '../../db/index.js';
-import { requests, type RequestRow, type RequestStatus } from '../../db/schema.js';
+import { releases, requests, type RequestRow, type RequestStatus } from '../../db/schema.js';
 import type { BookQuery } from '../search/planner.js';
 import type { IndexerSearch, RunOptions, SearchOutcome } from '../search/service.js';
-import { assertTransition, canRetry, InvalidTransitionError } from './status.js';
+import { assertTransition, canRetry, canUndoWrongBook, InvalidTransitionError } from './status.js';
 
 /**
  * The one job type that may reach an indexer: resuming the search of a
@@ -37,6 +37,11 @@ export class RequestNotFoundError extends Error {
   override name = 'RequestNotFoundError';
 }
 
+/** Undoing a wrong book needs the library (CWA). */
+export class LibraryNotSetUpError extends Error {
+  override name = 'LibraryNotSetUpError';
+}
+
 export { InvalidTransitionError };
 
 /** The "add a book" lifecycle up to the indexer search (BRK-05). */
@@ -49,6 +54,23 @@ export type OnFound = (request: RequestRow) => Promise<RequestRow>;
 /** What happens once the book is in the library: ownership and Kobo shelves (APP-03). */
 export type OnInLibrary = (request: RequestRow) => Promise<RequestRow>;
 
+/** Taking a wrong book away again; implemented by the library module (BRK-19). */
+export interface WrongBookLibrary {
+  /** A book the request imported: off every owner's and reader's Kobo, deleted from the library. */
+  discard(calibreBookId: number, readers: string[]): Promise<void>;
+  /** A book that was already in the library: only out of this reader's library and Kobos. */
+  dropFor(calibreBookId: number, userId: string, readers: string[]): Promise<void>;
+}
+
+/** What happens after "Wrong book?" (ADR 0048). */
+export type WrongBookNext = 'search_myself' | 'search_again' | 'remove_only';
+
+const NEXT_STATUS: Record<WrongBookNext, RequestStatus> = {
+  search_myself: 'choose_release',
+  search_again: 'searching',
+  remove_only: 'cancelled',
+};
+
 export class RequestService {
   constructor(
     private readonly db: Db,
@@ -58,6 +80,8 @@ export class RequestService {
     private readonly clock: Clock,
     private readonly onInLibrary: OnInLibrary,
     private readonly notify: (row: RequestRow) => RequestRow,
+    /** Null until the library (CWA) is configured. */
+    private readonly wrongBookLibrary: WrongBookLibrary | null = null,
   ) {}
 
   /** Job handler for {@link RESUME_SEARCH_JOB}. */
@@ -158,6 +182,66 @@ export class RequestService {
     if (current.status !== request.status) return { request: current, resultCount };
     const searching = this.setStatus(current, 'searching');
     return { request: this.setStatus(searching, 'choose_release'), resultCount };
+  }
+
+  /**
+   * "Wrong book?" (BRK-19, ADR 0048): the book leaves the Kobos (and the
+   * library, when this request imported it), its release is never picked
+   * again, and the request goes on as the reader chose. Answers once the
+   * book is gone; `done` settles after a new search round.
+   */
+  async wrongBook(
+    id: string,
+    then: WrongBookNext,
+  ): Promise<{ request: RequestRow; done: Promise<RequestRow> }> {
+    const request = this.get(id);
+    const next = NEXT_STATUS[then];
+    if (!canUndoWrongBook(request.status) || request.calibreBookId === null) {
+      throw new InvalidTransitionError(request.status, next);
+    }
+    if (!this.wrongBookLibrary) {
+      throw new LibraryNotSetUpError('The library is not set up yet');
+    }
+    const grabbed = this.db
+      .select({ id: releases.id })
+      .from(releases)
+      .where(and(eq(releases.requestId, id), eq(releases.status, 'grabbed')))
+      .all();
+    const readers = [request.userId, ...(JSON.parse(request.pushToJson) as string[])];
+    // A grabbed release means this request brought the book in, so it goes.
+    if (grabbed.length > 0) {
+      await this.wrongBookLibrary.discard(request.calibreBookId, readers);
+    } else {
+      await this.wrongBookLibrary.dropFor(request.calibreBookId, request.userId, readers);
+    }
+    this.db
+      .update(releases)
+      .set({ status: 'failed' })
+      .where(and(eq(releases.requestId, id), eq(releases.status, 'grabbed')))
+      .run();
+    // The book may have moved on while CWA answered; only go on from where we were.
+    const current = this.get(id);
+    assertTransition(current.status, next);
+    const now = this.clock();
+    const row = this.notify(
+      this.db
+        .update(requests)
+        .set({
+          status: next,
+          calibreBookId: null,
+          downloadId: null,
+          progress: null,
+          error: null,
+          updatedAt: now,
+          ...(next === 'searching' ? { searchStartedAt: now } : {}),
+        })
+        .where(eq(requests.id, id))
+        .returning()
+        .get(),
+    );
+    const done =
+      next === 'searching' ? this.runSearch(row, { skipLibrary: true }) : Promise.resolve(row);
+    return { request: row, done };
   }
 
   /** "Try again": a new, paid search round. */

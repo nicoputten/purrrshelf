@@ -5,6 +5,8 @@ import type { RequestStatus } from '../../db/schema.js';
  * searching → waiting_budget → searching → not_found | choose_release | downloading
  * → importing → in_library → pushed; failures download_failed and import_failed.
  * not_found and the failures offer "Try again" (back to searching).
+ * A book in the library can be undone as the wrong book (BRK-19): back to
+ * searching, to choose_release (search it myself) or cancelled.
  */
 export const transitions: Readonly<Record<RequestStatus, readonly RequestStatus[]>> = {
   searching: [
@@ -24,8 +26,8 @@ export const transitions: Readonly<Record<RequestStatus, readonly RequestStatus[
   download_failed: ['downloading', 'searching', 'cancelled'],
   importing: ['in_library', 'import_failed'],
   import_failed: ['searching', 'downloading', 'cancelled'],
-  in_library: ['pushed'],
-  pushed: [],
+  in_library: ['pushed', 'searching', 'choose_release', 'cancelled'],
+  pushed: ['searching', 'choose_release', 'cancelled'],
   cancelled: [],
 };
 
@@ -47,7 +49,14 @@ export function assertTransition(from: RequestStatus, to: RequestStatus): void {
   if (!canTransition(from, to)) throw new InvalidTransitionError(from, to);
 }
 
+/** Statuses from which "Wrong book?" is offered: the book reached the library (BRK-19). */
+export function canUndoWrongBook(status: RequestStatus): boolean {
+  return status === 'in_library' || status === 'pushed';
+}
+
 /** Statuses from which "Try again" (a new, paid search) is offered. */
 export function canRetry(status: RequestStatus): boolean {
-  return canTransition(status, 'searching') && status !== 'waiting_budget';
+  return (
+    canTransition(status, 'searching') && status !== 'waiting_budget' && !canUndoWrongBook(status)
+  );
 }

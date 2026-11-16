@@ -19,7 +19,7 @@ import {
   type LibraryItems,
 } from './requests/delivery.js';
 import { RequestEvents } from './requests/events.js';
-import { RESUME_SEARCH_JOB, RequestService } from './requests/service.js';
+import { RESUME_SEARCH_JOB, RequestService, type WrongBookLibrary } from './requests/service.js';
 import type { DownloadClient } from './sabnzbd/client.js';
 import { titleMatchJudge } from './search/judge.js';
 import { IndexerSearch, type LibraryLookup } from './search/service.js';
@@ -40,6 +40,8 @@ export interface DownloadsDeps {
   shelves?: KoboShelves | null;
   /** Library items and ownership; records nothing until the library stream provides them. */
   libraryItems?: LibraryItems;
+  /** Takes a wrong book away again (BRK-19); null until the library (CWA) is configured. */
+  wrongBook?: WrongBookLibrary | null;
 }
 
 const DEFAULT_SETTINGS: PipelineSettings = {
@@ -111,6 +113,7 @@ export function createDownloads(deps: DownloadsDeps): Downloads {
     deps.clock,
     delivery.deliver,
     events.emit,
+    deps.wrongBook ?? null,
   );
   /**
    * The job types. Only two can reach an indexer, both through the budget:

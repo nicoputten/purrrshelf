@@ -41,6 +41,7 @@ import { healthRoutes, type HealthCheck } from './modules/health/routes.js';
 import { LibraryBrowser } from './modules/library/browse.js';
 import { CleanupJobs, LibraryCleanup } from './modules/library/cleanup.js';
 import { Ownership } from './modules/library/ownership.js';
+import { BookDiscard } from './modules/library/discard.js';
 import { LibraryItems } from './modules/library/items.js';
 import { KoboResender, KoboResendJobs } from './modules/library/kobo-resend.js';
 import { Kobos } from './modules/library/kobos.js';
@@ -191,6 +192,7 @@ export async function buildApp({
     importLibrary: library,
     shelves: library,
     libraryItems: ownershipOverride ?? libraryItems,
+    wrongBook: library ? new BookDiscard(libraryItems, library, (id) => users.findById(id)) : null,
     settings: {
       downloadsPath: config.DOWNLOADS_PATH,
       ingestPath: config.CWA_INGEST_PATH,

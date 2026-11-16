@@ -61,8 +61,8 @@ export function requestView(db: Db, row: RequestRow): BookRequest {
  * `book title=<title>[ author=<author>]` (see search/planner.ts).
  */
 export function attemptWords(label: string): string {
-  const q = /^search q=(.*)$/s.exec(label);
-  if (q) return q[1] ?? '';
+  const search = 'search q=';
+  if (label.startsWith(search)) return label.slice(search.length);
   const book = /^book title=(.*?)(?: author=(.*))?$/s.exec(label);
   if (book) return [book[2], book[1]].filter(Boolean).join(' ');
   return label;

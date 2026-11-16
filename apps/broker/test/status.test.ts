@@ -4,6 +4,7 @@ import {
   assertTransition,
   canRetry,
   canTransition,
+  canUndoWrongBook,
   InvalidTransitionError,
   transitions,
 } from '../src/modules/requests/status.js';
@@ -29,6 +30,13 @@ describe('request status machine', () => {
     ['downloading', 'download_failed'],
     ['importing', 'import_failed'],
     ['not_found', 'searching'],
+    // Wrong book (BRK-19): search again, search it myself, or just remove it.
+    ['in_library', 'searching'],
+    ['in_library', 'choose_release'],
+    ['in_library', 'cancelled'],
+    ['pushed', 'searching'],
+    ['pushed', 'choose_release'],
+    ['pushed', 'cancelled'],
   ] as const)('allows %s → %s', (from, to) => {
     expect(canTransition(from, to)).toBe(true);
     expect(() => assertTransition(from, to)).not.toThrow();
@@ -36,9 +44,9 @@ describe('request status machine', () => {
 
   it.each([
     ['waiting_budget', 'downloading'],
-    ['pushed', 'searching'],
+    ['pushed', 'downloading'],
     ['cancelled', 'searching'],
-    ['in_library', 'searching'],
+    ['in_library', 'downloading'],
     ['importing', 'cancelled'],
   ] as const)('refuses %s → %s', (from, to) => {
     expect(canTransition(from, to)).toBe(false);
@@ -51,5 +59,9 @@ describe('request status machine', () => {
     expect(retryable.sort()).toEqual(
       ['choose_release', 'download_failed', 'import_failed', 'not_found'].sort(),
     );
+  });
+
+  it('offers "Wrong book?" only for a book that reached the library', () => {
+    expect(requestStatuses.filter(canUndoWrongBook).sort()).toEqual(['in_library', 'pushed']);
   });
 });
