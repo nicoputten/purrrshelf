@@ -85,11 +85,15 @@ export function useAddRequest() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (input: AddRequest) => call('addRequest', input),
-    onSuccess: async (request) => {
+    onSuccess: async (request, input) => {
       rememberRequest(request);
+      // A book the library already had is delivered at once: the book's page
+      // and the library must show it, or Add looks like it did nothing (APP-20).
       await Promise.all([
         client.invalidateQueries({ queryKey: ['requests'] }),
         client.invalidateQueries({ queryKey: ['budget'] }),
+        client.invalidateQueries({ queryKey: ['work', input.workId] }),
+        client.invalidateQueries({ queryKey: ['library'] }),
       ]);
     },
   });

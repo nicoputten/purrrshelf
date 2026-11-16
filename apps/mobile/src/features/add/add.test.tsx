@@ -11,6 +11,8 @@ import {
   readers,
   work,
 } from '@/test/fakeBroker';
+import { Text } from 'react-native';
+import { useWork } from '@/features/book/useWork';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { AddSheetHost, defaultLanguage } from './AddSheet';
 import { useAddSheet } from './useAddSheet';
@@ -105,6 +107,42 @@ describe('Add sheet', () => {
     expect(screen.queryByText(/Uses/)).toBeNull();
     expect(screen.queryByRole('radio', { name: 'English' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Add to my library' })).toBeOnTheScreen();
+  });
+
+  it('refreshes the book once it is added, so its page shows it in the library (APP-20)', async () => {
+    let added = false;
+    broker({
+      'GET /works/hardcover:301': () =>
+        ok(
+          work(
+            added
+              ? { library: { itemId: 'item-1', owners: [], onMyKobo: true, reading: null } }
+              : {},
+          ),
+        ),
+      'POST /requests': (body) => {
+        added = true;
+        return {
+          status: 201,
+          body: bookRequest({ ...(body as Record<string, unknown>), status: 'pushed' }),
+        };
+      },
+    });
+    function BookPage() {
+      const page = useWork('hardcover:301');
+      return <Text>{page.data?.library ? 'In my library' : 'Not in my library'}</Text>;
+    }
+    const user = userEvent.setup();
+    await renderWithProviders(
+      <>
+        <BookPage />
+        <AddSheetHost onAdded={jest.fn()} />
+      </>,
+    );
+    expect(await screen.findByText('Not in my library')).toBeOnTheScreen();
+    await act(async () => useAddSheet.getState().open('hardcover:301'));
+    await user.press(await screen.findByRole('button', { name: 'Fetch it now' }));
+    expect(await screen.findByText('In my library')).toBeOnTheScreen();
   });
 
   it('says so when no indexer is set up, and does not fetch', async () => {
