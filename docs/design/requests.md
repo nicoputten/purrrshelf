@@ -54,3 +54,9 @@ Motion (DES-02, board 9c; see design-choices.md, Motion):
   waiting for a free search.
 - Loading the list shows the paw-print loader; Try again shows it inside the
   button.
+
+Search it yourself and Wrong book (APP-18, APP-19; boards 16, 16c, 16d):
+
+- A not-found card gets an outlined **Search it myself** next to Try again.
+- A finished card gets a text button **Wrong book?** for 7 days; it opens the
+  Wrong book sheet ([book-detail.md](book-detail.md)).

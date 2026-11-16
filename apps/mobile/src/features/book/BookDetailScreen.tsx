@@ -180,7 +180,7 @@ function BookDetail({
       {work.library && partner ? (
         <InstantAddCard library={work.library} partner={partner} />
       ) : work.library ? (
-        <MyLibraryCard library={work.library} />
+        <MyLibraryCard library={work.library} workId={work.id} />
       ) : null}
 
       {work.library && !partner ? (

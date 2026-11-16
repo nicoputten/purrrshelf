@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppProviders } from '@/components/AppProviders';
 import { AddSheetHost } from '@/features/add/AddSheet';
+import { WrongBookSheetHost } from '@/features/requests/WrongBookSheet';
 import { usePreferences } from '@/session/preferences';
 import { useSession } from '@/session/session';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -37,6 +38,7 @@ function RootStack() {
       </Stack>
       {/* After Fetch the reader stays put: the activity pill shows the request (APP-14). */}
       {status === 'ready' ? <AddSheetHost onAdded={() => undefined} /> : null}
+      {status === 'ready' ? <WrongBookSheetHost /> : null}
     </>
   );
 }

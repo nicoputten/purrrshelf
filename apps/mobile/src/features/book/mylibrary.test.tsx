@@ -1,6 +1,7 @@
 import { screen, userEvent } from '@testing-library/react-native';
 import { setFetch, useSession } from '@/session/session';
-import { apiError, fakeBroker, ok, work } from '@/test/fakeBroker';
+import { apiError, bookRequest, fakeBroker, ok, work } from '@/test/fakeBroker';
+import { useWrongBookSheet } from '@/features/requests/WrongBookSheet';
 import { renderWithProviders, resetApp } from '@/test/utils';
 import { BookDetailScreen } from './BookDetailScreen';
 
@@ -21,7 +22,7 @@ const me = { id: 'u1', displayName: 'Reader One', me: true };
 const partner = { id: 'u2', displayName: 'Reader Two', me: false };
 type Owner = typeof me;
 
-function render(start: Owner[], { failRemove = false } = {}) {
+function render(start: Owner[], { failRemove = false, requests = [] as unknown[] } = {}) {
   let owners = start;
   const ownership = (deleteAfter: string | null = null) => ok({ itemId, owners, deleteAfter });
   const b = fakeBroker({
@@ -29,6 +30,7 @@ function render(start: Owner[], { failRemove = false } = {}) {
       ok(work({ series: null, library: { itemId, owners, onMyKobo: false, reading: null } })),
     'GET /works/hardcover:301/similar': () => ok({ works: [] }),
     [`GET /library/items/${itemId}/kobos`]: () => ok({ kobos: [] }),
+    'GET /requests': () => ok({ requests }),
     [`DELETE /library/items/${itemId}/owners/me`]: () => {
       if (failRemove) return apiError(503, 'LIBRARY_UNAVAILABLE');
       owners = owners.filter((o) => !o.me);
@@ -89,5 +91,22 @@ describe('My library on the book page', () => {
     await user.press(await screen.findByRole('button', { name: 'Remove from my library' }));
     expect(await screen.findByRole('alert')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Remove from my library' })).toBeOnTheScreen();
+  });
+});
+
+describe('Wrong book? on the book page (APP-19)', () => {
+  it('is offered for my book that came from my request, and opens the sheet', async () => {
+    const fetched = bookRequest({ status: 'pushed', calibreBookId: undefined });
+    await render([me], { requests: [fetched] }).view;
+    const user = userEvent.setup();
+    await user.press(await screen.findByRole('button', { name: 'Wrong book?' }));
+    expect(useWrongBookSheet.getState().request?.id).toBe('r1');
+    useWrongBookSheet.getState().close();
+  });
+
+  it('is not offered for a book I did not request', async () => {
+    await render([me]).view;
+    await screen.findByRole('button', { name: 'Remove from my library' });
+    expect(screen.queryByRole('button', { name: 'Wrong book?' })).toBeNull();
   });
 });

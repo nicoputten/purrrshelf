@@ -168,3 +168,5 @@ Rules:
 | 4     | Requests & progress  | [requests.md](requests.md)                             |
 | 5     | Pick another release | [release-picker.md](release-picker.md)                 |
 | 6     | Library              | [library.md](library.md)                               |
+| 16    | Search it yourself   | [release-picker.md](release-picker.md)                 |
+| 16c   | Wrong book?          | [book-detail.md](book-detail.md)                       |

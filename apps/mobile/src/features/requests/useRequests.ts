@@ -2,7 +2,9 @@ import {
   settledStatuses,
   type AddRequest,
   type BookRequest,
+  type ManualSearch,
   type RequestList,
+  type WrongBookNext,
 } from '@purrshelf/contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/session/session';
@@ -72,6 +74,58 @@ export function useRetryRequest() {
 export function useCancelRequest() {
   const call = useSession((s) => s.call);
   return useRequestAction((id: string) => call('cancelRequest', { id }));
+}
+
+/** "What we tried" for a request (BRK-18). Free: reads the broker's records only. */
+export function useRequestSearches(requestId: string) {
+  const call = useSession((s) => s.call);
+  return useQuery({
+    queryKey: ['request', requestId, 'searches'],
+    queryFn: () => call('requestSearches', { id: requestId }),
+  });
+}
+
+/** Every indexer with its searches left today (the budget pill shows only the scarcest). */
+export function useIndexerBudgets() {
+  const call = useSession((s) => s.call);
+  return useQuery({ queryKey: ['budget'], queryFn: () => call('budget'), staleTime: 60_000 });
+}
+
+/** "Sniff with these words": one paid search with the reader's own words (APP-18). */
+export function useManualSearch() {
+  const call = useSession((s) => s.call);
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ManualSearch & { id: string }) => call('searchRequest', input),
+    onSuccess: async ({ request }) => {
+      applyRequest(client, request);
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['requests'] }),
+        client.invalidateQueries({ queryKey: ['request', request.id] }),
+        client.invalidateQueries({ queryKey: ['budget'] }),
+      ]);
+    },
+    onError: () => client.invalidateQueries({ queryKey: ['budget'] }),
+  });
+}
+
+/** "Wrong book?" (APP-19): the book goes, and the request goes on as chosen. */
+export function useWrongBook() {
+  const call = useSession((s) => s.call);
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; then: WrongBookNext }) => call('wrongBook', input),
+    onSuccess: async (request) => {
+      applyRequest(client, request);
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['requests'] }),
+        client.invalidateQueries({ queryKey: ['request', request.id] }),
+        client.invalidateQueries({ queryKey: ['budget'] }),
+        client.invalidateQueries({ queryKey: ['library'] }),
+        client.invalidateQueries({ queryKey: ['work', request.workId] }),
+      ]);
+    },
+  });
 }
 
 export function useReaders() {

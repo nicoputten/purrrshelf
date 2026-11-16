@@ -11,6 +11,7 @@ import { Swat, useOneShot } from '@/components/motion';
 import { errorMessage } from '@/lib/errors';
 import { statusLine } from '@/features/requests/RequestsScreen';
 import { swatEvent, swatFresh, swatScope } from '@/features/requests/motion';
+import { canCallWrongBook, useWrongBookSheet } from '@/features/requests/WrongBookSheet';
 import { useReaders, useRetryRequest } from '@/features/requests/useRequests';
 import { useSearchBudget } from '@/features/search/useBookSearch';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -53,6 +54,9 @@ export function RequestsSheet({ requests }: { requests: readonly BookRequest[] }
     close();
     to();
   };
+  const openWrongBook = useWrongBookSheet((s) => s.open);
+  const searchMyself = (id: string) =>
+    go(() => router.push({ pathname: '/request-search/[id]', params: { id } }));
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={close}>
@@ -92,6 +96,7 @@ export function RequestsSheet({ requests }: { requests: readonly BookRequest[] }
                 onPick={() =>
                   go(() => router.push({ pathname: '/request/[id]', params: { id: r.id } }))
                 }
+                onSearchMyself={() => searchMyself(r.id)}
               />
             ))
           )}
@@ -101,7 +106,14 @@ export function RequestsSheet({ requests }: { requests: readonly BookRequest[] }
                 {t('activity.earlier')}
               </AppText>
               {earlier.map((r) => (
-                <Row key={r.id} request={r} myId={myId} />
+                <Row
+                  key={r.id}
+                  request={r}
+                  myId={myId}
+                  {...(canCallWrongBook(r)
+                    ? { onWrongBook: () => go(() => openWrongBook(r)) }
+                    : {})}
+                />
               ))}
             </>
           ) : null}
@@ -124,10 +136,14 @@ function Row({
   request,
   myId,
   onPick,
+  onSearchMyself,
+  onWrongBook,
 }: {
   request: BookRequest;
   myId: string | undefined;
   onPick?: () => void;
+  onSearchMyself?: () => void;
+  onWrongBook?: () => void;
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -171,9 +187,16 @@ function Row({
             </View>
           ) : null}
           {request.status === 'not_found' ? (
-            <Action label={t('activity.tryAgain')} onPress={() => retry.mutate(request.id)} />
+            <View style={styles.actions}>
+              <Action label={t('activity.tryAgain')} onPress={() => retry.mutate(request.id)} />
+              {onSearchMyself ? (
+                <Action label={t('picker.searchMyself')} onPress={onSearchMyself} />
+              ) : null}
+            </View>
           ) : needs && onPick ? (
             <Action label={t('requests.pickAnother')} onPress={onPick} />
+          ) : finished && onWrongBook ? (
+            <Action label={t('wrongBook.action')} onPress={onWrongBook} />
           ) : null}
           {retry.error ? (
             <AppText accessibilityRole="alert" style={{ color: colors.danger }}>
@@ -233,5 +256,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   seeAll: { alignSelf: 'center', minHeight: sizes.touch, justifyContent: 'center', padding: 8 },
 });

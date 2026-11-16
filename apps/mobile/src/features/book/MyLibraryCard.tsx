@@ -4,21 +4,29 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
+import { useWrongBookSheet } from '@/features/requests/WrongBookSheet';
+import { useRequests } from '@/features/requests/useRequests';
 import { errorMessage } from '@/lib/errors';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useOwnershipChange } from './useOwnership';
 
 /**
  * "Remove from my library" for a book I own, with an Undo right after; for a
- * library book I don't own, "Add to my library" (BRK-08, ADR 0009).
+ * library book I don't own, "Add to my library" (BRK-08, ADR 0009). A book
+ * that came from my request also offers "Wrong book?" (APP-19).
  */
-export function MyLibraryCard({ library }: { library: LibraryState }) {
+export function MyLibraryCard({ library, workId }: { library: LibraryState; workId: string }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const change = useOwnershipChange(library.itemId);
   // The broker's answer to my last removal, so Undo can be offered.
   const [removed, setRemoved] = useState<ItemOwnership | null>(null);
   const mine = library.owners.some((o) => o.me);
+  const requests = useRequests();
+  const openWrongBook = useWrongBookSheet((st) => st.open);
+  const fetched = requests.data?.requests.find(
+    (r) => r.workId === workId && (r.status === 'pushed' || r.status === 'in_library'),
+  );
 
   let content;
   if (mine) {
@@ -58,6 +66,13 @@ export function MyLibraryCard({ library }: { library: LibraryState }) {
   return (
     <View style={styles.wrap}>
       {content}
+      {mine && fetched ? (
+        <Button
+          label={t('wrongBook.action')}
+          variant="text"
+          onPress={() => openWrongBook(fetched)}
+        />
+      ) : null}
       {change.isError ? (
         <AppText accessibilityRole="alert" style={{ color: colors.danger }}>
           {errorMessage(change.error, t)}

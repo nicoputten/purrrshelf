@@ -59,3 +59,10 @@ reasons. Broker: BRK-13, [ADR 0041](../decisions/0041-low-odds-warning.md).
   - A rare one: "Few people read this, so few copies get shared. It may not
     be out there."
 - Not built: "Remind me in 2 weeks" on the new-book warning (ADR 0041).
+
+## Or search it myself (APP-18)
+
+Canvas board: 16d, item 3. Only when the sheet shows a low-odds warning: a
+text button **Or search it myself** under **Fetch it anyway**. It makes the
+request without searching (`search: "manual"`), closes the sheet and opens
+Search it yourself ([release-picker.md](release-picker.md)).

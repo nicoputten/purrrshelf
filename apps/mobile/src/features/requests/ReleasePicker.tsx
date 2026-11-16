@@ -27,9 +27,23 @@ export function releaseAge(publishedAt: string | null, now: Date, t: TFunction):
   return t('picker.age.years', { count: Math.floor(days / 365) });
 }
 
-/** The card's label: Best match, Good, Weaker match or Language differs. */
+/** Results of the reader's own words (APP-18, board 16b). */
+export interface MineSearch {
+  words: string;
+  indexer: string;
+}
+
+/**
+ * Left out in the normal picker, but shown with a warning after the reader's
+ * own search: they chose the words, so "another book?" is theirs to judge.
+ */
+const isAnotherBook = (o: ReleaseOption) =>
+  o.rejected.length > 0 && o.rejected.every((r) => r === 'title_mismatch');
+
+/** The card's label: Best match, Good, Weaker match, Language differs or Another book?. */
 export function optionLabel(o: ReleaseOption, threshold: number, t: TFunction): string {
   if (o.picked) return `${t('picker.best')} · ${t('picker.fetching')}`;
+  if (isAnotherBook(o)) return t('picker.anotherBook');
   if (o.rejected.includes('language_mismatch')) return t('picker.languageDiffers');
   if (o.rejected.length === 0 && o.score >= threshold) return t('picker.good');
   return t('picker.weaker');
@@ -51,10 +65,16 @@ export function optionLine(o: ReleaseOption, t: TFunction): string {
 export function ReleasePickerScreen({
   requestId,
   onBack,
+  onSearchMyself,
+  mine = null,
   now = new Date(),
 }: {
   requestId: string;
   onBack: () => void;
+  /** Opens Search it yourself (APP-18). */
+  onSearchMyself?: () => void;
+  /** Set when these are the results of the reader's own words. */
+  mine?: MineSearch | null;
   now?: Date;
 }) {
   const { t } = useTranslation();
@@ -84,7 +104,7 @@ export function ReleasePickerScreen({
         </Svg>
       </Pressable>
       <AppText variant="display" accessibilityRole="header">
-        {t('picker.title')}
+        {mine ? t('picker.mineTitle') : t('picker.title')}
       </AppText>
 
       {releases.isPending ? (
@@ -102,6 +122,8 @@ export function ReleasePickerScreen({
         <Options
           list={releases.data}
           title={title}
+          mine={mine}
+          onSearchMyself={onSearchMyself}
           now={now}
           showAll={showAll}
           onToggle={() => setShowAll((v) => !v)}
@@ -118,6 +140,8 @@ export function ReleasePickerScreen({
 function Options({
   list,
   title,
+  mine,
+  onSearchMyself,
   now,
   showAll,
   onToggle,
@@ -128,6 +152,8 @@ function Options({
 }: {
   list: ReleaseList;
   title: string;
+  mine: MineSearch | null;
+  onSearchMyself: (() => void) | undefined;
   now: Date;
   showAll: boolean;
   onToggle: () => void;
@@ -137,9 +163,21 @@ function Options({
   t: TFunction;
 }) {
   const { colors } = useTheme();
-  const usable = list.releases.filter((r) => r.rejected.length === 0 || r.picked);
-  const leftOut = list.releases.filter((r) => r.rejected.length > 0 && !r.picked);
-  if (list.releases.length === 0) return <AppText variant="muted">{t('picker.empty')}</AppText>;
+  const shown = (r: ReleaseOption) =>
+    r.rejected.length === 0 || r.picked || (mine !== null && isAnotherBook(r));
+  const usable = list.releases.filter(shown);
+  const leftOut = list.releases.filter((r) => !shown(r));
+  const notHere = onSearchMyself ? (
+    <NotHere mine={mine !== null} onSearchMyself={onSearchMyself} t={t} />
+  ) : null;
+  if (list.releases.length === 0) {
+    return (
+      <>
+        <AppText variant="muted">{t('picker.empty')}</AppText>
+        {notHere}
+      </>
+    );
+  }
   const card = (o: ReleaseOption) => (
     <OptionCard
       key={o.id}
@@ -148,18 +186,32 @@ function Options({
       now={now}
       busy={busyId === o.id}
       onPick={() => onPick(o.id)}
+      mine={mine !== null}
       t={t}
     />
   );
   return (
     <>
       <AppText variant="muted">
-        {t('picker.results', { title, count: list.releases.length })}
+        {mine
+          ? t('picker.mineResults', {
+              words: mine.words,
+              indexer: mine.indexer,
+              count: list.releases.length,
+            })
+          : t('picker.results', { title, count: list.releases.length })}
       </AppText>
-      <View style={[styles.banner, { backgroundColor: colors.successBg }]}>
-        <PawIcon color={colors.onSuccessBg} size={18} />
-        <AppText style={[styles.fill, { color: colors.onSuccessBg }]}>{t('picker.free')}</AppText>
-      </View>
+      {mine ? (
+        <View style={[styles.banner, { backgroundColor: colors.mineBg }]}>
+          <PawIcon color={colors.mine} size={18} />
+          <AppText style={[styles.fill, { color: colors.mine }]}>{t('picker.mineBanner')}</AppText>
+        </View>
+      ) : (
+        <View style={[styles.banner, { backgroundColor: colors.successBg }]}>
+          <PawIcon color={colors.onSuccessBg} size={18} />
+          <AppText style={[styles.fill, { color: colors.onSuccessBg }]}>{t('picker.free')}</AppText>
+        </View>
+      )}
       {error ? (
         <AppText accessibilityRole="alert" style={{ color: colors.danger }}>
           {errorMessage(error, t)}
@@ -182,7 +234,31 @@ function Options({
         </View>
       ) : null}
       {showAll ? leftOut.map(card) : null}
+      {notHere}
     </>
+  );
+}
+
+/** "Not in this list? Search it myself", or "Other words" under the reader's own results. */
+function NotHere({
+  mine,
+  onSearchMyself,
+  t,
+}: {
+  mine: boolean;
+  onSearchMyself: () => void;
+  t: TFunction;
+}) {
+  const { colors } = useTheme();
+  if (mine) {
+    return <Button label={t('picker.otherWords')} variant="text" onPress={onSearchMyself} />;
+  }
+  return (
+    <View style={[styles.card, { backgroundColor: colors.surfaceMuted }]}>
+      <AppText style={[styles.label, { color: colors.text }]}>{t('picker.notHere')}</AppText>
+      <AppText variant="muted">{t('picker.notHereText')}</AppText>
+      <Button label={t('picker.searchMyself')} variant="outline" onPress={onSearchMyself} />
+    </View>
   );
 }
 
@@ -192,6 +268,7 @@ function OptionCard({
   now,
   busy,
   onPick,
+  mine,
   t,
 }: {
   option: ReleaseOption;
@@ -199,6 +276,7 @@ function OptionCard({
   now: Date;
   busy: boolean;
   onPick: () => void;
+  mine: boolean;
   t: TFunction;
 }) {
   const { colors } = useTheme();
@@ -224,7 +302,13 @@ function OptionCard({
       <AppText variant="muted">{optionLine(option, t)}</AppText>
       {option.picked ? null : (
         <Button
-          label={t('picker.useThis')}
+          label={
+            mine
+              ? isAnotherBook(option)
+                ? t('picker.fetchAnyway')
+                : t('picker.fetchThis')
+              : t('picker.useThis')
+          }
           variant={good ? 'primary' : 'outline'}
           busy={busy}
           disabled={option.rejected.includes('failed_before')}

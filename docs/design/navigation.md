@@ -42,3 +42,9 @@ Story: APP-14. Why: [ADR 0040](../decisions/0040-navigation-activity-pill.md).
 - With the sheet open, Swat plays in that request's row instead.
 - Reduced motion: the pill only says "Got it!" with the title for 1.2 s.
 - Plays once per grab, wherever it plays first.
+
+## Search it yourself and Wrong book (APP-18, APP-19)
+
+- In the Requests sheet a not-found row has **Try again** and **Search it
+  myself**; a row under EARLIER has **Wrong book?** for 7 days after it
+  finished. Both close the sheet first.

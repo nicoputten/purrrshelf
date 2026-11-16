@@ -71,3 +71,20 @@ Changed after APP-08:
 
 - "You're reading this one" (reading, no position reported yet) now shows an
   empty bar too, so a book in progress always has one.
+
+Wrong book? (APP-19, canvas boards 16c and 16d, ADR 0048):
+
+- For my library book that came from my own request (pushed or in the
+  library), a text button **Wrong book?** sits under Remove from my library.
+  The book page has no ⋯ menu yet, so it is not in a menu as board 16d shows.
+- It opens the Wrong book sheet (one for the whole app, also from Requests):
+  cat ears, handle, "Got the wrong book?", "You asked for **<title>**. We
+  fetched “<release>”."
+- WHAT HAPPENS, with mint ticks: it leaves your Kobo and the other Kobos it was
+  sent to at their next sync; it's deleted from the library; we never pick
+  this release for this book again. A book that was already in the library
+  before the request only shows the first line (it is not deleted).
+- Then: **Search it myself** (picked), **Let Purrshelf look again** ("Same as
+  Add · up to 4 searches") or **Just remove it** ("No search").
+- **Remove and search** (or **Remove it**), then Search it yourself, the
+  Requests page, or back where you were. **Keep it** closes the sheet.

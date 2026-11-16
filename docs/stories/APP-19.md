@@ -11,7 +11,7 @@ that I can get rid of it and look again in one go.
 
 ## Acceptance criteria
 
-- [x] "Wrong book?" is in the book page's ⋯ menu for a library book that came from my request, and on finished rows in the Requests sheet for 7 days
+- [x] "Wrong book?" is on the book page (under Remove from my library; there is no ⋯ menu yet) for a library book that came from my request, and on finished rows in the Requests sheet for 7 days
 - [x] The sheet names what I asked for and what was fetched, says what will happen (off both Kobos, deleted from the library, never picked again) and offers Search it myself (default), Let Purrshelf look again and Just remove it
 - [x] **Remove and search** does it and then opens Search it yourself, Requests, or goes back, as chosen; Keep it closes the sheet
 - [x] Every new string has `en` and `nl`

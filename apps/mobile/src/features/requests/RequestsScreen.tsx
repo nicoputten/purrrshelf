@@ -25,6 +25,7 @@ import {
   swatScope,
 } from './motion';
 import { requestSteps, type Step } from './steps';
+import { canCallWrongBook, useWrongBookSheet } from './WrongBookSheet';
 import { useRequestEvents } from './useRequestEvents';
 import { useCancelRequest, useReaders, useRequests, useRetryRequest } from './useRequests';
 
@@ -60,10 +61,17 @@ export interface RequestsScreenProps {
   onFindBook: () => void;
   /** The full list is a page of its own (APP-14): it gets a back button. */
   onBack?: () => void;
+  /** Opens Search it yourself for a request (APP-18). */
+  onSearchMyself?: (requestId: string) => void;
 }
 
 /** Requests & progress (APP-03, APP-05; canvas board 4): live over server-sent events. */
-export function RequestsScreen({ onPick, onFindBook, onBack }: RequestsScreenProps) {
+export function RequestsScreen({
+  onPick,
+  onFindBook,
+  onBack,
+  onSearchMyself,
+}: RequestsScreenProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   useRequestEvents();
@@ -125,6 +133,7 @@ export function RequestsScreen({ onPick, onFindBook, onBack }: RequestsScreenPro
             myId={myId}
             maxSearches={maxSearches}
             onPick={() => onPick(r.id)}
+            {...(onSearchMyself ? { onSearchMyself: () => onSearchMyself(r.id) } : {})}
           />
         ))
       )}
@@ -137,11 +146,13 @@ function RequestCard({
   myId,
   maxSearches,
   onPick,
+  onSearchMyself,
 }: {
   request: BookRequest;
   myId: string | undefined;
   maxSearches: number;
   onPick: () => void;
+  onSearchMyself?: () => void;
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -163,6 +174,7 @@ function RequestCard({
     request.status,
   );
   const error = retry.error ?? cancel.error;
+  const openWrongBook = useWrongBookSheet((st) => st.open);
   const swat = useOneShot(swatScope(request), swatEvent(request), swatFresh(request));
   const delivered = useOneShot(
     deliveredScope(request),
@@ -237,6 +249,14 @@ function RequestCard({
         </AppText>
       ) : null}
 
+      {canCallWrongBook(request) ? (
+        <Button
+          label={t('wrongBook.action')}
+          variant="text"
+          onPress={() => openWrongBook(request)}
+        />
+      ) : null}
+
       {canRetry ? (
         <View style={styles.actions}>
           <Button
@@ -245,6 +265,9 @@ function RequestCard({
             busy={retry.isPending}
             onPress={() => retry.mutate(request.id)}
           />
+          {notFound && onSearchMyself ? (
+            <Button label={t('picker.searchMyself')} variant="outline" onPress={onSearchMyself} />
+          ) : null}
           <Button
             label={t('requests.dismiss')}
             variant="text"

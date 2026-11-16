@@ -5,6 +5,7 @@ import {
   type Reader,
 } from '@purrshelf/contract';
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -144,6 +145,25 @@ export function AddSheet({
     setTargets(next);
   };
 
+  /** "Or search it myself" (APP-18): the request waits for the reader's own words. */
+  const searchMyself = () => {
+    void setBookLanguage(chosenLanguage);
+    add.mutate(
+      {
+        workId,
+        language: chosenLanguage,
+        pushTo: kobos.filter((r) => chosen.has(r.id)).map((r) => r.id),
+        search: 'manual',
+      },
+      {
+        onSuccess: (request) => {
+          onClose();
+          router.push({ pathname: '/request-search/[id]', params: { id: request.id } });
+        },
+      },
+    );
+  };
+
   const submit = () => {
     void setBookLanguage(chosenLanguage);
     add.mutate(
@@ -251,6 +271,14 @@ export function AddSheet({
             busy={add.isPending}
             disabled={noIndexer || readers.isPending}
           />
+          {lowOdds && !inLibrary && !noIndexer ? (
+            <Button
+              label={t('add.searchMyself')}
+              variant="text"
+              disabled={add.isPending || readers.isPending}
+              onPress={searchMyself}
+            />
+          ) : null}
           <Button label={t('add.notNow')} variant="text" onPress={onClose} />
         </>
       )}

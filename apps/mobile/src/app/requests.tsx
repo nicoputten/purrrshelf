@@ -8,6 +8,7 @@ export default function RequestsRoute() {
       onBack={() => router.back()}
       onPick={(id) => router.push({ pathname: '/request/[id]', params: { id } })}
       onFindBook={() => router.navigate('/')}
+      onSearchMyself={(id) => router.push({ pathname: '/request-search/[id]', params: { id } })}
     />
   );
 }
