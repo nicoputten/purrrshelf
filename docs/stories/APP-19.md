@@ -1,6 +1,6 @@
 # APP-19 Tell Purrshelf it fetched the wrong book
 
-Status: in review
+Status: done
 Milestone: 12
 Depends on: BRK-19, APP-18
 

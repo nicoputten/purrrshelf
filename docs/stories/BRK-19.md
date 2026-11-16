@@ -1,6 +1,6 @@
 # BRK-19 Undo a wrong book and search again
 
-Status: in review
+Status: done
 Milestone: 12
 Depends on: BRK-08, BRK-18
 

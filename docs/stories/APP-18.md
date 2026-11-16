@@ -1,6 +1,6 @@
 # APP-18 Search it myself when a book is hard to find
 
-Status: in review
+Status: done
 Milestone: 12
 Depends on: BRK-18, APP-05, APP-16
 

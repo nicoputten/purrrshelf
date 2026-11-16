@@ -1,6 +1,6 @@
 # BRK-18 Search an indexer with my own words
 
-Status: in review
+Status: done
 Milestone: 12
 Depends on: BRK-05, BRK-06, BRK-16
 

@@ -56,10 +56,10 @@ Statuses: `todo`, `in progress`, `done`.
 | [APP-20](APP-20.md) | See a book I add from the library on its page at once          | 11        | done      |
 | [BRK-20](BRK-20.md) | Find a one-word title by its subtitle too                      | 12        | done      |
 | [BRK-21](BRK-21.md) | Keep deleting books after CWA's form token expires             | 12        | done      |
-| [BRK-18](BRK-18.md) | Search an indexer with my own words                            | 12        | in review |
-| [BRK-19](BRK-19.md) | Undo a wrong book and search again                             | 12        | in review |
-| [APP-18](APP-18.md) | Search it myself when a book is hard to find                   | 12        | in review |
-| [APP-19](APP-19.md) | Tell Purrshelf it fetched the wrong book                       | 12        | in review |
+| [BRK-18](BRK-18.md) | Search an indexer with my own words                            | 12        | done      |
+| [BRK-19](BRK-19.md) | Undo a wrong book and search again                             | 12        | done      |
+| [APP-18](APP-18.md) | Search it myself when a book is hard to find                   | 12        | done      |
+| [APP-19](APP-19.md) | Tell Purrshelf it fetched the wrong book                       | 12        | done      |
 
 ## Template
 
