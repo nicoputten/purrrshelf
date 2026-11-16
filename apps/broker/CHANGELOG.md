@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.4...broker-v1.4.0) (2026-11-16)
+
+
+### Features
+
+* **broker:** resend books a Kobo sync lost (BRK-17) ([c21ec79](https://github.com/nicoputten/purrrshelf/commit/c21ec79ef0aaddd5c86304229dc53516e57ca4f3))
+* **broker:** search a one-word title with its subtitle (BRK-20) ([fcaf44f](https://github.com/nicoputten/purrrshelf/commit/fcaf44f57965a404cc8342bd5bea5938bb22452a))
+* **broker:** search an indexer with my own words (BRK-18) ([9f00942](https://github.com/nicoputten/purrrshelf/commit/9f00942f291c12f5225ee2542ac3a05569277cb0))
+* **broker:** undo a wrong book and search again (BRK-19) ([53103bb](https://github.com/nicoputten/purrrshelf/commit/53103bb18d5ca61feb0c47cde497c440ee83ce3f))
+
+
+### Bug Fixes
+
+* **broker:** don't take a book that only shares a one-word title (BRK-16) ([5956c6f](https://github.com/nicoputten/purrrshelf/commit/5956c6fdcfaae4004c07e8ed7b1de4db1d28b113))
+* **broker:** log in to CWA again when its form token has expired (BRK-21) ([cb16aff](https://github.com/nicoputten/purrrshelf/commit/cb16aff71f757108c76310207facaabb44b0fb6a))
+
 ## [1.3.4](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.3...broker-v1.3.4) (2026-11-13)
 
 
