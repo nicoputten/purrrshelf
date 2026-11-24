@@ -60,6 +60,7 @@ Statuses: `todo`, `in progress`, `done`.
 | [BRK-19](BRK-19.md) | Undo a wrong book and search again                             | 12        | done      |
 | [APP-18](APP-18.md) | Search it myself when a book is hard to find                   | 12        | done      |
 | [APP-19](APP-19.md) | Tell Purrshelf it fetched the wrong book                       | 12        | done      |
+| [BRK-22](BRK-22.md) | Never call a finished download failed                          | 12        | done      |
 
 ## Template
 

@@ -80,10 +80,9 @@ describe('SabnzbdClient', () => {
       { status: 'Completed', storage: '/downloads/kobopush/Book' },
       { state: 'completed', storage: '/downloads/kobopush/Book' },
     ],
-    [
-      { status: 'Completed', storage: null },
-      { state: 'failed', message: 'SABnzbd finished without a download folder' },
-    ],
+    // SABnzbd shows a job as Completed a moment before it writes the folder to its history.
+    [{ status: 'Completed', storage: null }, { state: 'finishing' }],
+    [{ status: 'Completed', storage: '' }, { state: 'finishing' }],
     [
       { status: 'Failed', fail_message: 'Repair failed' },
       { state: 'failed', message: 'Repair failed' },
@@ -93,6 +92,8 @@ describe('SabnzbdClient', () => {
       { state: 'failed', message: 'Download failed' },
     ],
     [{ status: 'Extracting' }, { state: 'processing' }],
+    [{ status: 'Downloading' }, { state: 'processing' }],
+    [{ status: 'Checking' }, { state: 'processing' }],
     [{ status: 'Weird' }, { state: 'failed', message: 'Unexpected SABnzbd status Weird' }],
   ])('reads history %j', async (slot, expected) => {
     const { client } = fake({

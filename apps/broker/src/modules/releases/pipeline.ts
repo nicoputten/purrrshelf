@@ -74,7 +74,15 @@ export interface PipelineDeps {
 }
 
 const JobPayload = z.object({ requestId: z.string() });
+const PollPayload = JobPayload.extend({ unsettled: z.number().int().min(0).default(0) });
 const WaitPayload = JobPayload.extend({ deadline: z.number() });
+
+/**
+ * Polls in a row that SABnzbd may report a job as lost, or as Completed
+ * without a folder, before the broker believes it. Both happen for a moment
+ * while SABnzbd moves a finished job into its history.
+ */
+export const SETTLE_POLLS = 4;
 
 /** Ebook files the importer accepts, best first. CWA converts AZW3/MOBI to EPUB at ingest. */
 const EBOOK_EXTS = ['.epub', '.azw3', '.mobi'];
@@ -308,7 +316,8 @@ export class ReleasePipeline {
 
   /** Job: follows the SABnzbd download. */
   readonly pollJob = async (payload: unknown): Promise<void> => {
-    const request = this.find(JobPayload.parse(payload).requestId);
+    const { requestId, unsettled } = PollPayload.parse(payload);
+    const request = this.find(requestId);
     const services = this.services();
     if (request?.status !== 'downloading' || !request.downloadId || !services) return;
     const state = await services.sab.status(request.downloadId);
@@ -317,10 +326,10 @@ export class ReleasePipeline {
       case 'downloading':
       case 'paused':
         this.update(request, { progress: Math.round(state.percentage) });
-        this.later(POLL_DOWNLOAD_JOB, { requestId: request.id });
+        this.later(POLL_DOWNLOAD_JOB, { requestId });
         return;
       case 'processing':
-        this.later(POLL_DOWNLOAD_JOB, { requestId: request.id });
+        this.later(POLL_DOWNLOAD_JOB, { requestId });
         return;
       case 'completed':
         await this.importFrom(
@@ -328,20 +337,35 @@ export class ReleasePipeline {
           state.storage,
         );
         return;
-      case 'failed':
-      case 'missing': {
-        const grabbed = this.db
-          .select()
-          .from(releases)
-          .where(and(eq(releases.requestId, request.id), eq(releases.status, 'grabbed')))
-          .all();
-        for (const r of grabbed) this.markFailed(r);
-        const reason = state.state === 'failed' ? state.message : 'SABnzbd lost the download';
-        await this.next(request, reason);
+      case 'finishing':
+      case 'missing':
+        if (unsettled + 1 < SETTLE_POLLS) {
+          this.later(POLL_DOWNLOAD_JOB, { requestId, unsettled: unsettled + 1 });
+          return;
+        }
+        await this.downloadFailed(
+          request,
+          state.state === 'missing'
+            ? 'SABnzbd lost the download'
+            : 'SABnzbd finished without a download folder',
+        );
         return;
-      }
+      case 'failed':
+        await this.downloadFailed(request, state.message);
+        return;
     }
   };
+
+  /** The grabbed release failed in SABnzbd: never pick it again, try the next one. */
+  private async downloadFailed(request: RequestRow, reason: string): Promise<void> {
+    const grabbed = this.db
+      .select()
+      .from(releases)
+      .where(and(eq(releases.requestId, request.id), eq(releases.status, 'grabbed')))
+      .all();
+    for (const r of grabbed) this.markFailed(r);
+    await this.next(request, reason);
+  }
 
   /** Job: waits until CWA has the book in metadata.db. */
   readonly waitImportJob = async (payload: unknown): Promise<void> => {

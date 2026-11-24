@@ -8,6 +8,7 @@ import { readTag } from '../src/modules/importer/epub.js';
 import {
   POLL_DOWNLOAD_JOB,
   ReleaseError,
+  SETTLE_POLLS,
   WAIT_IMPORT_JOB,
   type ImportLibrary,
 } from '../src/modules/releases/pipeline.js';
@@ -452,11 +453,58 @@ describe('following the download', () => {
     expect(h.budget.status('primary', 'search').used).toBe(searches);
     expect(h.budget.status('primary', 'grab').used).toBe(2);
 
-    // The second one is lost too: nothing left.
-    await tick();
+    // The second one is lost too: after a few polls of grace, nothing left.
+    for (let i = 0; i < SETTLE_POLLS; i++) await tick();
     expect(h.requests.get(req.id)).toMatchObject({
       status: 'download_failed',
       error: 'SABnzbd lost the download. No other release left; try another one or search again.',
+    });
+  });
+
+  it('waits while SABnzbd finishes writing its history (Completed without a folder)', async () => {
+    const req = await add();
+    sab.states.set('nzo_1', [
+      { state: 'finishing' },
+      { state: 'finishing' },
+      { state: 'processing' },
+    ]);
+    await tick();
+    await tick();
+    expect(h.requests.get(req.id)).toMatchObject({ status: 'downloading', downloadId: 'nzo_1' });
+    await finishDownload('nzo_1', { 'book.epub': makeEpub() });
+    await tick();
+    expect(h.requests.get(req.id).status).toBe('importing');
+    expect(sab.added).toHaveLength(1);
+    expect(releaseRows(req.id).filter((r) => r.status === 'failed')).toEqual([]);
+  });
+
+  it('waits a few polls when SABnzbd briefly does not know the job', async () => {
+    const req = await add();
+    sab.states.set('nzo_1', [
+      { state: 'missing' },
+      { state: 'missing' },
+      { state: 'queued', percentage: 0 },
+    ]);
+    await tick();
+    await tick();
+    expect(h.requests.get(req.id)).toMatchObject({ status: 'downloading', downloadId: 'nzo_1' });
+    await finishDownload('nzo_1', { 'book.epub': makeEpub() });
+    await tick();
+    await tick();
+    expect(h.requests.get(req.id).status).toBe('importing');
+    expect(sab.added).toHaveLength(1);
+  });
+
+  it('gives up on a job that stays without a folder', async () => {
+    const req = await add();
+    sab.states.set('nzo_1', [{ state: 'finishing' }]);
+    for (let i = 0; i < SETTLE_POLLS - 1; i++) await tick();
+    expect(h.requests.get(req.id)).toMatchObject({ status: 'downloading', downloadId: 'nzo_1' });
+    await tick();
+    expect(h.requests.get(req.id)).toMatchObject({
+      status: 'download_failed',
+      error:
+        'SABnzbd finished without a download folder. No other release left; try another one or search again.',
     });
   });
 

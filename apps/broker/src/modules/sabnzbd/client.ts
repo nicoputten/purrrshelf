@@ -11,6 +11,8 @@ export interface SabnzbdConfig {
 export type DownloadState =
   | { state: 'queued' | 'downloading' | 'paused'; percentage: number }
   | { state: 'processing' }
+  /** Completed, but SABnzbd has not written the download folder to its history yet. */
+  | { state: 'finishing' }
   | { state: 'completed'; storage: string }
   | { state: 'failed'; message: string }
   | { state: 'missing' };
@@ -56,8 +58,13 @@ const HistoryReply = z.object({
 });
 const ErrorReply = z.object({ status: z.literal(false), error: z.string() });
 
-/** Post-processing states in SABnzbd's history before it reaches Completed or Failed. */
+/**
+ * Post-processing states in SABnzbd's history before it reaches Completed or
+ * Failed. A job can briefly show Downloading or Checking there on its way in.
+ */
 const PROCESSING = new Set([
+  'Downloading',
+  'Checking',
   'Queued',
   'QuickCheck',
   'Verifying',
@@ -142,9 +149,9 @@ export class SabnzbdClient implements DownloadClient {
     const done = history.data.history.slots.find((s) => s.nzo_id === nzoId);
     if (!done) return { state: 'missing' };
     if (done.status === 'Completed') {
-      return done.storage
-        ? { state: 'completed', storage: done.storage }
-        : { state: 'failed', message: 'SABnzbd finished without a download folder' };
+      // SABnzbd 5 marks a job Completed while it is still in post-processing, with an
+      // empty storage, and only fills in the folder when it writes the history a moment later.
+      return done.storage ? { state: 'completed', storage: done.storage } : { state: 'finishing' };
     }
     if (done.status === 'Failed')
       return { state: 'failed', message: done.fail_message || 'Download failed' };
