@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/nicoputten/purrrshelf/compare/broker-v1.4.0...broker-v1.4.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* **broker:** don't fail a download SABnzbd is still finishing (BRK-22) ([02a1e4d](https://github.com/nicoputten/purrrshelf/commit/02a1e4db5557306f322cfd71c73de94d4b3201d5))
+
 ## [1.4.0](https://github.com/nicoputten/purrrshelf/compare/broker-v1.3.4...broker-v1.4.0) (2026-11-16)
 
 
